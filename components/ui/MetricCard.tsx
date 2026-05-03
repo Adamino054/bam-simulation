@@ -16,28 +16,35 @@ interface MetricCardProps {
   precision?: number
   className?: string
   accentColor?: string
+  /** Si true, delta positif = mauvais (ex: chômage) */
+  invertDelta?: boolean
 }
 
-/** Anime un nombre de `from` à `to` en `duration` ms */
-function useCountUp(to: number, duration = 400): number {
+function useCountUp(to: number, duration = 450): number {
   const [displayed, setDisplayed] = useState(to)
-  const prevRef = useRef(to)
-  const rafRef  = useRef<number>(0)
+  const prevRef  = useRef(to)
+  const rafRef   = useRef<number>(0)
+  const mountRef = useRef(false)
 
   useEffect(() => {
-    const from = prevRef.current
+    if (!mountRef.current) {
+      mountRef.current = true
+      prevRef.current  = to
+      setDisplayed(to)
+      return
+    }
+
+    const from  = prevRef.current
     if (from === to) return
 
     const start = performance.now()
     const diff  = to - from
 
     const tick = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      // Easing out expo
-      const eased = 1 - Math.pow(2, -10 * progress)
+      const elapsed  = Math.min((now - start) / duration, 1)
+      const eased    = 1 - Math.pow(2, -10 * elapsed)
       setDisplayed(from + diff * eased)
-      if (progress < 1) {
+      if (elapsed < 1) {
         rafRef.current = requestAnimationFrame(tick)
       } else {
         setDisplayed(to)
@@ -45,6 +52,7 @@ function useCountUp(to: number, duration = 400): number {
       }
     }
 
+    cancelAnimationFrame(rafRef.current)
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
   }, [to, duration])
@@ -63,39 +71,42 @@ export function MetricCard({
   precision = 1,
   className = '',
   accentColor,
+  invertDelta = false,
 }: MetricCardProps) {
   const animatedValue = useCountUp(value)
-  const isPositiveDelta = delta !== undefined && delta > 0
-  const isNegativeDelta = delta !== undefined && delta < 0
 
-  const deltaColor = isPositiveDelta
-    ? 'var(--data-positive)'
-    : isNegativeDelta
-    ? 'var(--data-negative)'
-    : 'var(--text-tertiary)'
+  const isGood = delta !== undefined
+    ? (invertDelta ? delta < 0 : delta > 0)
+    : null
+  const isBad = delta !== undefined
+    ? (invertDelta ? delta > 0 : delta < 0)
+    : null
 
-  const displayValue = animatedValue.toFixed(precision)
-    .replace('.', ',')
+  const deltaColor =
+    isGood ? 'var(--data-positive)' :
+    isBad  ? 'var(--data-negative)' :
+    'var(--text-tertiary)'
 
   return (
     <div
-      className={`rounded p-3 flex flex-col gap-1 ${className}`}
+      className={`rounded-md p-3.5 flex flex-col gap-2.5 ${className}`}
       style={{
         backgroundColor: 'var(--bg-panel)',
-        border: '1px solid var(--border-subtle)',
+        border: '1px solid var(--border-default)',
       }}
     >
-      {/* Label */}
-      <div className="flex items-center justify-between">
+      {/* Label row */}
+      <div className="flex items-center justify-between min-h-[16px]">
         <span className="label-caps">{label}</span>
         {tooltipContent && (
           <Tooltip content={tooltipContent}>
             <span
-              className="w-4 h-4 rounded-full flex items-center justify-center text-xs"
+              className="flex items-center justify-center w-[14px] h-[14px] rounded-full cursor-help select-none"
               style={{
-                backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border-default)',
                 color: 'var(--text-tertiary)',
-                fontSize: '10px',
+                fontSize: '9px',
+                fontWeight: 600,
               }}
             >
               i
@@ -104,36 +115,46 @@ export function MetricCard({
         )}
       </div>
 
-      {/* Valeur principale */}
-      <div className="flex items-baseline gap-1.5">
+      {/* Value */}
+      <div className="flex items-end gap-1.5">
         <span
           className="font-editorial leading-none tabular"
           style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            fontSize: 'clamp(1.6rem, 2.5vw, 2rem)',
             color: accentColor ?? 'var(--text-primary)',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {displayValue}
+          {animatedValue.toFixed(precision).replace('.', ',')}
         </span>
-        <span className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+        <span
+          className="text-sm pb-0.5"
+          style={{ color: 'var(--text-tertiary)' }}
+        >
           {unit}
         </span>
       </div>
 
-      {/* Variation + sparkline */}
-      <div className="flex items-end justify-between mt-auto">
-        {delta !== undefined && (
-          <span
-            className="text-xs font-mono tabular"
-            style={{ color: deltaColor }}
-          >
-            {delta > 0 ? '+' : ''}{delta.toFixed(precision).replace('.', ',')} {deltaUnit}
-          </span>
-        )}
+      {/* Delta + sparkline */}
+      <div className="flex items-center justify-between">
+        <div className="min-w-[60px]">
+          {delta !== undefined && delta !== 0 ? (
+            <span
+              className="text-xs font-mono tabular"
+              style={{ color: deltaColor }}
+            >
+              {delta > 0 ? '+' : ''}{delta.toFixed(precision).replace('.', ',')} {deltaUnit}
+            </span>
+          ) : delta === 0 ? (
+            <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>—</span>
+          ) : null}
+        </div>
         {history.length >= 2 && (
           <Sparkline
             data={history}
-            color={accentColor ?? 'var(--text-secondary)'}
+            color={accentColor ?? 'var(--text-tertiary)'}
+            width={72}
+            height={22}
           />
         )}
       </div>

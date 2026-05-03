@@ -4,56 +4,50 @@
 
 /* =====================================================
    DESIGN TOKENS — Central Bank Simulator
-   Palette institutionnelle, mode sombre par défaut
    ===================================================== */
 
 :root {
-  /* Mode sombre (défaut) */
   --bg-base:        #0E0F12;
-  --bg-panel:       #15171B;
-  --bg-elevated:    #1C1F25;
+  --bg-panel:       #14161A;
+  --bg-elevated:    #1C1F26;
   --bg-hover:       #242830;
-  --text-primary:   #F2F2EC;
-  --text-secondary: #9FA0A0;
-  --text-tertiary:  #66686D;
-  --border-subtle:  rgba(242, 242, 236, 0.06);
-  --border-default: rgba(242, 242, 236, 0.12);
-  --border-strong:  rgba(242, 242, 236, 0.20);
+  --text-primary:   #F0F0EA;
+  --text-secondary: #9A9B9B;
+  --text-tertiary:  #5E6066;
+  --border-subtle:  rgba(240, 240, 234, 0.05);
+  --border-default: rgba(240, 240, 234, 0.10);
+  --border-strong:  rgba(240, 240, 234, 0.18);
 
-  /* Accents (identiques dark/light) */
   --accent-primary: #B41923;
   --accent-warm:    #C9A86A;
   --accent-cool:    #5C7E92;
 
-  /* Sémantique data-viz */
   --data-positive: #4A9D7C;
   --data-negative: #C25450;
-  --data-neutral:  #9FA0A0;
+  --data-neutral:  #9A9B9B;
   --data-warning:  #C9A86A;
 }
 
 .light {
-  --bg-base:        #FAFAF6;
+  --bg-base:        #F8F8F4;
   --bg-panel:       #FFFFFF;
-  --bg-elevated:    #F2F2EC;
-  --bg-hover:       #E8E8E0;
-  --text-primary:   #15151A;
-  --text-secondary: #525258;
-  --text-tertiary:  #8B8B90;
-  --border-subtle:  rgba(21, 21, 26, 0.06);
-  --border-default: rgba(21, 21, 26, 0.12);
-  --border-strong:  rgba(21, 21, 26, 0.20);
+  --bg-elevated:    #F0F0EC;
+  --bg-hover:       #E6E6E0;
+  --text-primary:   #141418;
+  --text-secondary: #4E4E54;
+  --text-tertiary:  #888890;
+  --border-subtle:  rgba(20, 20, 24, 0.06);
+  --border-default: rgba(20, 20, 24, 0.10);
+  --border-strong:  rgba(20, 20, 24, 0.18);
 }
 
 /* =====================================================
-   BASE STYLES
+   BASE
    ===================================================== */
 
 @layer base {
-  * {
+  *, *::before, *::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
   }
 
   html {
@@ -70,103 +64,72 @@
     line-height: 1.6;
   }
 
-  /* Tabular nums partout pour les chiffres */
-  [class*="metric"],
-  [class*="value"],
-  [class*="rate"],
-  [class*="pct"],
-  .tabular {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Focus rings accessibles */
   :focus-visible {
     outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
+    border-radius: 2px;
   }
 
-  /* Scrollbar custom (mode sombre) */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    background: var(--bg-base);
-  }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: var(--border-default);
-    border-radius: 3px;
+    border-radius: 10px;
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-strong);
-  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+  /* KaTeX override */
+  .katex { font-size: 0.85em !important; }
 }
 
 /* =====================================================
-   UTILITIES CUSTOM
+   UTILITIES
    ===================================================== */
 
 @layer utilities {
-  /* Label small caps (en-têtes de panneaux) */
+  /* Label small-caps institutionnel */
   .label-caps {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--text-tertiary);
     font-variant-numeric: tabular-nums;
+    font-family: var(--font-inter), system-ui, sans-serif;
   }
 
-  /* Typographie Fraunces */
+  /* Titres éditoriaux Fraunces */
   .font-editorial {
-    font-family: var(--font-fraunces), serif;
+    font-family: var(--font-fraunces), 'Georgia', serif;
     font-style: italic;
-    font-optical-sizing: auto;
   }
 
   .font-editorial-roman {
-    font-family: var(--font-fraunces), serif;
+    font-family: var(--font-fraunces), 'Georgia', serif;
     font-style: normal;
     font-weight: 600;
   }
 
-  /* Bordures avec CSS vars */
-  .border-subtle  { border-color: var(--border-subtle); }
-  .border-default { border-color: var(--border-default); }
-  .border-strong  { border-color: var(--border-strong); }
+  /* Tabular nums helpers */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
 
-  /* Backgrounds */
-  .bg-base     { background-color: var(--bg-base); }
-  .bg-panel    { background-color: var(--bg-panel); }
-  .bg-elevated { background-color: var(--bg-elevated); }
-  .bg-hover    { background-color: var(--bg-hover); }
+  /* Container max-width */
+  .max-w-container {
+    max-width: 1440px;
+  }
 
-  /* Text colors */
-  .text-primary   { color: var(--text-primary); }
-  .text-secondary { color: var(--text-secondary); }
-  .text-tertiary  { color: var(--text-tertiary); }
-
-  /* Accent colors */
-  .text-accent-primary { color: var(--accent-primary); }
-  .text-accent-warm    { color: var(--accent-warm); }
-  .text-accent-cool    { color: var(--accent-cool); }
-
-  /* Data colors */
-  .text-positive { color: var(--data-positive); }
-  .text-negative { color: var(--data-negative); }
-  .text-warning  { color: var(--data-warning); }
-
-  /* Padding container responsive */
   .container-padding {
-    padding-left:  clamp(1.25rem, 4vw, 3rem);
-    padding-right: clamp(1.25rem, 4vw, 3rem);
+    padding-left:  clamp(1rem, 3vw, 2.5rem);
+    padding-right: clamp(1rem, 3vw, 2.5rem);
   }
 
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
   }

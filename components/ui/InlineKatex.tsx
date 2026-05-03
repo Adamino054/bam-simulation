@@ -1,8 +1,6 @@
 'use client'
 
 import { InlineMath } from 'react-katex'
-import 'katex/dist/katex.min.css'
-import type { ReactNode } from 'react'
 
 interface InlineKatexProps {
   children: string
@@ -10,7 +8,10 @@ interface InlineKatexProps {
 
 export function InlineKatex({ children }: InlineKatexProps) {
   return (
-    <span className="font-mono text-xs" style={{ color: 'var(--accent-cool)' }}>
+    <span
+      className="font-mono inline-block py-1"
+      style={{ color: 'var(--accent-cool)', fontSize: '0.8em' }}
+    >
       <InlineMath math={children} />
     </span>
   )

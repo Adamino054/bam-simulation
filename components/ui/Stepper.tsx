@@ -11,11 +11,23 @@ interface StepperProps {
   onChange: (value: number) => void
   label: string
   className?: string
+  compact?: boolean
 }
 
-export function Stepper({ value, options, onChange, label, className = '' }: StepperProps) {
+export function Stepper({
+  value,
+  options,
+  onChange,
+  label,
+  className = '',
+  compact = false,
+}: StepperProps) {
   return (
-    <div className={`flex gap-1 ${className}`} role="group" aria-label={label}>
+    <div
+      className={`flex gap-[2px] ${className}`}
+      role="group"
+      aria-label={label}
+    >
       {options.map((opt) => {
         const isActive = opt.value === value
         return (
@@ -24,12 +36,19 @@ export function Stepper({ value, options, onChange, label, className = '' }: Ste
             type="button"
             aria-pressed={isActive}
             onClick={() => onChange(opt.value)}
-            className="flex-1 px-2 py-1.5 rounded text-xs font-mono transition-colors duration-200"
+            className="flex-1 rounded transition-all duration-150"
             style={{
+              padding: compact ? '4px 2px' : '5px 3px',
+              fontSize: compact ? '9px' : '10px',
+              fontFamily: 'var(--font-jetbrains), monospace',
+              fontWeight: 600,
               backgroundColor: isActive ? 'var(--accent-primary)' : 'var(--bg-elevated)',
-              color: isActive ? '#fff' : 'var(--text-secondary)',
-              border: '1px solid',
-              borderColor: isActive ? 'var(--accent-primary)' : 'var(--border-default)',
+              color: isActive ? '#fff' : 'var(--text-tertiary)',
+              border: `1px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-default)'}`,
+              letterSpacing: '0',
+              minWidth: 0,
+              textAlign: 'center',
+              cursor: 'pointer',
             }}
           >
             {opt.label}

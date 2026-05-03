@@ -11,19 +11,36 @@ import { useGameStore } from '@/store/gameStore'
 
 export default function PlayPage() {
   const router = useRouter()
-  const { status, scenario } = useGameStore(s => ({
+  const { status, scenario, _hasHydrated } = useGameStore(s => ({
     status: s.status,
     scenario: s.scenario,
+    _hasHydrated: s._hasHydrated,
   }))
 
-  // Rediriger si la partie est terminée ou pas démarrée
   useEffect(() => {
+    // Attendre la fin de la rehydration avant de rediriger
+    if (!_hasHydrated) return
+
     if (status === 'finished') {
       router.push('/debrief')
     } else if (status === 'menu' || !scenario) {
       router.push('/')
     }
-  }, [status, scenario, router])
+  }, [status, scenario, router, _hasHydrated])
+
+  // Splash de chargement pendant la rehydration localStorage
+  if (!_hasHydrated) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: 'var(--bg-base)' }}
+      >
+        <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+          Chargement…
+        </p>
+      </div>
+    )
+  }
 
   if (status !== 'playing') return null
 
@@ -32,40 +49,39 @@ export default function PlayPage() {
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: 'var(--bg-base)' }}
     >
-      {/* ── Header fixe ── */}
       <Header variant="game" />
 
-      {/* ── Timeline ── */}
+      {/* Timeline */}
       <div
-        className="flex items-center justify-center py-3 px-4"
+        className="flex items-center justify-center py-2.5 px-4"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
         <Timeline />
       </div>
 
-      {/* ── Layout principal ── */}
+      {/* Layout 12 colonnes */}
       <main className="flex-1 w-full max-w-container mx-auto container-padding py-4">
-        <div className="grid grid-cols-12 gap-4 h-full">
+        <div className="grid grid-cols-12 gap-3 items-start">
 
-          {/* Sidebar gauche (3 colonnes) */}
-          <aside className="col-span-3 hidden lg:block">
+          {/* Sidebar gauche — contexte + chocs (3 col) */}
+          <aside className="col-span-3 hidden lg:flex flex-col gap-3">
             <LeftPanel />
           </aside>
 
-          {/* Zone centrale (6 colonnes) */}
-          <section className="col-span-12 lg:col-span-6">
+          {/* Zone centrale — dashboard + graphes (6 col) */}
+          <section className="col-span-12 lg:col-span-6 flex flex-col gap-3">
             <Dashboard />
           </section>
 
-          {/* Sidebar droite (3 colonnes) */}
+          {/* Sidebar droite — décision (3 col) */}
           <aside className="col-span-12 lg:col-span-3">
             <DecisionPanel />
           </aside>
 
         </div>
 
-        {/* Mobile : LeftPanel collapse sous le Dashboard */}
-        <div className="lg:hidden mt-4">
+        {/* Mobile : LeftPanel en bas */}
+        <div className="lg:hidden mt-3">
           <LeftPanel />
         </div>
       </main>

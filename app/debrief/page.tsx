@@ -25,18 +25,20 @@ const GRADE_COLOR: Record<string, string> = {
 
 export default function DebriefPage() {
   const router = useRouter()
-  const { history, currentState, scenario, status, reset, startGame } = useGameStore(s => ({
+  const { history, currentState, scenario, status, reset, startGame, _hasHydrated } = useGameStore(s => ({
     history: s.history,
     currentState: s.currentState,
     scenario: s.scenario,
     status: s.status,
     reset: s.reset,
     startGame: s.startGame,
+    _hasHydrated: s._hasHydrated,
   }))
 
   useEffect(() => {
+    if (!_hasHydrated) return
     if (status === 'menu' || !scenario) router.push('/')
-  }, [status, scenario, router])
+  }, [status, scenario, router, _hasHydrated])
 
   const allStates = useMemo(
     () => [...history, currentState],
@@ -44,6 +46,14 @@ export default function DebriefPage() {
   )
 
   const score = useMemo(() => computeScore(allStates), [allStates])
+
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-base)' }}>
+        <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>Chargement…</p>
+      </div>
+    )
+  }
 
   const handleReplay = () => {
     if (scenario) startGame(scenario)

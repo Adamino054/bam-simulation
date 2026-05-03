@@ -3,15 +3,11 @@
 import { useGameStore } from '@/store/gameStore'
 import { TOTAL_QUARTERS } from '@/lib/constants'
 
-interface TurnButtonProps {
-  onAdvance?: () => void
-}
-
-export function TurnButton({ onAdvance }: TurnButtonProps) {
+export function TurnButton() {
   const { advanceTurn, currentState, isTransitioning, setTransitioning } = useGameStore(s => ({
-    advanceTurn: s.advanceTurn,
-    currentState: s.currentState,
-    isTransitioning: s.isTransitioning,
+    advanceTurn:      s.advanceTurn,
+    currentState:     s.currentState,
+    isTransitioning:  s.isTransitioning,
     setTransitioning: s.setTransitioning,
   }))
 
@@ -21,11 +17,11 @@ export function TurnButton({ onAdvance }: TurnButtonProps) {
   const handleClick = async () => {
     if (isDisabled) return
     setTransitioning(true)
-    onAdvance?.()
-    // Courte pause pour l'animation
-    await new Promise(r => setTimeout(r, 600))
+    // Courte pause pour l'animation (les MetricCards convergent)
+    await new Promise(r => setTimeout(r, 450))
     advanceTurn()
     setTransitioning(false)
+    // La redirection vers /debrief est gérée par le useEffect de play/page.tsx
   }
 
   return (
@@ -33,24 +29,22 @@ export function TurnButton({ onAdvance }: TurnButtonProps) {
       type="button"
       onClick={handleClick}
       disabled={isDisabled}
-      className="w-full py-3 px-4 rounded font-medium text-sm transition-all duration-200 relative overflow-hidden"
+      className="w-full py-3 rounded font-medium text-sm transition-opacity duration-150"
       style={{
         backgroundColor: isDisabled ? 'var(--bg-elevated)' : 'var(--accent-primary)',
-        color: isDisabled ? 'var(--text-tertiary)' : '#fff',
+        color: isDisabled ? 'var(--text-tertiary)' : '#FFFFFF',
         border: 'none',
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        letterSpacing: '0.02em',
+        letterSpacing: '0.03em',
       }}
-      aria-live="polite"
       aria-busy={isTransitioning}
+      aria-live="polite"
     >
-      {isTransitioning ? (
-        <span>Calcul en cours…</span>
-      ) : isLast ? (
-        <span>Terminer la partie</span>
-      ) : (
-        <span>Trimestre suivant →</span>
-      )}
+      {isTransitioning
+        ? 'Calcul en cours…'
+        : isLast
+        ? 'Terminer la partie'
+        : 'Trimestre suivant →'}
     </button>
   )
 }
