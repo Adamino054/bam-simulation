@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================
+   DESIGN TOKENS — Central Bank Simulator
+   Palette institutionnelle, mode sombre par défaut
+   ===================================================== */
+
+:root {
+  /* Mode sombre (défaut) */
+  --bg-base:        #0E0F12;
+  --bg-panel:       #15171B;
+  --bg-elevated:    #1C1F25;
+  --bg-hover:       #242830;
+  --text-primary:   #F2F2EC;
+  --text-secondary: #9FA0A0;
+  --text-tertiary:  #66686D;
+  --border-subtle:  rgba(242, 242, 236, 0.06);
+  --border-default: rgba(242, 242, 236, 0.12);
+  --border-strong:  rgba(242, 242, 236, 0.20);
+
+  /* Accents (identiques dark/light) */
+  --accent-primary: #B41923;
+  --accent-warm:    #C9A86A;
+  --accent-cool:    #5C7E92;
+
+  /* Sémantique data-viz */
+  --data-positive: #4A9D7C;
+  --data-negative: #C25450;
+  --data-neutral:  #9FA0A0;
+  --data-warning:  #C9A86A;
+}
+
+.light {
+  --bg-base:        #FAFAF6;
+  --bg-panel:       #FFFFFF;
+  --bg-elevated:    #F2F2EC;
+  --bg-hover:       #E8E8E0;
+  --text-primary:   #15151A;
+  --text-secondary: #525258;
+  --text-tertiary:  #8B8B90;
+  --border-subtle:  rgba(21, 21, 26, 0.06);
+  --border-default: rgba(21, 21, 26, 0.12);
+  --border-strong:  rgba(21, 21, 26, 0.20);
+}
+
+/* =====================================================
+   BASE STYLES
+   ===================================================== */
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-inter), system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* Tabular nums partout pour les chiffres */
+  [class*="metric"],
+  [class*="value"],
+  [class*="rate"],
+  [class*="pct"],
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus rings accessibles */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbar custom (mode sombre) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--bg-base);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--border-strong);
+  }
+}
+
+/* =====================================================
+   UTILITIES CUSTOM
+   ===================================================== */
+
+@layer utilities {
+  /* Label small caps (en-têtes de panneaux) */
+  .label-caps {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Typographie Fraunces */
+  .font-editorial {
+    font-family: var(--font-fraunces), serif;
+    font-style: italic;
+    font-optical-sizing: auto;
+  }
+
+  .font-editorial-roman {
+    font-family: var(--font-fraunces), serif;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  /* Bordures avec CSS vars */
+  .border-subtle  { border-color: var(--border-subtle); }
+  .border-default { border-color: var(--border-default); }
+  .border-strong  { border-color: var(--border-strong); }
+
+  /* Backgrounds */
+  .bg-base     { background-color: var(--bg-base); }
+  .bg-panel    { background-color: var(--bg-panel); }
+  .bg-elevated { background-color: var(--bg-elevated); }
+  .bg-hover    { background-color: var(--bg-hover); }
+
+  /* Text colors */
+  .text-primary   { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-tertiary  { color: var(--text-tertiary); }
+
+  /* Accent colors */
+  .text-accent-primary { color: var(--accent-primary); }
+  .text-accent-warm    { color: var(--accent-warm); }
+  .text-accent-cool    { color: var(--accent-cool); }
+
+  /* Data colors */
+  .text-positive { color: var(--data-positive); }
+  .text-negative { color: var(--data-negative); }
+  .text-warning  { color: var(--data-warning); }
+
+  /* Padding container responsive */
+  .container-padding {
+    padding-left:  clamp(1.25rem, 4vw, 3rem);
+    padding-right: clamp(1.25rem, 4vw, 3rem);
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
