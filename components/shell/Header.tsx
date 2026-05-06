@@ -12,12 +12,10 @@ interface HeaderProps {
 }
 
 export function Header({ variant }: HeaderProps) {
-  const { scenario, status, history, currentState } = useGameStore(s => ({
-    scenario: s.scenario,
-    status: s.status,
-    history: s.history,
-    currentState: s.currentState,
-  }))
+  const scenario = useGameStore(s => s.scenario)
+  const status = useGameStore(s => s.status)
+  const history = useGameStore(s => s.history)
+  const currentState = useGameStore(s => s.currentState)
 
   const scenarioLabel = scenario ? SCENARIOS[scenario]?.title : null
 

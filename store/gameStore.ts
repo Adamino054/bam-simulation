@@ -5,6 +5,12 @@
  * Note hydration : Next.js démarre côté serveur avec l'état par défaut
  * (status: 'menu'). Le middleware `persist` recharge localStorage de façon
  * asynchrone. Le flag `_hasHydrated` empêche les redirections prématurées.
+ *
+ * IMPORTANT: All useGameStore selectors must use individual property access
+ * instead of object destructuring to prevent infinite re-renders.
+ *
+ * ✅ const status = useGameStore(s => s.status)
+ * ❌ const { status } = useGameStore(s => ({ status: s.status }))
  */
 
 import { create } from 'zustand'

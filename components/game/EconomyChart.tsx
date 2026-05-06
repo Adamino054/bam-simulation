@@ -89,10 +89,8 @@ const AXIS_STYLE = {
 }
 
 export function EconomyChart() {
-  const { history, currentState } = useGameStore(s => ({
-    history:      s.history,
-    currentState: s.currentState,
-  }))
+  const history = useGameStore(s => s.history)
+  const currentState = useGameStore(s => s.currentState)
 
   const data = useMemo(
     () => buildData(history, currentState),

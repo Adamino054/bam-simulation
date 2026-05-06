@@ -22,10 +22,8 @@ const EconomyChart = dynamic(
 )
 
 export function Dashboard() {
-  const { currentState, history } = useGameStore(s => ({
-    currentState: s.currentState,
-    history:      s.history,
-  }))
+  const currentState = useGameStore(s => s.currentState)
+  const history = useGameStore(s => s.history)
 
   const prev = history[history.length - 1]
 

@@ -126,6 +126,26 @@ vercel deploy
 
 Variables d'environnement requises : aucune (application 100 % client-side).
 
+## Notes techniques
+
+### Sélecteurs Zustand
+Pour éviter les boucles de rendu infinies, utilisez toujours des sélecteurs individuels :
+
+```typescript
+// ✅ Correct
+const status = useGameStore(s => s.status)
+const scenario = useGameStore(s => s.scenario)
+
+// ❌ Incorrect (cause des re-rendus infinis)
+const { status, scenario } = useGameStore(s => ({
+  status: s.status,
+  scenario: s.scenario,
+}))
+```
+
+### Hydratation
+Les pages ont un fallback de 2 secondes pour forcer l'hydratation si localStorage échoue.
+
 ## Licence
 
 Projet académique — Projet de Fin d'Année · Bank Al-Maghrib · 2024-2025.

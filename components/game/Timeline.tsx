@@ -5,9 +5,7 @@ import { TOTAL_QUARTERS } from '@/lib/constants'
 import { fmtQuarter } from '@/lib/format'
 
 export function Timeline() {
-  const { currentState } = useGameStore(s => ({
-    currentState: s.currentState,
-  }))
+  const currentState = useGameStore(s => s.currentState)
 
   const currentQ = currentState.quarter
   const pct = Math.round(((currentQ + 1) / TOTAL_QUARTERS) * 100)

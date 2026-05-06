@@ -16,10 +16,8 @@ const {
 } = require('recharts')
 
 export function DebriefChart() {
-  const { history, currentState } = useGameStore(s => ({
-    history: s.history,
-    currentState: s.currentState,
-  }))
+  const history = useGameStore(s => s.history)
+  const currentState = useGameStore(s => s.currentState)
 
   const data = useMemo(() => {
     return [...history, currentState].map(s => ({

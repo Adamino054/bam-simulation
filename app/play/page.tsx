@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Header } from '@/components/shell/Header'
 import { Timeline } from '@/components/game/Timeline'
 import { Dashboard } from '@/components/game/Dashboard'
@@ -11,22 +11,31 @@ import { useGameStore } from '@/store/gameStore'
 
 export default function PlayPage() {
   const router = useRouter()
-  const { status, scenario, _hasHydrated } = useGameStore(s => ({
-    status: s.status,
-    scenario: s.scenario,
-    _hasHydrated: s._hasHydrated,
-  }))
+  const pathname = usePathname()
+  const status = useGameStore(s => s.status)
+  const scenario = useGameStore(s => s.scenario)
+  const _hasHydrated = useGameStore(s => s._hasHydrated)
 
   useEffect(() => {
     // Attendre la fin de la rehydration avant de rediriger
     if (!_hasHydrated) return
 
-    if (status === 'finished') {
-      router.push('/debrief')
-    } else if (status === 'menu' || !scenario) {
-      router.push('/')
+    if (status === 'finished' && pathname !== '/debrief') {
+      router.replace('/debrief')
+    } else if ((status === 'menu' || !scenario) && pathname !== '/') {
+      router.replace('/')
     }
-  }, [status, scenario, router, _hasHydrated])
+  }, [status, scenario, pathname, router, _hasHydrated])
+
+  // Fallback: forcer l'hydratation après 2 secondes si elle échoue
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!useGameStore.getState()._hasHydrated) {
+        useGameStore.getState().setHasHydrated(true)
+      }
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   // Splash de chargement pendant la rehydration localStorage
   if (!_hasHydrated) {

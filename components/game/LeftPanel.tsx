@@ -47,11 +47,9 @@ function generateNarrative(state: {
 
 export function LeftPanel() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const { currentState, history, activeShocks } = useGameStore(s => ({
-    currentState: s.currentState,
-    history: s.history,
-    activeShocks: s.activeShocks,
-  }))
+  const currentState = useGameStore(s => s.currentState)
+  const history = useGameStore(s => s.history)
+  const activeShocks = useGameStore(s => s.activeShocks)
 
   const narrative = generateNarrative(currentState)
 

@@ -4,12 +4,10 @@ import { useGameStore } from '@/store/gameStore'
 import { TOTAL_QUARTERS } from '@/lib/constants'
 
 export function TurnButton() {
-  const { advanceTurn, currentState, isTransitioning, setTransitioning } = useGameStore(s => ({
-    advanceTurn:      s.advanceTurn,
-    currentState:     s.currentState,
-    isTransitioning:  s.isTransitioning,
-    setTransitioning: s.setTransitioning,
-  }))
+  const advanceTurn = useGameStore(s => s.advanceTurn)
+  const currentState = useGameStore(s => s.currentState)
+  const isTransitioning = useGameStore(s => s.isTransitioning)
+  const setTransitioning = useGameStore(s => s.setTransitioning)
 
   const isLast     = currentState.quarter >= TOTAL_QUARTERS - 1
   const isDisabled = isTransitioning

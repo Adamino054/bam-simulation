@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/store/gameStore'
 import { computeScore } from '@/engine/scoring'
@@ -25,20 +25,31 @@ const GRADE_COLOR: Record<string, string> = {
 
 export default function DebriefPage() {
   const router = useRouter()
-  const { history, currentState, scenario, status, reset, startGame, _hasHydrated } = useGameStore(s => ({
-    history: s.history,
-    currentState: s.currentState,
-    scenario: s.scenario,
-    status: s.status,
-    reset: s.reset,
-    startGame: s.startGame,
-    _hasHydrated: s._hasHydrated,
-  }))
+  const pathname = usePathname()
+  const history = useGameStore(s => s.history)
+  const currentState = useGameStore(s => s.currentState)
+  const scenario = useGameStore(s => s.scenario)
+  const status = useGameStore(s => s.status)
+  const reset = useGameStore(s => s.reset)
+  const startGame = useGameStore(s => s.startGame)
+  const _hasHydrated = useGameStore(s => s._hasHydrated)
 
   useEffect(() => {
     if (!_hasHydrated) return
-    if (status === 'menu' || !scenario) router.push('/')
-  }, [status, scenario, router, _hasHydrated])
+    if ((status === 'menu' || !scenario) && pathname !== '/') {
+      router.replace('/')
+    }
+  }, [status, scenario, pathname, router, _hasHydrated])
+
+  // Fallback: forcer l'hydratation après 2 secondes si elle échoue
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!useGameStore.getState()._hasHydrated) {
+        useGameStore.getState().setHasHydrated(true)
+      }
+    }, 2000)
+    return () => clearTimeout(timer)
+  }, [])
 
   const allStates = useMemo(
     () => [...history, currentState],

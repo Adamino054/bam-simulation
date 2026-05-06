@@ -46,21 +46,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 export function DecisionPanel() {
-  const {
-    currentState,
-    pendingAction,
-    setPendingAction,
-    benchmarkRate,
-    previewOutcome,
-    isTransitioning,
-  } = useGameStore(s => ({
-    currentState:     s.currentState,
-    pendingAction:    s.pendingAction,
-    setPendingAction: s.setPendingAction,
-    benchmarkRate:    s.benchmarkRate,
-    previewOutcome:   s.previewOutcome,
-    isTransitioning:  s.isTransitioning,
-  }))
+  const currentState = useGameStore(s => s.currentState)
+  const pendingAction = useGameStore(s => s.pendingAction)
+  const setPendingAction = useGameStore(s => s.setPendingAction)
+  const benchmarkRate = useGameStore(s => s.benchmarkRate)
+  const previewOutcome = useGameStore(s => s.previewOutcome)
+  const isTransitioning = useGameStore(s => s.isTransitioning)
 
   const newPolicyRate = Math.max(
     POLICY_RATE_BOUNDS.min,
