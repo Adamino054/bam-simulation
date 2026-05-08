@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/shell/Header'
 import { Timeline } from '@/components/game/Timeline'
@@ -11,25 +11,27 @@ import { useGameStore } from '@/store/gameStore'
 
 export default function PlayPage() {
   const router = useRouter()
-  const { status, scenario, _hasHydrated } = useGameStore(s => ({
-    status: s.status,
-    scenario: s.scenario,
-    _hasHydrated: s._hasHydrated,
-  }))
+  const [mounted, setMounted] = useState(false)
+
+  const status   = useGameStore(s => s.status)
+  const scenario = useGameStore(s => s.scenario)
 
   useEffect(() => {
-    // Attendre la fin de la rehydration avant de rediriger
-    if (!_hasHydrated) return
+    setMounted(true)
+  }, [])
 
+  useEffect(() => {
+    if (!mounted) return
     if (status === 'finished') {
       router.push('/debrief')
     } else if (status === 'menu' || !scenario) {
       router.push('/')
     }
-  }, [status, scenario, router, _hasHydrated])
+    // router exclu des deps intentionnellement — l'instance change à chaque render dans Next.js 14
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, status, scenario])
 
-  // Splash de chargement pendant la rehydration localStorage
-  if (!_hasHydrated) {
+  if (!mounted) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"

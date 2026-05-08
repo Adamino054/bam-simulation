@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import {
   ResponsiveContainer,
   LineChart,
@@ -89,10 +90,12 @@ const AXIS_STYLE = {
 }
 
 export function EconomyChart() {
-  const { history, currentState } = useGameStore(s => ({
-    history:      s.history,
-    currentState: s.currentState,
-  }))
+  const { history, currentState } = useGameStore(
+    useShallow(s => ({
+      history:      s.history,
+      currentState: s.currentState,
+    }))
+  )
 
   const data = useMemo(
     () => buildData(history, currentState),

@@ -1,11 +1,14 @@
 'use client'
 
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { Stepper } from '@/components/ui/Stepper'
 import { TurnButton } from './TurnButton'
 import { fmtPct, fmtBp } from '@/lib/format'
 import { POLICY_RATE_BOUNDS, RESERVE_REQ_BOUNDS, MARKET_OPS_OPTIONS } from '@/lib/constants'
+import { computeTaylorRate } from '@/engine/models/taylorRule'
+import { simulateN } from '@/engine/simulator'
 
 const RATE_CHANGE_OPTIONS = [
   { value: -100, label: '−100' },
@@ -49,18 +52,20 @@ export function DecisionPanel() {
   const {
     currentState,
     pendingAction,
+    activeShocks,
+    seed,
     setPendingAction,
-    benchmarkRate,
-    previewOutcome,
     isTransitioning,
-  } = useGameStore(s => ({
-    currentState:     s.currentState,
-    pendingAction:    s.pendingAction,
-    setPendingAction: s.setPendingAction,
-    benchmarkRate:    s.benchmarkRate,
-    previewOutcome:   s.previewOutcome,
-    isTransitioning:  s.isTransitioning,
-  }))
+  } = useGameStore(
+    useShallow(s => ({
+      currentState:     s.currentState,
+      pendingAction:    s.pendingAction,
+      activeShocks:     s.activeShocks,
+      seed:             s.seed,
+      setPendingAction: s.setPendingAction,
+      isTransitioning:  s.isTransitioning,
+    }))
+  )
 
   const newPolicyRate = Math.max(
     POLICY_RATE_BOUNDS.min,
@@ -71,10 +76,14 @@ export function DecisionPanel() {
     currentState.reserveRequirement + pendingAction.reserveRequirementChangeBp / 100,
   )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const taylor  = useMemo(() => benchmarkRate(), [benchmarkRate])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const preview = useMemo(() => previewOutcome(4), [previewOutcome])
+  const taylor = useMemo(
+    () => computeTaylorRate(currentState.inflation, currentState.outputGap),
+    [currentState],
+  )
+  const preview = useMemo(
+    () => simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000),
+    [currentState, pendingAction, activeShocks, seed],
+  )
 
   const taylorDiff = newPolicyRate - taylor
 
@@ -92,11 +101,20 @@ export function DecisionPanel() {
       {/* En-tête */}
       <div
         className="px-4 py-3 flex items-center justify-between"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        style={{
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'linear-gradient(to right, rgba(180,25,35,0.06), transparent)',
+        }}
       >
-        <span className="label-caps" style={{ color: 'var(--accent-primary)', letterSpacing: '0.1em' }}>
-          Décision — T{currentState.quarter + 2}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full animate-pulse-soft"
+            style={{ backgroundColor: 'var(--accent-primary)' }}
+          />
+          <span className="label-caps" style={{ color: 'var(--accent-primary)', letterSpacing: '0.1em' }}>
+            Décision — T{currentState.quarter + 2}
+          </span>
+        </div>
         <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
           en bp
         </span>
@@ -140,7 +158,14 @@ export function DecisionPanel() {
           {/* Taylor benchmark */}
           <div
             className="flex items-center justify-between px-2.5 py-1.5 rounded"
-            style={{ backgroundColor: 'var(--bg-elevated)' }}
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              borderLeft: `2px solid ${
+                Math.abs(taylorDiff) > 1 ? 'var(--data-warning)'
+                : Math.abs(taylorDiff) >= 0.1 ? 'var(--border-strong)'
+                : 'var(--data-positive)'
+              }`,
+            }}
           >
             <span className="label-caps">Règle de Taylor</span>
             <div className="flex items-center gap-2">
@@ -207,27 +232,31 @@ export function DecisionPanel() {
 
         {/* ── Projection ── */}
         <div
-          className="rounded px-3 py-2.5 flex flex-col gap-2"
-          style={{ backgroundColor: 'var(--bg-elevated)' }}
+          className="rounded flex flex-col gap-2 overflow-hidden"
+          style={{
+            border: '1px solid var(--border-subtle)',
+            background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-panel) 100%)',
+          }}
         >
-          <p className="label-caps">Projection à +4 trimestres</p>
-          <div className="grid grid-cols-2 gap-y-1.5">
-            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
-            <span className="text-xs font-mono tabular text-right" style={{ color: 'var(--text-primary)' }}>
-              {fmtPct(preview.inflation)}
-            </span>
-            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Output gap</span>
-            <span className="text-xs font-mono tabular text-right" style={{ color: 'var(--text-primary)' }}>
-              {fmtPct(preview.outputGap)}
-            </span>
-            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Taux débiteur</span>
-            <span className="text-xs font-mono tabular text-right" style={{ color: 'var(--text-primary)' }}>
-              {fmtPct(preview.lendingRate)}
-            </span>
+          <div
+            className="px-3 py-2 flex items-center justify-between"
+            style={{ borderBottom: '1px solid var(--border-subtle)' }}
+          >
+            <p className="label-caps">Projection +4 trimestres</p>
+            <span className="label-caps" style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>indicatif</span>
           </div>
-          <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)', fontSize: '10px' }}>
-            Hors nouveaux chocs. À titre indicatif.
-          </p>
+          <div className="px-3 pb-2.5 grid grid-cols-2 gap-y-2">
+            {[
+              { label: 'Inflation',    value: fmtPct(preview.inflation),   color: Math.abs(preview.inflation - 2) < 0.5 ? 'var(--data-positive)' : 'var(--data-warning)' },
+              { label: 'Output gap',  value: fmtPct(preview.outputGap),   color: 'var(--text-primary)' },
+              { label: 'Taux débit.', value: fmtPct(preview.lendingRate), color: 'var(--text-primary)' },
+            ].map(row => (
+              <>
+                <span key={`${row.label}-l`} className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+                <span key={`${row.label}-v`} className="text-xs font-mono tabular text-right" style={{ color: row.color }}>{row.value}</span>
+              </>
+            ))}
+          </div>
         </div>
 
         {/* ── Bouton ── */}

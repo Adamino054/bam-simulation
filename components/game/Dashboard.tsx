@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { MetricCard } from '@/components/ui/MetricCard'
 import { InlineKatex } from '@/components/ui/InlineKatex'
@@ -22,10 +23,12 @@ const EconomyChart = dynamic(
 )
 
 export function Dashboard() {
-  const { currentState, history } = useGameStore(s => ({
-    currentState: s.currentState,
-    history:      s.history,
-  }))
+  const { currentState, history } = useGameStore(
+    useShallow(s => ({
+      currentState: s.currentState,
+      history:      s.history,
+    }))
+  )
 
   const prev = history[history.length - 1]
 

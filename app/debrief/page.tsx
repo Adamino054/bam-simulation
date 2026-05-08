@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useGameStore } from '@/store/gameStore'
@@ -25,20 +26,29 @@ const GRADE_COLOR: Record<string, string> = {
 
 export default function DebriefPage() {
   const router = useRouter()
-  const { history, currentState, scenario, status, reset, startGame, _hasHydrated } = useGameStore(s => ({
-    history: s.history,
-    currentState: s.currentState,
-    scenario: s.scenario,
-    status: s.status,
-    reset: s.reset,
-    startGame: s.startGame,
-    _hasHydrated: s._hasHydrated,
-  }))
+  const [mounted, setMounted] = useState(false)
+
+  const { history, currentState, scenario, status, reset, startGame } = useGameStore(
+    useShallow(s => ({
+      history:      s.history,
+      currentState: s.currentState,
+      scenario:     s.scenario,
+      status:       s.status,
+      reset:        s.reset,
+      startGame:    s.startGame,
+    }))
+  )
 
   useEffect(() => {
-    if (!_hasHydrated) return
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     if (status === 'menu' || !scenario) router.push('/')
-  }, [status, scenario, router, _hasHydrated])
+    // router exclu des deps intentionnellement
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted, status, scenario])
 
   const allStates = useMemo(
     () => [...history, currentState],
@@ -47,7 +57,7 @@ export default function DebriefPage() {
 
   const score = useMemo(() => computeScore(allStates), [allStates])
 
-  if (!_hasHydrated) {
+  if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-base)' }}>
         <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>Chargement…</p>

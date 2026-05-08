@@ -3,46 +3,84 @@
 @tailwind utilities;
 
 /* =====================================================
-   DESIGN TOKENS — Central Bank Simulator
+   DESIGN SYSTEM — Central Bank Simulator
+   Tokens CSS pour le thème Dark/Light + CNCB Palette
+   Version: 2.0
    ===================================================== */
 
+/* ── Dark Mode (default) ───────────────────────────────────── */
 :root {
+  /* Background */
   --bg-base:        #0E0F12;
   --bg-panel:       #14161A;
   --bg-elevated:    #1C1F26;
   --bg-hover:       #242830;
+  --bg-active:      #2C3038;
+  --bg-overlay:     rgba(14, 15, 18, 0.85);
+
+  /* Text */
   --text-primary:   #F0F0EA;
   --text-secondary: #9A9B9B;
   --text-tertiary:  #5E6066;
+  --text-inverse:   #141418;
+  --text-link:      #B41923;
+
+  /* Border */
   --border-subtle:  rgba(240, 240, 234, 0.05);
   --border-default: rgba(240, 240, 234, 0.10);
   --border-strong:  rgba(240, 240, 234, 0.18);
-
+  --border-focus:   rgba(180, 25, 35, 0.5);
+  
+  /* Accent */
   --accent-primary: #B41923;
+  --accent-primary-rgb: 180, 25, 35;
   --accent-warm:    #C9A86A;
   --accent-cool:    #5C7E92;
+  --accent-gold:    #C9A86A;
 
-  --data-positive: #4A9D7C;
-  --data-negative: #C25450;
-  --data-neutral:  #9A9B9B;
-  --data-warning:  #C9A86A;
+  /* Data/Semantic */
+  --data-positive:  #4A9D7C;
+  --data-negative:  #C25450;
+  --data-neutral:   #9A9B9B;
+  --data-warning:   #C9A86A;
+  --data-info:      #5C7E92;
 }
 
+/* ── Light Mode ───────────────────────────────────────────────── */
 .light {
   --bg-base:        #F8F8F4;
   --bg-panel:       #FFFFFF;
   --bg-elevated:    #F0F0EC;
   --bg-hover:       #E6E6E0;
+  --bg-active:      #DDDCD6;
+  --bg-overlay:     rgba(248, 248, 244, 0.92);
+
   --text-primary:   #141418;
   --text-secondary: #4E4E54;
   --text-tertiary:  #888890;
+  --text-inverse:   #F0F0EA;
+  --text-link:      #8B131B;
+
   --border-subtle:  rgba(20, 20, 24, 0.06);
   --border-default: rgba(20, 20, 24, 0.10);
   --border-strong:  rgba(20, 20, 24, 0.18);
+  --border-focus:   rgba(180, 25, 35, 0.4);
+
+  --accent-primary: #B41923;
+  --accent-primary-rgb: 180, 25, 35;
+  --accent-warm:    #A68A4F;
+  --accent-cool:    #4A6574;
+  --accent-gold:    #A68A4F;
+
+  --data-positive:  #3A8B6A;
+  --data-negative:  #B54540;
+  --data-neutral:   #6E6E74;
+  --data-warning:   #A68A4F;
+  --data-info:      #4A6574;
 }
 
 /* =====================================================
-   BASE
+   BASE STYLES
    ===================================================== */
 
 @layer base {
@@ -54,48 +92,69 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
   }
 
   body {
-    background-color: var(--bg-base);
-    color: var(--text-primary);
-    font-family: var(--font-inter), system-ui, sans-serif;
+    @apply bg-bg-base text-text-primary antialiased;
+    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
     font-size: 15px;
     line-height: 1.6;
   }
 
+  /* Focus visible */
   :focus-visible {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 2px;
+    @apply outline-none;
+    box-shadow: 0 0 0 2px var(--border-focus);
     border-radius: 2px;
   }
 
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    background: var(--border-default);
-    border-radius: 10px;
+  /* Selection */
+  ::selection {
+    background-color: rgba(180, 25, 35, 0.3);
+    color: var(--text-primary);
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
-  /* KaTeX override */
-  .katex { font-size: 0.85em !important; }
+  /* Scrollbar custom */
+  ::-webkit-scrollbar { 
+    width: 5px; 
+    height: 5px; 
+  }
+  ::-webkit-scrollbar-track { 
+    background: transparent; 
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full;
+    background: var(--border-default);
+  }
+  ::-webkit-scrollbar-thumb:hover { 
+    background: var(--border-strong); 
+  }
+
+  /* KaTeX overrides */
+  .katex { 
+    font-size: 0.85em !important; 
+  }
+  .katex-display { 
+    margin: 0.5em 0 !important; 
+  }
 }
 
 /* =====================================================
-   UTILITIES
+   COMPONENT UTILITIES
    ===================================================== */
 
-@layer utilities {
-  /* Label small-caps institutionnel */
+@layer components {
+  /* Label institutionnel small-caps */
   .label-caps {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-tertiary);
+    @apply text-[10px] font-semibold uppercase tracking-widest text-text-tertiary;
     font-variant-numeric: tabular-nums;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-feature-settings: "tnum";
+  }
+
+  /* Label badge */
+  .label-badge {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider;
   }
 
   /* Titres éditoriaux Fraunces */
@@ -110,27 +169,166 @@
     font-weight: 600;
   }
 
-  /* Tabular nums helpers */
+  /* Container system */
+  .container-base {
+    @apply w-full max-w-[1440px] mx-auto;
+    padding-left: clamp(1rem, 3vw, 2.5rem);
+    padding-right: clamp(1rem, 3vw, 2.5rem);
+  }
+
+  /* Card base */
+  .card-base {
+    @apply bg-bg-panel rounded-md border border-border-default;
+  }
+
+  /* Card hoverable */
+  .card-hover {
+    @apply card-base transition-colors duration-200;
+  }
+  .card-hover:hover {
+    @apply bg-bg-elevated border-border-strong;
+  }
+
+  /* Section divider */
+  .section-divider {
+    @apply h-px bg-border-subtle my-4 -mx-4;
+  }
+
+  /* Tabular numbers */
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }
 
-  /* Container max-width */
-  .max-w-container {
-    max-width: 1440px;
+  /* Skeleton/Shimmer loading */
+  .skeleton {
+    @apply bg-bg-elevated rounded animate-pulse;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
   }
 
-  .container-padding {
-    padding-left:  clamp(1rem, 3vw, 2.5rem);
-    padding-right: clamp(1rem, 3vw, 2.5rem);
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
   }
 
-  /* Reduced motion */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      transition-duration: 0.01ms !important;
+  /* Toast notification base */
+  .toast-base {
+    @apply flex items-center gap-2.5 px-4 py-3 rounded-md text-sm shadow-lg;
+    animation: toast-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes toast-in {
+    from { 
+      opacity: 0; 
+      transform: translateY(-10px); 
     }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
+  /* Progress bar base */
+  .progress-bar {
+    @apply h-1.5 rounded-full bg-bg-hover overflow-hidden;
+  }
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-700;
+    background-color: var(--accent-primary);
+  }
+
+  /* Tooltip style */
+  .tooltip-content {
+    @apply rounded-md px-3 py-2.5 text-xs shadow-2xl max-w-xs;
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+  }
+
+  /* Metric card grid */
+  .metric-grid {
+    @apply grid grid-cols-2 xl:grid-cols-4 gap-2;
+  }
+
+  /* Game layout */
+  .game-layout {
+    @apply grid grid-cols-12 gap-3 items-start;
+  }
+
+  .game-sidebar-left {
+    @apply col-span-3 hidden lg:flex flex-col gap-3;
+  }
+
+  .game-main {
+    @apply col-span-12 lg:col-span-6 flex flex-col gap-3;
+  }
+
+  .game-sidebar-right {
+    @apply col-span-12 lg:col-span-3;
+  }
+}
+
+@layer utilities {
+  /* Container padding responsive */
+  .container-padding {
+    padding-left:  clamp(1rem, 3vw, 2rem);
+    padding-right: clamp(1rem, 3vw, 2rem);
+  }
+
+  /* Text colors via CSS vars */
+  .text-text-primary { color: var(--text-primary); }
+  .text-text-secondary { color: var(--text-secondary); }
+  .text-text-tertiary { color: var(--text-tertiary); }
+  .text-accent-primary { color: var(--accent-primary); }
+  
+  .bg-bg-base { background-color: var(--bg-base); }
+  .bg-bg-panel { background-color: var(--bg-panel); }
+  .bg-bg-elevated { background-color: var(--bg-elevated); }
+  .bg-bg-hover { background-color: var(--bg-hover); }
+  .bg-bg-active { background-color: var(--bg-active); }
+  
+  .border-border-subtle { border-color: var(--border-subtle); }
+  .border-border-default { border-color: var(--border-default); }
+  .border-border-strong { border-color: var(--border-strong); }
+  
+  /* Data colors */
+  .text-data-positive { color: var(--data-positive); }
+  .text-data-negative { color: var(--data-negative); }
+  .text-data-neutral { color: var(--data-neutral); }
+  .text-data-warning { color: var(--data-warning); }
+  
+  .bg-data-positive { background-color: var(--data-positive); }
+  .bg-data-negative { background-color: var(--data-negative); }
+  .bg-data-neutral { background-color: var(--data-neutral); }
+  .bg-data-warning { background-color: var(--data-warning); }
+
+  /* Accessibility helpers */
+  .visually-hidden,
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

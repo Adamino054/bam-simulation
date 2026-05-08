@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { ShockBannerList } from './ShockBannerList'
 import { HistoryDrawer } from './HistoryDrawer'
@@ -47,11 +48,13 @@ function generateNarrative(state: {
 
 export function LeftPanel() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const { currentState, history, activeShocks } = useGameStore(s => ({
-    currentState: s.currentState,
-    history: s.history,
-    activeShocks: s.activeShocks,
-  }))
+  const { currentState, history, activeShocks } = useGameStore(
+    useShallow(s => ({
+      currentState: s.currentState,
+      history:      s.history,
+      activeShocks: s.activeShocks,
+    }))
+  )
 
   const narrative = generateNarrative(currentState)
 

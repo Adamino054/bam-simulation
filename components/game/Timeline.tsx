@@ -1,67 +1,143 @@
 'use client'
 
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { TOTAL_QUARTERS } from '@/lib/constants'
 import { fmtQuarter } from '@/lib/format'
+import { Sun, CloudRain, Snowflake, Leaf } from 'lucide-react'
+
+// ── Season data for Morocco ──────────────────────────────────
+const SEASONS: Record<number, { label: string; icon: any; color: string }> = {
+  1: { label: 'Ramadan & Semis', icon: Sun, color: '#C9A86A' },
+  2: { label: 'Tourisme & Aid', icon: CloudRain, color: '#4A9D7C' },
+  3: { label: 'Récolte & Aid', icon: Leaf, color: '#5C7E92' },
+  4: { label: 'Budget & Hiver', icon: Snowflake, color: '#B41923' },
+}
 
 export function Timeline() {
-  const { currentState } = useGameStore(s => ({
-    currentState: s.currentState,
-  }))
-
+  const currentState = useGameStore(s => s.currentState)
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  
   const currentQ = currentState.quarter
   const pct = Math.round(((currentQ + 1) / TOTAL_QUARTERS) * 100)
 
+  const getSeason = (qIdx: number) => SEASONS[(qIdx % 4) + 1]
+
   return (
     <div className="flex flex-col items-center gap-2 w-full max-w-lg">
-      {/* Label */}
+      {/* Labels */}
       <div className="flex items-center gap-3">
-        <span
-          className="font-mono text-xs tabular"
-          style={{ color: 'var(--accent-primary)', fontWeight: 600 }}
-        >
+        <span className="font-mono text-xs font-semibold tabular" style={{ color: 'var(--accent-primary)' }}>
           {fmtQuarter(currentState.date.year, currentState.date.q)}
         </span>
-        <span style={{ color: 'var(--border-default)' }}>·</span>
-        <span className="label-caps">
-          Trimestre {currentQ + 1} / {TOTAL_QUARTERS}
-        </span>
-        <span style={{ color: 'var(--border-default)' }}>·</span>
-        <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-          {pct}&nbsp;% du mandat
-        </span>
+        <span className="text-text-tertiary">·</span>
+        <span className="label-caps">Trimestre {currentQ + 1} / {TOTAL_QUARTERS}</span>
+        <span className="text-text-tertiary">·</span>
+        <span className="label-caps text-text-tertiary">{pct}% du mandat</span>
       </div>
 
-      {/* Barre de 20 dots */}
-      <div
-        className="flex items-center gap-[3px]"
-        role="progressbar"
-        aria-valuenow={currentQ + 1}
-        aria-valuemin={1}
-        aria-valuemax={TOTAL_QUARTERS}
-        aria-label={`Trimestre ${currentQ + 1} sur ${TOTAL_QUARTERS}`}
-      >
-        {Array.from({ length: TOTAL_QUARTERS }, (_, i) => {
-          const isPast    = i < currentQ
-          const isCurrent = i === currentQ
+      {/* Progress bar */}
+      <div className="w-full relative">
+        <div
+          className="h-2.5 rounded-full overflow-hidden"
+          style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}
+        >
+          <motion.div
+            className="h-full rounded-full"
+            style={{
+              background: 'linear-gradient(90deg, rgba(180,25,35,0.7) 0%, #B41923 100%)',
+              boxShadow: '2px 0 10px rgba(180,25,35,0.5)',
+            }}
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          />
+        </div>
 
-          return (
-            <div
-              key={i}
-              className="rounded-full transition-all duration-300"
+        {/* Year markers */}
+        <div className="flex justify-between mt-1 px-0">
+          {['T1','T2','T3','T4','T5'].map((y, i) => (
+            <span
+              key={y}
+              className="label-caps"
               style={{
-                width:  isCurrent ? '10px' : '5px',
-                height: isCurrent ? '6px'  : '5px',
-                backgroundColor: isCurrent
-                  ? 'var(--accent-primary)'
-                  : isPast
-                  ? 'var(--text-tertiary)'
-                  : 'var(--border-default)',
-                flexShrink: 0,
+                fontSize: '8px',
+                color: i < Math.ceil(currentQ / 4) ? 'var(--text-tertiary)' : 'var(--border-default)',
+                transform: i === 4 ? 'translateX(50%)' : i === 0 ? 'translateX(-50%)' : 'none',
               }}
-            />
-          )
-        })}
+            >
+              {y}
+            </span>
+          ))}
+        </div>
+
+        {/* Dots */}
+        <div className="flex items-center justify-between mt-1">
+          {Array.from({ length: TOTAL_QUARTERS }, (_, i) => {
+            const isPast    = i < currentQ
+            const isCurrent = i === currentQ
+            const season    = getSeason(i)
+            const isHovered = hoveredIdx === i
+
+            return (
+              <div
+                key={i}
+                className="relative flex flex-col items-center"
+                onMouseEnter={() => setHoveredIdx(i)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
+                <motion.div
+                  animate={{
+                    scale: isCurrent ? 1.6 : isHovered ? 1.3 : 1,
+                    backgroundColor: isCurrent
+                      ? '#B41923'
+                      : isPast
+                        ? 'var(--text-tertiary)'
+                        : 'var(--border-default)',
+                  }}
+                  className="rounded-full cursor-pointer"
+                  style={{
+                    width:     isCurrent ? 9  : 5,
+                    height:    isCurrent ? 9  : 5,
+                    boxShadow: isCurrent ? '0 0 10px rgba(180,25,35,0.7)' : 'none',
+                  }}
+                />
+
+                {isHovered && (
+                  <div
+                    className="absolute bottom-full mb-2 z-50 w-36 p-2 rounded-md text-xs"
+                    style={{
+                      backgroundColor: 'var(--bg-elevated)',
+                      border: '1px solid var(--border-default)',
+                      color: 'var(--text-secondary)',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5" style={{ color: season.color }}>
+                      <season.icon size={11} />
+                      <span className="font-semibold" style={{ fontSize: '10px' }}>{season.label}</span>
+                    </div>
+                    <span style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>
+                      Trimestre {i + 1} / {TOTAL_QUARTERS}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Current season */}
+      <div className="flex items-center gap-2 text-xs text-text-tertiary">
+        {(() => {
+          const season = SEASONS[currentState.date.q]
+          return season ? <>
+            <span style={{ color: season.color }}><season.icon size={14} /></span>
+            <span>{season.label}</span>
+          </> : null
+        })()}
       </div>
     </div>
   )

@@ -6,18 +6,21 @@ import { useGameStore } from '@/store/gameStore'
 import { SCENARIOS } from '@/engine/scenarios'
 import { computeScore } from '@/engine/scoring'
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 
 interface HeaderProps {
   variant: 'home' | 'game' | 'debrief'
 }
 
 export function Header({ variant }: HeaderProps) {
-  const { scenario, status, history, currentState } = useGameStore(s => ({
-    scenario: s.scenario,
-    status: s.status,
-    history: s.history,
-    currentState: s.currentState,
-  }))
+  const { scenario, status, history, currentState } = useGameStore(
+    useShallow(s => ({
+      scenario:     s.scenario,
+      status:       s.status,
+      history:      s.history,
+      currentState: s.currentState,
+    }))
+  )
 
   const scenarioLabel = scenario ? SCENARIOS[scenario]?.title : null
 

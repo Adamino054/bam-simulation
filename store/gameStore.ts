@@ -1,27 +1,13 @@
-/**
- * Store Zustand — état global du jeu.
- * Persisté dans localStorage à chaque avancée de trimestre.
- *
- * Note hydration : Next.js démarre côté serveur avec l'état par défaut
- * (status: 'menu'). Le middleware `persist` recharge localStorage de façon
- * asynchrone. Le flag `_hasHydrated` empêche les redirections prématurées.
- */
-
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { EconomicState, PolicyAction, Shock, ScenarioId } from '@/engine/state'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
-import { step, simulateN } from '@/engine/simulator'
-import { computeTaylorRate } from '@/engine/models/taylorRule'
+import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
 import { TOTAL_QUARTERS } from '@/lib/constants'
 
 interface GameStore {
-  // ── Hydration ─────────────────────────────────────────────────────
-  _hasHydrated: boolean
-
-  // ── État ──────────────────────────────────────────────────────────
   scenario: ScenarioId | null
   currentState: EconomicState
   history: EconomicState[]
@@ -31,17 +17,11 @@ interface GameStore {
   seed: number
   isTransitioning: boolean
 
-  // ── Actions ───────────────────────────────────────────────────────
   startGame: (scenario: ScenarioId) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
   reset: () => void
   setTransitioning: (v: boolean) => void
-  setHasHydrated: (v: boolean) => void
-
-  // ── Computed ──────────────────────────────────────────────────────
-  benchmarkRate: () => number
-  previewOutcome: (n: number) => EconomicState
 }
 
 function generateSeed(): number {
@@ -51,7 +31,6 @@ function generateSeed(): number {
 export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
-      _hasHydrated: false,
       scenario: null,
       currentState: INITIAL_STATE,
       history: [],
@@ -60,10 +39,6 @@ export const useGameStore = create<GameStore>()(
       status: 'menu',
       seed: generateSeed(),
       isTransitioning: false,
-
-      setHasHydrated(v) {
-        set({ _hasHydrated: v })
-      },
 
       startGame(scenarioId) {
         const scenario = SCENARIOS[scenarioId]
@@ -123,16 +98,6 @@ export const useGameStore = create<GameStore>()(
       setTransitioning(v) {
         set({ isTransitioning: v })
       },
-
-      benchmarkRate() {
-        const { currentState } = get()
-        return computeTaylorRate(currentState.inflation, currentState.outputGap)
-      },
-
-      previewOutcome(n) {
-        const { currentState, pendingAction, activeShocks, seed } = get()
-        return simulateN(currentState, pendingAction, activeShocks, n, seed + 50000)
-      },
     }),
     {
       name: 'cbs-game-state',
@@ -145,11 +110,6 @@ export const useGameStore = create<GameStore>()(
         status: state.status,
         seed: state.seed,
       }),
-      onRehydrateStorage: () => (_state, error) => {
-        if (!error) {
-          useGameStore.getState().setHasHydrated(true)
-        }
-      },
     },
   ),
 )

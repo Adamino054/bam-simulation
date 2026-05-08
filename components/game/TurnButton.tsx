@@ -1,15 +1,18 @@
 'use client'
 
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
 import { TOTAL_QUARTERS } from '@/lib/constants'
 
 export function TurnButton() {
-  const { advanceTurn, currentState, isTransitioning, setTransitioning } = useGameStore(s => ({
-    advanceTurn:      s.advanceTurn,
-    currentState:     s.currentState,
-    isTransitioning:  s.isTransitioning,
-    setTransitioning: s.setTransitioning,
-  }))
+  const { advanceTurn, currentState, isTransitioning, setTransitioning } = useGameStore(
+    useShallow(s => ({
+      advanceTurn:      s.advanceTurn,
+      currentState:     s.currentState,
+      isTransitioning:  s.isTransitioning,
+      setTransitioning: s.setTransitioning,
+    }))
+  )
 
   const isLast     = currentState.quarter >= TOTAL_QUARTERS - 1
   const isDisabled = isTransitioning
@@ -29,13 +32,39 @@ export function TurnButton() {
       type="button"
       onClick={handleClick}
       disabled={isDisabled}
-      className="w-full py-3 rounded font-medium text-sm transition-opacity duration-150"
+      className="w-full py-3 rounded-md font-semibold text-sm transition-all duration-200"
       style={{
-        backgroundColor: isDisabled ? 'var(--bg-elevated)' : 'var(--accent-primary)',
-        color: isDisabled ? 'var(--text-tertiary)' : '#FFFFFF',
+        background: isDisabled
+          ? 'var(--bg-elevated)'
+          : isLast
+            ? 'linear-gradient(135deg, #C9A86A 0%, #A68A4F 100%)'
+            : 'linear-gradient(135deg, #C41923 0%, #8B131B 100%)',
+        color: isDisabled ? 'var(--text-tertiary)' : '#fff',
         border: 'none',
         cursor: isDisabled ? 'not-allowed' : 'pointer',
-        letterSpacing: '0.03em',
+        letterSpacing: '0.04em',
+        boxShadow: isDisabled
+          ? 'none'
+          : isLast
+            ? '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(201,168,106,0.3)'
+            : '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(180,25,35,0.3)',
+        opacity: isDisabled ? 0.6 : 1,
+      }}
+      onMouseEnter={e => {
+        if (!isDisabled) {
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'
+          ;(e.currentTarget as HTMLElement).style.boxShadow = isLast
+            ? '0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(201,168,106,0.4)'
+            : '0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(180,25,35,0.4)'
+        }
+      }}
+      onMouseLeave={e => {
+        if (!isDisabled) {
+          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
+          ;(e.currentTarget as HTMLElement).style.boxShadow = isLast
+            ? '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(201,168,106,0.3)'
+            : '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(180,25,35,0.3)'
+        }
       }}
       aria-busy={isTransitioning}
       aria-live="polite"
@@ -43,8 +72,8 @@ export function TurnButton() {
       {isTransitioning
         ? 'Calcul en cours…'
         : isLast
-        ? 'Terminer la partie'
-        : 'Trimestre suivant →'}
+          ? 'Terminer la partie →'
+          : 'Trimestre suivant →'}
     </button>
   )
 }
