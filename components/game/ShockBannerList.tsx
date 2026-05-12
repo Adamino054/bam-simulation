@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatePresence, motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { ShockBanner } from '@/components/ui/ShockBanner'
 
@@ -16,9 +17,19 @@ export function ShockBannerList() {
 
   return (
     <div className="flex flex-col gap-2">
-      {activeShocks.map(shock => (
-        <ShockBanner key={shock.id} shock={shock} />
-      ))}
+      <AnimatePresence mode="popLayout">
+        {activeShocks.map(shock => (
+          <motion.div
+            key={shock.id}
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -50, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <ShockBanner shock={shock} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }

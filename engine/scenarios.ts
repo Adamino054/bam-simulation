@@ -14,6 +14,8 @@ export interface Scenario {
   difficulty: 'normal' | 'hard' | 'crisis'
   initialState: EconomicState
   initialShocks: Shock[]
+  /** Key starting KPI displayed on scenario card */
+  keyKpi?: string
 }
 
 export const SCENARIOS: Record<ScenarioId, Scenario> = {
@@ -26,6 +28,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 'normal',
     initialState: { ...INITIAL_STATE },
     initialShocks: [],
+    keyKpi: 'Inflation 2,2 %',
   },
 
   inflation2022: {
@@ -45,6 +48,9 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       policyRate: 2.50,
       interbankRate: 2.50,
       lendingRate: 5.50,
+      centralBankCredibility: 70,
+      currentAccountBalance: -2.5,
+      fiscalStance: 'neutral',
     },
     initialShocks: [
       {
@@ -60,6 +66,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
         externalDemandImpact: 0,
       },
     ],
+    keyKpi: 'Inflation 6,1 % ⚠',
   },
 
   covid2020: {
@@ -82,6 +89,9 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       lendingRate: 4.20,
       creditGrowth: 1.5,
       liquidityNeed: 110.0,
+      centralBankCredibility: 70,
+      currentAccountBalance: -2.5,
+      fiscalStance: 'expansionary',
     },
     initialShocks: [
       {
@@ -97,5 +107,31 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
         externalDemandImpact: -1.8,
       },
     ],
+    keyKpi: 'PIB −6,3 % ⚠',
+  },
+
+  flexibilite: {
+    id: 'flexibilite',
+    title: 'Flexibilité du dirham',
+    subtitle: 'Transition vers le change flexible',
+    description:
+      'Le Maroc engage la transition vers un régime de change flexible. Le taux de change devient volatile (±2 % par trimestre), le pass-through s\'amplifie. Vous devez gérer la volatilité tout en maintenant la stabilité des prix et la confiance des marchés.',
+    difficulty: 'hard',
+    initialState: {
+      ...INITIAL_STATE,
+      inflation: 3.5,
+      inflationCore: 2.8,
+      inflationExpected: 3.0,
+      gdpGrowth: 3.0,
+      outputGap: 0.8,
+      policyRate: 3.00,
+      interbankRate: 3.00,
+      lendingRate: 5.50,
+      centralBankCredibility: 60,
+      currentAccountBalance: -3.5,
+      fiscalStance: 'neutral',
+    },
+    initialShocks: [],
+    keyKpi: 'Change ±2 % ⚠',
   },
 }

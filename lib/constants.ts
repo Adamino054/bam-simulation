@@ -1,4 +1,5 @@
 export const TOTAL_QUARTERS = 20
+export const FREE_MODE_QUARTERS = 25
 export const YEARS = 5
 export const POTENTIAL_GROWTH = 3.0 // % annuel, croissance potentielle marocaine
 export const INFLATION_TARGET = 2.0 // % cible BAM
@@ -27,3 +28,9 @@ export const RESERVE_REQ_BOUNDS = {
 } as const
 
 export const MARKET_OPS_OPTIONS = [-20, -10, 0, 10, 20] as const // mds MAD
+
+export const FX_INTERVENTION_OPTIONS = [-10, 0, 10, 20, 30] as const // mds MAD
+
+export const EMERGENCY_LENDING_OPTIONS = [0, 5, 10, 20] as const // mds MAD
+
+export const CCYB_OPTIONS = [0, 0.5, 1.0, 1.5, 2.0, 2.5] as const // %

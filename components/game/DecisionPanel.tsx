@@ -1,14 +1,17 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TrendingDown, Minus, TrendingUp, ChevronDown } from 'lucide-react'
 import { useGameStore } from '@/store/gameStore'
 import { Stepper } from '@/components/ui/Stepper'
 import { TurnButton } from './TurnButton'
 import { fmtPct, fmtBp } from '@/lib/format'
-import { POLICY_RATE_BOUNDS, RESERVE_REQ_BOUNDS, MARKET_OPS_OPTIONS } from '@/lib/constants'
+import { POLICY_RATE_BOUNDS, FX_INTERVENTION_OPTIONS, EMERGENCY_LENDING_OPTIONS, MARKET_OPS_OPTIONS, CCYB_OPTIONS } from '@/lib/constants'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { simulateN } from '@/engine/simulator'
+import type { CommunicationStance } from '@/engine/state'
 
 const RATE_CHANGE_OPTIONS = [
   { value: -100, label: '−100' },
@@ -36,6 +39,36 @@ const MARKET_OPS_LABELS: Record<number, string> = {
   [20]:  '+20 mds',
 }
 
+const FX_LABELS: Record<number, string> = {
+  [-10]: '−10 mds',
+  [0]:   'Neutre',
+  [10]:  '+10 mds',
+  [20]:  '+20 mds',
+  [30]:  '+30 mds',
+}
+
+const EMERGENCY_LABELS: Record<number, string> = {
+  [0]:  'Inactif',
+  [5]:  '5 mds',
+  [10]: '10 mds',
+  [20]: '20 mds',
+}
+
+const CCYB_LABELS: Record<number, string> = {
+  [0]:   'Désactivé',
+  [0.5]: '0,5 %',
+  [1.0]: '1,0 %',
+  [1.5]: '1,5 %',
+  [2.0]: '2,0 %',
+  [2.5]: '2,5 %',
+}
+
+const GUIDANCE_OPTIONS: { value: CommunicationStance; label: string; sublabel: string; icon: typeof TrendingDown; tint: string }[] = [
+  { value: 'dovish',  label: 'Accommodant', sublabel: 'Signal accommodant', icon: TrendingDown, tint: 'rgba(74, 157, 124, 0.15)' },
+  { value: 'neutral', label: 'Neutre',      sublabel: 'Neutre',             icon: Minus,        tint: 'transparent' },
+  { value: 'hawkish', label: 'Restrictif',  sublabel: 'Ancre les anticipations', icon: TrendingUp, tint: 'rgba(194, 84, 80, 0.15)' },
+]
+
 function SectionDivider() {
   return <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '0 -1rem' }} />
 }
@@ -48,12 +81,64 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+function AccordionSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-2.5 transition-colors"
+        style={{
+          borderBottom: '1px solid var(--border-subtle)',
+          background: 'linear-gradient(to right, rgba(180,25,35,0.04), transparent)',
+        }}
+      >
+        <span className="label-caps" style={{ color: 'var(--accent-primary)', letterSpacing: '0.1em', fontSize: '9px' }}>
+          {title}
+        </span>
+        <motion.span
+          animate={{ rotate: isOpen ? 0 : -90 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ChevronDown size={12} style={{ color: 'var(--text-tertiary)' }} />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="px-4 py-4 flex flex-col gap-5">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export function DecisionPanel() {
   const {
     currentState,
     pendingAction,
     activeShocks,
     seed,
+    scenario,
     setPendingAction,
     isTransitioning,
   } = useGameStore(
@@ -62,6 +147,7 @@ export function DecisionPanel() {
       pendingAction:    s.pendingAction,
       activeShocks:     s.activeShocks,
       seed:             s.seed,
+      scenario:         s.scenario,
       setPendingAction: s.setPendingAction,
       isTransitioning:  s.isTransitioning,
     }))
@@ -71,21 +157,56 @@ export function DecisionPanel() {
     POLICY_RATE_BOUNDS.min,
     currentState.policyRate + pendingAction.policyRateChangeBp / 100,
   )
-  const newReserveReq = Math.max(
-    0,
-    currentState.reserveRequirement + pendingAction.reserveRequirementChangeBp / 100,
-  )
 
   const taylor = useMemo(
     () => computeTaylorRate(currentState.inflation, currentState.outputGap),
     [currentState],
   )
   const preview = useMemo(
-    () => simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000),
-    [currentState, pendingAction, activeShocks, seed],
+    () => simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000, scenario ?? undefined),
+    [currentState, pendingAction, activeShocks, seed, scenario],
   )
 
   const taylorDiff = newPolicyRate - taylor
+  const taylorAlignment = Math.max(0, Math.min(100, 100 - Math.abs(taylorDiff) * 40))
+
+  // Emergency lending availability check
+  const hasFinancialShock = activeShocks.some(s => s.type === 'financial')
+  const emergencyAvailable = currentState.liquidityNeed > 100 || hasFinancialShock
+
+  // Projection items with color coding
+  const projectionItems = [
+    {
+      label: 'Inflation',
+      value: fmtPct(preview.inflation),
+      color: Math.abs(preview.inflation - 2) < 0.5 ? 'var(--data-positive)' : Math.abs(preview.inflation - 2) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)',
+    },
+    {
+      label: 'Output gap',
+      value: fmtPct(preview.outputGap),
+      color: Math.abs(preview.outputGap) < 0.5 ? 'var(--data-positive)' : Math.abs(preview.outputGap) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)',
+    },
+    {
+      label: 'Taux débit.',
+      value: fmtPct(preview.lendingRate),
+      color: 'var(--text-primary)',
+    },
+    {
+      label: 'Chômage',
+      value: fmtPct(preview.unemployment),
+      color: preview.unemployment > 12 ? 'var(--data-negative)' : preview.unemployment > 10 ? 'var(--data-warning)' : 'var(--data-positive)',
+    },
+    {
+      label: 'Crédibilité',
+      value: `${Math.round(preview.centralBankCredibility)}`,
+      color: preview.centralBankCredibility > 70 ? 'var(--data-positive)' : preview.centralBankCredibility > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+    },
+    {
+      label: 'Solde courant',
+      value: fmtPct(preview.currentAccountBalance),
+      color: preview.currentAccountBalance > -4 ? 'var(--data-positive)' : preview.currentAccountBalance > -6 ? 'var(--data-warning)' : 'var(--data-negative)',
+    },
+  ]
 
   return (
     <div
@@ -116,12 +237,12 @@ export function DecisionPanel() {
           </span>
         </div>
         <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-          en bp
+          6 instruments
         </span>
       </div>
 
-      <div className="px-4 py-4 flex flex-col gap-5">
-
+      {/* ══ Section 1: Taux & Liquidité ══ */}
+      <AccordionSection title="TAUX & LIQUIDITÉ">
         {/* ── Taux directeur ── */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -194,7 +315,7 @@ export function DecisionPanel() {
               {fmtPct(currentState.reserveRequirement, 1)}
               {pendingAction.reserveRequirementChangeBp !== 0 && (
                 <span style={{ color: 'var(--text-tertiary)' }}>
-                  {' → '}{fmtPct(newReserveReq, 1)}
+                  {' → '}{fmtPct(Math.max(0, currentState.reserveRequirement + pendingAction.reserveRequirementChangeBp / 100), 1)}
                 </span>
               )}
             </span>
@@ -230,7 +351,167 @@ export function DecisionPanel() {
 
         <SectionDivider />
 
-        {/* ── Projection ── */}
+        {/* ── Emergency Lending Facility ── */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SectionLabel>Facilité de prêt d&apos;urgence</SectionLabel>
+            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+              mds MAD
+            </span>
+          </div>
+          {emergencyAvailable ? (
+            <Stepper
+              value={pendingAction.emergencyLendingBnMad}
+              options={EMERGENCY_LENDING_OPTIONS.map(v => ({
+                value: v,
+                label: EMERGENCY_LABELS[v] ?? String(v),
+              }))}
+              onChange={v => setPendingAction({ emergencyLendingBnMad: v })}
+              label="Facilité de prêt d'urgence en milliards MAD"
+            />
+          ) : (
+            <div
+              className="px-2.5 py-2 rounded text-xs"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                color: 'var(--text-tertiary)',
+                border: '1px solid var(--border-subtle)',
+              }}
+              title="Aucune tension de liquidité détectée"
+            >
+              Aucune tension de liquidité détectée
+            </div>
+          )}
+        </div>
+      </AccordionSection>
+
+      {/* ══ Section 2: Communication & Change ══ */}
+      <AccordionSection title="COMMUNICATION & CHANGE">
+        {/* ── Forward Guidance ── */}
+        <div className="flex flex-col gap-3">
+          <SectionLabel>Forward guidance</SectionLabel>
+          <div
+            className="flex gap-[2px] p-[3px] rounded-md"
+            role="group"
+            aria-label="Forward guidance"
+            style={{
+              backgroundColor: 'var(--bg-elevated)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            {GUIDANCE_OPTIONS.map(opt => {
+              const isActive = pendingAction.communicationStance === opt.value
+              const Icon = opt.icon
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={isActive}
+                  onClick={() => setPendingAction({ communicationStance: opt.value })}
+                  className="flex-1 flex flex-col items-center gap-1 rounded py-2 px-1 transition-all duration-100"
+                  style={{
+                    backgroundColor: isActive ? opt.tint : 'transparent',
+                    border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Icon
+                    size={14}
+                    style={{
+                      color: isActive
+                        ? opt.value === 'dovish' ? 'var(--data-positive)'
+                          : opt.value === 'hawkish' ? 'var(--data-negative)'
+                          : 'var(--text-secondary)'
+                        : 'var(--text-tertiary)',
+                    }}
+                  />
+                  <span
+                    className="text-[9px] font-semibold uppercase tracking-wider"
+                    style={{
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                    }}
+                  >
+                    {opt.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-[9px] text-center" style={{ color: 'var(--text-tertiary)' }}>
+            {GUIDANCE_OPTIONS.find(o => o.value === pendingAction.communicationStance)?.sublabel}
+          </p>
+        </div>
+
+        <SectionDivider />
+
+        {/* ── FX Intervention ── */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SectionLabel>Intervention change</SectionLabel>
+            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+              mds MAD
+            </span>
+          </div>
+          <Stepper
+            value={pendingAction.fxInterventionBnMad}
+            options={FX_INTERVENTION_OPTIONS.map(v => ({
+              value: v,
+              label: FX_LABELS[v] ?? String(v),
+            }))}
+            onChange={v => setPendingAction({ fxInterventionBnMad: v })}
+            label="Intervention sur le marché des changes en milliards MAD"
+          />
+        </div>
+      </AccordionSection>
+
+      {/* ══ Section 3: Macroprudentiel ══ */}
+      <AccordionSection title="MACROPRUDENTIEL">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <SectionLabel>Coussin en capital (CCyB)</SectionLabel>
+            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+              % RWA
+            </span>
+          </div>
+          <Stepper
+            value={pendingAction.ccybRate ?? 0}
+            options={CCYB_OPTIONS.map(v => ({
+              value: v,
+              label: CCYB_LABELS[v] ?? String(v),
+            }))}
+            onChange={v => setPendingAction({ ccybRate: v })}
+            label="Coussin de fonds propres contracyclique"
+            compact
+          />
+        </div>
+      </AccordionSection>
+
+      {/* ══ Projections & Actions ══ */}
+      <div className="px-4 py-4 flex flex-col gap-4">
+        {/* Confiance Taylor meter */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <span className="label-caps">Confiance Taylor</span>
+            <span className="font-mono text-xs tabular" style={{
+              color: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+            }}>
+              {Math.round(taylorAlignment)} %
+            </span>
+          </div>
+          <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
+            <div
+              className="h-1 rounded-full transition-all duration-300"
+              style={{
+                width: `${taylorAlignment}%`,
+                backgroundColor: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+              }}
+            />
+          </div>
+        </div>
+
+        <SectionDivider />
+
+        {/* ── 6-variable projection ── */}
         <div
           className="rounded flex flex-col gap-2 overflow-hidden"
           style={{
@@ -245,23 +526,18 @@ export function DecisionPanel() {
             <p className="label-caps">Projection +4 trimestres</p>
             <span className="label-caps" style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>indicatif</span>
           </div>
-          <div className="px-3 pb-2.5 grid grid-cols-2 gap-y-2">
-            {[
-              { label: 'Inflation',    value: fmtPct(preview.inflation),   color: Math.abs(preview.inflation - 2) < 0.5 ? 'var(--data-positive)' : 'var(--data-warning)' },
-              { label: 'Output gap',  value: fmtPct(preview.outputGap),   color: 'var(--text-primary)' },
-              { label: 'Taux débit.', value: fmtPct(preview.lendingRate), color: 'var(--text-primary)' },
-            ].map(row => (
-              <>
-                <span key={`${row.label}-l`} className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
-                <span key={`${row.label}-v`} className="text-xs font-mono tabular text-right" style={{ color: row.color }}>{row.value}</span>
-              </>
+          <div className="px-3 pb-2.5 grid grid-cols-2 gap-y-2 gap-x-4">
+            {projectionItems.map(row => (
+              <div key={row.label} className="flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
+                <span className="text-xs font-mono tabular" style={{ color: row.color }}>{row.value}</span>
+              </div>
             ))}
           </div>
         </div>
 
         {/* ── Bouton ── */}
         <TurnButton />
-
       </div>
     </div>
   )

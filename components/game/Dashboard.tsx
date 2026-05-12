@@ -48,10 +48,32 @@ export function Dashboard() {
     () => [...history.map(s => s.outputGap), currentState.outputGap].slice(-10),
     [history, currentState],
   )
+  const credibilityHistory = useMemo(
+    () => [...history.map(s => s.centralBankCredibility), currentState.centralBankCredibility].slice(-10),
+    [history, currentState],
+  )
+  const currentAccountHistory = useMemo(
+    () => [...history.map(s => s.currentAccountBalance), currentState.currentAccountBalance].slice(-10),
+    [history, currentState],
+  )
+  const nplHistory = useMemo(
+    () => [...history.map(s => s.nplRatio ?? 7.0), currentState.nplRatio ?? 7.0].slice(-10),
+    [history, currentState],
+  )
+
+  const credColor =
+    currentState.centralBankCredibility > 70 ? '#4A9D7C' :
+    currentState.centralBankCredibility > 40 ? '#C9A86A' :
+    '#C25450'
+
+  const caColor =
+    currentState.currentAccountBalance > -4 ? '#4A9D7C' :
+    currentState.currentAccountBalance > -6 ? '#C9A86A' :
+    '#C25450'
 
   return (
     <div className="flex flex-col gap-3">
-      {/* MetricCards */}
+      {/* MetricCards row 1 */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
         <MetricCard
           label="Inflation"
@@ -109,6 +131,57 @@ export function Dashboard() {
               <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Output gap (ỹ)</p>
               <p>Écart entre production observée et potentielle. Positif = surchauffe.</p>
               <InlineKatex>{'\\tilde{y}_t = \\rho\\tilde{y}_{t-1} - \\sigma(i^D - \\pi^e) + \\delta\\tilde{y}^*'}</InlineKatex>
+            </div>
+          }
+        />
+      </div>
+
+      {/* MetricCards row 2: new metrics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <MetricCard
+          label="Crédibilité BAM"
+          value={currentState.centralBankCredibility}
+          unit=""
+          precision={0}
+          delta={prev ? currentState.centralBankCredibility - prev.centralBankCredibility : undefined}
+          history={credibilityHistory}
+          accentColor={credColor}
+          tooltipContent={
+            <div className="space-y-1.5">
+              <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Crédibilité (0–100)</p>
+              <p>Indice de confiance des agents dans la politique de BAM.</p>
+              <p>{"Augmente quand l'inflation reste proche de 2 %. Diminue en cas de déviation >2 pt ou de reversal de politique."}</p>
+            </div>
+          }
+        />
+        <MetricCard
+          label="Solde courant"
+          value={currentState.currentAccountBalance}
+          unit="% PIB"
+          delta={prev ? currentState.currentAccountBalance - prev.currentAccountBalance : undefined}
+          history={currentAccountHistory}
+          accentColor={caColor}
+          tooltipContent={
+            <div className="space-y-1.5">
+              <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Solde courant (% PIB)</p>
+              <p>Balance des échanges courants. Zone de confort : −4 % à 0 %.</p>
+              <p>Un déficit {">"} 6 % déclenche une prime de risque automatique.</p>
+            </div>
+          }
+        />
+        <MetricCard
+          label="Créances douteuses"
+          value={currentState.nplRatio ?? 7.0}
+          unit="%"
+          invertDelta
+          delta={prev ? (currentState.nplRatio ?? 7.0) - (prev.nplRatio ?? 7.0) : undefined}
+          history={nplHistory}
+          accentColor={currentState.nplRatio > 10.0 ? 'var(--data-negative)' : currentState.nplRatio > 8.0 ? 'var(--data-warning)' : 'var(--data-positive)'}
+          tooltipContent={
+            <div className="space-y-1.5">
+              <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Créances en souffrance (NPL)</p>
+              <p>Indice de stabilité financière. Les défauts de crédit étouffent le prêt bancaire.</p>
+              <p>Augmente avec les taux d&apos;intérêt élevés et les récessions économiques.</p>
             </div>
           }
         />

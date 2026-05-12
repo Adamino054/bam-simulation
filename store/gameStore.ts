@@ -5,7 +5,7 @@ import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
-import { TOTAL_QUARTERS } from '@/lib/constants'
+import { TOTAL_QUARTERS, FREE_MODE_QUARTERS } from '@/lib/constants'
 
 interface GameStore {
   scenario: ScenarioId | null
@@ -16,12 +16,18 @@ interface GameStore {
   status: 'menu' | 'playing' | 'finished'
   seed: number
   isTransitioning: boolean
+  freeMode: boolean
+  /** Track previous policy rate change for credibility reversal detection */
+  previousPolicyRateChangeBp: number
+  /** Track FX intervention history for credibility boost */
+  fxInterventionHistory: number[]
 
   startGame: (scenario: ScenarioId) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
   reset: () => void
   setTransitioning: (v: boolean) => void
+  setFreeMode: (v: boolean) => void
 }
 
 function generateSeed(): number {
@@ -39,6 +45,9 @@ export const useGameStore = create<GameStore>()(
       status: 'menu',
       seed: generateSeed(),
       isTransitioning: false,
+      freeMode: false,
+      previousPolicyRateChangeBp: 0,
+      fxInterventionHistory: [],
 
       startGame(scenarioId) {
         const scenario = SCENARIOS[scenarioId]
@@ -51,6 +60,8 @@ export const useGameStore = create<GameStore>()(
           status: 'playing',
           seed: generateSeed(),
           isTransitioning: false,
+          previousPolicyRateChangeBp: 0,
+          fxInterventionHistory: [],
         })
       },
 
@@ -59,13 +70,21 @@ export const useGameStore = create<GameStore>()(
       },
 
       advanceTurn() {
-        const { currentState, pendingAction, activeShocks, seed, history } = get()
-        if (currentState.quarter >= TOTAL_QUARTERS - 1) {
+        const {
+          currentState, pendingAction, activeShocks, seed, history,
+          scenario, previousPolicyRateChangeBp, fxInterventionHistory, freeMode,
+        } = get()
+        const maxQuarters = freeMode ? FREE_MODE_QUARTERS : TOTAL_QUARTERS
+        if (currentState.quarter >= maxQuarters - 1) {
           set({ status: 'finished' })
           return
         }
 
-        const result = step(currentState, pendingAction, activeShocks, seed)
+        const result = step(currentState, pendingAction, activeShocks, seed, {
+          scenarioId: scenario ?? undefined,
+          previousPolicyRateChangeBp,
+          fxInterventionHistory,
+        })
         const newActiveShocks = [
           ...activeShocks
             .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))
@@ -73,12 +92,16 @@ export const useGameStore = create<GameStore>()(
           ...result.triggeredShocks,
         ]
 
+        const newFxHistory = [...fxInterventionHistory, pendingAction.fxInterventionBnMad].slice(-4)
+
         set({
           history: [...history, currentState],
           currentState: result.newState,
           activeShocks: newActiveShocks,
           pendingAction: { ...DEFAULT_POLICY_ACTION },
-          status: result.newState.quarter >= TOTAL_QUARTERS ? 'finished' : 'playing',
+          status: result.newState.quarter >= maxQuarters ? 'finished' : 'playing',
+          previousPolicyRateChangeBp: pendingAction.policyRateChangeBp,
+          fxInterventionHistory: newFxHistory,
         })
       },
 
@@ -92,11 +115,17 @@ export const useGameStore = create<GameStore>()(
           status: 'menu',
           seed: generateSeed(),
           isTransitioning: false,
+          previousPolicyRateChangeBp: 0,
+          fxInterventionHistory: [],
         })
       },
 
       setTransitioning(v) {
         set({ isTransitioning: v })
+      },
+
+      setFreeMode(v) {
+        set({ freeMode: v })
       },
     }),
     {
@@ -109,6 +138,9 @@ export const useGameStore = create<GameStore>()(
         pendingAction: state.pendingAction,
         status: state.status,
         seed: state.seed,
+        freeMode: state.freeMode,
+        previousPolicyRateChangeBp: state.previousPolicyRateChangeBp,
+        fxInterventionHistory: state.fxInterventionHistory,
       }),
     },
   ),

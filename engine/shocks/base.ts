@@ -22,6 +22,7 @@ export interface ShockDefinition {
     outputGapImpact: number
     lendingRateImpact: number
     externalDemandImpact: number
+    currentAccountImpact?: number
   }
 }
 
@@ -58,6 +59,10 @@ export function instantiateShock(
     magnitude,
     remainingQuarters: duration,
     description: def.description,
-    ...effects,
+    inflationImpact: effects.inflationImpact,
+    outputGapImpact: effects.outputGapImpact,
+    lendingRateImpact: effects.lendingRateImpact,
+    externalDemandImpact: effects.externalDemandImpact,
+    currentAccountImpact: effects.currentAccountImpact,
   }
 }

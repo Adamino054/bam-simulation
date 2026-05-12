@@ -18,6 +18,8 @@ export interface CreditChannelInputs {
   outputGap: number             // ỹ_t
   inflationExpected: number     // π^e_t
   riskPremiumShock: number      // choc de prime de risque actif, en points de %
+  ccybRate: number              // Coussin de capital contracyclique, %
+  nplRatio: number              // Ratio de créances en souffrance, %
 }
 
 export interface CreditChannelResult {
@@ -27,22 +29,30 @@ export interface CreditChannelResult {
 
 export function computeCreditChannel(inputs: CreditChannelInputs): CreditChannelResult {
   const { lendingRatePrev, interbankRate, outputGap,
-          inflationExpected, riskPremiumShock } = inputs
-  const { lambda, bankMargin, theta0, theta1, theta2, theta3 } = PARAMS
+          inflationExpected, riskPremiumShock, ccybRate, nplRatio } = inputs
+  const { lambda, bankMargin, theta0, theta1, theta2, theta3, ccybLendingImpact, nplBase, nplCreditPenalty } = PARAMS
 
   // Ajustement partiel du taux débiteur vers son niveau cible
-  const targetRate = interbankRate + bankMargin
+  // Le CCyB augmente le coût du capital pour les banques, ce qui augmente la marge cible
+  const targetRate = interbankRate + bankMargin + (ccybRate * ccybLendingImpact)
+  
+  // Prime de risque interne des banques due aux mauvaises créances
+  const nplPremium = Math.max(0, nplRatio - nplBase) * 0.15
+
   const lendingRate =
     (1 - lambda) * lendingRatePrev +
     lambda * targetRate +
-    riskPremiumShock
+    riskPremiumShock +
+    nplPremium
 
   // Dynamique du crédit
+  // Les banques rationnent le crédit si les NPL sont élevés au-delà du niveau naturel
   const creditGrowth =
     theta0 +
     theta1 * outputGap -
     theta2 * lendingRate +
-    theta3 * inflationExpected
+    theta3 * inflationExpected -
+    (Math.max(0, nplRatio - nplBase) * nplCreditPenalty)
 
   return { lendingRate, creditGrowth }
 }

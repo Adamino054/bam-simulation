@@ -19,7 +19,7 @@ interface MetricCardProps {
   invertDelta?: boolean
 }
 
-function useCountUp(to: number, duration = 450): number {
+function useCountUp(to: number, duration = 800): number {
   const [displayed, setDisplayed] = useState(to)
   const prevRef = useRef(to)
   const rafRef  = useRef<number>(0)

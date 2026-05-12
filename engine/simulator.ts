@@ -3,17 +3,18 @@
  *
  * Séquence d'appel à chaque trimestre :
  *  1. Appliquer la décision politique (taux directeur, RO)
- *  2. Marché monétaire → TMP
+ *  2. Marché monétaire → TMP (with FX intervention + emergency lending)
  *  3. Canal du crédit → taux débiteur, croissance crédit
- *  4. Courbe IS → output gap (avec chocs de demande)
- *  5. Courbe de Phillips → inflation (avec chocs d'offre)
- *  6. Mise à jour : anticipations, chômage (Okun), croissance PIB
- *  7. Décrémenter les chocs actifs
- *  8. Tirer de nouveaux chocs aléatoires (~15 %/trimestre)
- *  9. Construire le trace pédagogique
+ *  4. Courbe IS → output gap (avec chocs de demande, guidance, fiscal)
+ *  5. Courbe de Phillips → inflation (avec chocs d'offre, guidance, credibility)
+ *  6. Mise à jour : anticipations (expectations channel), chômage (Okun), croissance PIB
+ *  7. Update credibility, current account balance, fiscal stance
+ *  8. Décrémenter les chocs actifs
+ *  9. Tirer de nouveaux chocs aléatoires
+ * 10. Construire le trace pédagogique
  */
 
-import type { EconomicState, PolicyAction, Shock, SimulationResult } from './state'
+import type { EconomicState, PolicyAction, Shock, SimulationResult, FiscalStance, ScenarioId } from './state'
 import { PARAMS, INITIAL_STATE } from './parameters'
 import { computePhillips } from './models/phillips'
 import { computeISCurve } from './models/isCurve'
@@ -24,8 +25,10 @@ import { OIL_SHOCK } from './shocks/oil'
 import { AGRICULTURAL_SHOCK } from './shocks/agricultural'
 import { EXTERNAL_DEMAND_SHOCK } from './shocks/externalDemand'
 import { RISK_PREMIUM_SHOCK } from './shocks/riskPremium'
+import { DROUGHT_SHOCK } from './shocks/drought'
+import { CAPITAL_FLIGHT_SHOCK } from './shocks/capitalFlight'
 
-const ALL_SHOCK_DEFS = [OIL_SHOCK, AGRICULTURAL_SHOCK, EXTERNAL_DEMAND_SHOCK, RISK_PREMIUM_SHOCK]
+const ALL_SHOCK_DEFS = [OIL_SHOCK, AGRICULTURAL_SHOCK, EXTERNAL_DEMAND_SHOCK, RISK_PREMIUM_SHOCK, DROUGHT_SHOCK, CAPITAL_FLIGHT_SHOCK]
 
 // Encours dépôts approximatif du système bancaire marocain (mds MAD)
 const TOTAL_DEPOSITS_APPROX = 1_500
@@ -36,8 +39,15 @@ export function step(
   action: PolicyAction,
   activeShocks: Shock[],
   seed: number,
+  options?: {
+    scenarioId?: ScenarioId
+    previousPolicyRateChangeBp?: number
+    fxInterventionHistory?: number[]
+  },
 ): SimulationResult {
   const rand = seededRandom(seed + current.quarter * 7919)
+  const scenarioId = options?.scenarioId
+  const previousPolicyRateChangeBp = options?.previousPolicyRateChangeBp ?? 0
 
   // ── 1. Nouveau taux directeur et RO ─────────────────────────────
   const newPolicyRate = Math.max(
@@ -50,7 +60,7 @@ export function step(
   )
 
   // ── 2. Marché monétaire ──────────────────────────────────────────
-  const { interbankRate, liquidityNeed } = computeMonetaryMarket({
+  const { interbankRate, liquidityNeed: rawLiquidityNeed } = computeMonetaryMarket({
     policyRate: newPolicyRate,
     liquidityNeedPrev: current.liquidityNeed,
     reserveRequirementChange: action.reserveRequirementChangeBp / 100,
@@ -58,18 +68,34 @@ export function step(
     totalDeposits: TOTAL_DEPOSITS_APPROX,
   })
 
+  // Task 1: FX intervention adds to liquidity need (positive = tightens)
+  let liquidityNeed = rawLiquidityNeed + action.fxInterventionBnMad
+
+  // Task 1: Emergency lending reduces liquidity need
+  liquidityNeed = liquidityNeed - action.emergencyLendingBnMad
+
   // ── 3. Canal du crédit ───────────────────────────────────────────
   const riskPremiumShock = activeShocks
     .filter(s => s.type === 'financial')
     .reduce((acc, s) => acc + s.lendingRateImpact, 0)
 
-  const { lendingRate, creditGrowth } = computeCreditChannel({
+  // Task 2a: Low credibility increases lending rate spread
+  const credibilitySpread = current.centralBankCredibility < 40 ? 0.3 : 0
+
+  // Task 1: Emergency lending reduces lending rate
+  const emergencyLendingEffect = -(action.emergencyLendingBnMad * 0.003)
+
+  const { lendingRate: baseLendingRate, creditGrowth } = computeCreditChannel({
     lendingRatePrev: current.lendingRate,
     interbankRate,
     outputGap: current.outputGap,
     inflationExpected: current.inflationExpected,
-    riskPremiumShock,
+    riskPremiumShock: riskPremiumShock + credibilitySpread + emergencyLendingEffect,
+    ccybRate: action.ccybRate ?? 0,
+    nplRatio: current.nplRatio ?? PARAMS.nplBase,
   })
+
+  const lendingRate = baseLendingRate
 
   // ── 4. Courbe IS ─────────────────────────────────────────────────
   const demandShockTotal = activeShocks
@@ -87,29 +113,51 @@ export function step(
     inflationExpectedPrev: current.inflationExpected,
     externalDemand: newExternalDemand,
     demandShock: demandShockTotal,
+    communicationStance: action.communicationStance,
+    fiscalStance: current.fiscalStance,
   })
 
   // ── 5. Courbe de Phillips ────────────────────────────────────────
   const agriculturalShock = activeShocks
-    .filter(s => s.type === 'supply' && s.id.startsWith('agricultural'))
+    .filter(s => s.type === 'supply' && (s.id.startsWith('agricultural') || s.id.startsWith('drought')))
     .reduce((acc, s) => acc + s.inflationImpact, 0)
 
   const supplyShock = activeShocks
-    .filter(s => s.type === 'supply' && !s.id.startsWith('agricultural'))
+    .filter(s => s.type === 'supply' && !s.id.startsWith('agricultural') && !s.id.startsWith('drought'))
     .reduce((acc, s) => acc + s.inflationImpact, 0)
+
+  // Task 1: Emergency lending inflation risk
+  const emergencyInflationRisk = action.emergencyLendingBnMad * 0.005
+
+  // Handle exchange rate for flexibilite scenario
+  let newExchangeRate = current.exchangeRate
+  if (scenarioId === 'flexibilite') {
+    // Random ±1.5% per quarter
+    const exchangeShock = (rand() - 0.5) * 3.0
+    newExchangeRate = current.exchangeRate * (1 + exchangeShock / 100)
+  }
+
+  const alphaOverride = scenarioId === 'flexibilite' ? PARAMS.alpha * 2 : undefined
 
   const { inflation, trace: phillipsTrace } = computePhillips({
     inflationExpected: current.inflationExpected,
     outputGap,
-    exchangeRate: current.exchangeRate,
-    exchangeRatePrev: current.exchangeRate, // régime de change quasi-fixe
+    exchangeRate: newExchangeRate,
+    exchangeRatePrev: current.exchangeRate,
     agriculturalShock,
-    supplyShock,
+    supplyShock: supplyShock + emergencyInflationRisk,
+    communicationStance: action.communicationStance,
+    credibility: current.centralBankCredibility,
+    alphaOverride,
   })
 
   // ── 6. Indicateurs dérivés ───────────────────────────────────────
+  // Task 2d: Expectations channel with credibility anchoring
+  const lambda_cred = (current.centralBankCredibility / 100) * 0.4
+  const phi = 0.6
+  const adaptiveExpectation = phi * current.inflationExpected + (1 - phi) * inflation
   const inflationExpected =
-    0.5 * current.inflationExpected + 0.5 * inflation
+    lambda_cred * PARAMS.piTarget + (1 - lambda_cred) * adaptiveExpectation
 
   const unemployment =
     PARAMS.unemploymentNatural - PARAMS.okunCoef * outputGap
@@ -122,18 +170,72 @@ export function step(
     PARAMS.infCoreSmoothing * current.inflationCore +
     (1 - PARAMS.infCoreSmoothing) * inflation
 
-  // ── 7. Décrémenter les chocs ─────────────────────────────────────
+  // ── 7. Update credibility, current account, fiscal stance ────────
+
+  // Task 2a: Credibility update
+  let newCredibility = current.centralBankCredibility
+  const inflationDeviation = Math.abs(inflation - PARAMS.piTarget)
+  if (inflationDeviation <= 0.5) {
+    newCredibility += 2
+  }
+  if (inflationDeviation > 2) {
+    newCredibility -= 3
+  }
+  // Policy rate reversal penalty
+  const isReversal = (previousPolicyRateChangeBp > 0 && action.policyRateChangeBp < 0) ||
+                     (previousPolicyRateChangeBp < 0 && action.policyRateChangeBp > 0)
+  if (isReversal) {
+    newCredibility -= 1
+  }
+  // FX intervention credibility boost (sustained over 2+ quarters)
+  const fxHistory = options?.fxInterventionHistory ?? []
+  if (fxHistory.length >= 2 && fxHistory.every(v => v > 0) && action.fxInterventionBnMad > 0) {
+    newCredibility = Math.min(100, newCredibility + 0.1)
+  }
+  newCredibility = clamp(newCredibility, 20, 100)
+
+  // Task 2b: Current account balance
+  const currentAccountShock = activeShocks
+    .reduce((acc, s) => acc + (s.currentAccountImpact ?? 0), 0)
+  const deltaCurrentAccount =
+    0.4 * newExternalDemand - 0.15 * inflation + 0.10 * outputGap + currentAccountShock
+  const newCurrentAccountBalance = current.currentAccountBalance + deltaCurrentAccount * 0.25 // quarterly adjustment
+
+  // Task 2c: Fiscal stance (changes every 4 quarters)
+  let newFiscalStance: FiscalStance = current.fiscalStance
+  if ((current.quarter + 1) % 4 === 0) {
+    if (outputGap > 1) newFiscalStance = 'contractionary'
+    else if (outputGap < -1) newFiscalStance = 'expansionary'
+    else newFiscalStance = 'neutral'
+  }
+
+  // Task 4: NPL dynamics (Stabilité Financière)
+  // Les NPL montent quand les taux débiteurs sont élevés ou en récession (outputGap négatif).
+  const deltaNpl =
+    PARAMS.nplSensRate * Math.max(0, lendingRate - PARAMS.rStar - PARAMS.piTarget - PARAMS.bankMargin) -
+    PARAMS.nplSensGrowth * outputGap
+  const currentNpl = current.nplRatio ?? PARAMS.nplBase
+  const newNplRatio = clamp(currentNpl + deltaNpl * 0.25, 2.0, 25.0) // Lissage trimestriel
+
+  // ── 8. Décrémenter les chocs ─────────────────────────────────────
   const updatedShocks = activeShocks
     .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))
     .filter(s => s.remainingQuarters > 0)
 
-  // ── 8. Nouveaux chocs aléatoires ─────────────────────────────────
+  // ── 9. Nouveaux chocs aléatoires ─────────────────────────────────
   const triggeredShocks: Shock[] = []
   const hasActiveShock = updatedShocks.length > 0
   const isFirstQuarter = current.quarter === 0
 
   if (!isFirstQuarter) {
     for (const def of ALL_SHOCK_DEFS) {
+      // Capital flight: conditional trigger
+      if (def.id === 'capital_flight') {
+        if (current.centralBankCredibility >= 50 && current.currentAccountBalance >= -5) {
+          continue // Skip if conditions aren't met
+        }
+      }
+
       const alreadyActive = updatedShocks.some(s => s.id.startsWith(def.id))
       if (!alreadyActive && rand() < def.probability && !hasActiveShock) {
         const shock = instantiateShock(def, rand, current.quarter)
@@ -147,7 +249,26 @@ export function step(
     }
   }
 
-  // ── 9. Nouvel état ───────────────────────────────────────────────
+  // Task 2b: Auto-trigger risk premium if current account < -6%
+  if (newCurrentAccountBalance < -6) {
+    const hasRiskShock = [...updatedShocks, ...triggeredShocks].some(s => s.id.startsWith('risk_premium'))
+    if (!hasRiskShock) {
+      triggeredShocks.push({
+        id: `risk_premium_ca_q${current.quarter}`,
+        label: 'Pression sur le solde courant',
+        type: 'financial',
+        magnitude: 0.6,
+        remainingQuarters: 2,
+        description: 'Le déficit courant dépasse −6 % du PIB, déclenchant une hausse de la prime de risque.',
+        inflationImpact: 0,
+        outputGapImpact: -0.3,
+        lendingRateImpact: 0.6,
+        externalDemandImpact: 0,
+      })
+    }
+  }
+
+  // ── 10. Nouvel état ──────────────────────────────────────────────
   const nextQ = (((current.date.q) % 4) + 1) as 1 | 2 | 3 | 4
   const nextYear = nextQ === 1 ? current.date.year + 1 : current.date.year
 
@@ -166,8 +287,12 @@ export function step(
     reserveRequirement: newReserveRequirement,
     creditGrowth: clamp(creditGrowth, -10, 30),
     liquidityNeed: clamp(liquidityNeed, 0, 300),
-    exchangeRate: current.exchangeRate,
+    nplRatio: newNplRatio,
+    exchangeRate: newExchangeRate,
     externalDemand: clamp(newExternalDemand, -5, 5),
+    centralBankCredibility: newCredibility,
+    currentAccountBalance: clamp(newCurrentAccountBalance, -15, 10),
+    fiscalStance: newFiscalStance,
   }
 
   const trace: SimulationResult['trace'] = {
@@ -207,11 +332,12 @@ export function simulateN(
   shocks: Shock[],
   n: number,
   seed: number,
+  scenarioId?: ScenarioId,
 ): EconomicState {
   let state = start
   let activeShocks = [...shocks]
   for (let i = 0; i < n; i++) {
-    const result = step(state, action, activeShocks, seed + i * 100)
+    const result = step(state, action, activeShocks, seed + i * 100, { scenarioId })
     state = result.newState
     activeShocks = [
       ...activeShocks

@@ -41,6 +41,13 @@ export const PARAMS = {
   // ── Marché monétaire ─────────────────────────────────────────────
   liquidityElasticity: 0.05, // pente : excès de besoin de liquidité → pression sur TMP
 
+  // ── Macroprudentiel (Stabilité Financière) ───────────────────────
+  ccybLendingImpact: 0.40, // 1% de CCyB en plus augmente le taux débiteur de 0.40 pt (coût du capital)
+  nplBase: 7.0,            // Taux de NPL naturel
+  nplSensRate: 0.8,        // Sensibilité du NPL au taux débiteur (taux élevé = défauts)
+  nplSensGrowth: 1.5,      // Sensibilité du NPL à l'output gap (récession = défauts)
+  nplCreditPenalty: 0.5,   // 1% de NPL en plus réduit la croissance du crédit de 0.5%
+
   // ── Loi d'Okun ───────────────────────────────────────────────────
   okunCoef:           0.40,  // coefficient Okun : 1 pt d'output gap → -0,4 pt chômage
   unemploymentNatural: 9.5,  // taux de chômage naturel (NAIRU marocain estimé)
@@ -72,7 +79,13 @@ export const INITIAL_STATE: EconomicState = {
   reserveRequirement: 4.0,
   creditGrowth: 5.0,
   liquidityNeed: 80.0,
+  nplRatio: 7.5,
 
   exchangeRate: 100.0,
   externalDemand: 0.0,
+
+  // New fields (Task 2)
+  centralBankCredibility: 70,
+  currentAccountBalance: -2.5,
+  fiscalStance: 'neutral',
 }
