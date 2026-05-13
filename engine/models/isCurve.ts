@@ -26,6 +26,8 @@ export interface ISCurveInputs {
   communicationStance?: CommunicationStance
   // Task 2c: fiscal stance
   fiscalStance?: FiscalStance
+  // Innovation financière (Kuttner & Mosser): la titrisation réduit la sensibilité au taux réel
+  sigmaOverride?: number
 }
 
 export interface ISCurveResult {
@@ -43,13 +45,17 @@ export function computeISCurve(inputs: ISCurveInputs): ISCurveResult {
   const { outputGapPrev, lendingRatePrev, inflationExpectedPrev,
           externalDemand, demandShock,
           communicationStance = 'neutral',
-          fiscalStance = 'neutral' } = inputs
+          fiscalStance = 'neutral',
+          sigmaOverride } = inputs
   const { rho, sigma, delta } = PARAMS
+
+  // Kuttner & Mosser: la titrisation peut affaiblir la transmission du taux réel
+  const effectiveSigma = sigmaOverride ?? sigma
 
   const realRate = lendingRatePrev - inflationExpectedPrev
 
   const persistenceComponent = rho * outputGapPrev
-  const realRateComponent    = -sigma * realRate
+  const realRateComponent    = -effectiveSigma * realRate
   const externalComponent    = delta * externalDemand
   const shockComponent       = demandShock
 

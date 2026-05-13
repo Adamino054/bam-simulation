@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { TableProperties, AlertTriangle } from 'lucide-react'
+import {
+  TableProperties, AlertTriangle, TrendingUp, Flame,
+  Activity, Shield, Zap, BarChart3,
+} from 'lucide-react'
 import { useGameStore } from '@/store/gameStore'
 import { ShockBannerList } from './ShockBannerList'
 import { HistoryDrawer } from './HistoryDrawer'
@@ -10,18 +13,40 @@ import { fmtPct, fmtQuarter } from '@/lib/format'
 import type { FiscalStance } from '@/engine/state'
 
 const FISCAL_LABELS: Record<FiscalStance, { label: string; color: string; bg: string }> = {
-  expansionary:    { label: 'Expansionniste',   color: '#4A9D7C', bg: 'rgba(74, 157, 124, 0.15)' },
-  neutral:         { label: 'Neutre',           color: '#9A9B9B', bg: 'rgba(154, 155, 155, 0.15)' },
-  contractionary:  { label: 'Restrictive',      color: '#C25450', bg: 'rgba(194, 84, 80, 0.15)' },
+  expansionary:   { label: 'Expansionniste', color: '#4A9D7C', bg: 'rgba(74,157,124,0.15)' },
+  neutral:        { label: 'Neutre',         color: '#9A9B9B', bg: 'rgba(154,155,155,0.15)' },
+  contractionary: { label: 'Restrictive',    color: '#C25450', bg: 'rgba(194,84,80,0.15)' },
+}
+
+const CRED_ZONES = [
+  { min: 0,  max: 25,  color: '#C25450', label: 'CRITIQUE' },
+  { min: 25, max: 50,  color: '#E8914A', label: 'FRAGILE' },
+  { min: 50, max: 75,  color: '#C9A86A', label: 'MODÉRÉE' },
+  { min: 75, max: 100, color: '#4A9D7C', label: 'SOLIDE' },
+]
+
+const BUBBLE_ZONES = [
+  { min: 0,  max: 30,  color: '#4A9D7C', label: 'NORMAL' },
+  { min: 30, max: 60,  color: '#C9A86A', label: 'SURVEILL.' },
+  { min: 60, max: 80,  color: '#E8914A', label: 'ALERTE' },
+  { min: 80, max: 100, color: '#C25450', label: 'CRITIQUE' },
+]
+
+function getEcoStatus(inflation: number, outputGap: number, credibility: number) {
+  const infDev = Math.abs(inflation - 2)
+  const gapDev = Math.abs(outputGap)
+  if (infDev > 3 || gapDev > 3 || credibility < 30)
+    return { label: 'CRISE',       color: '#C25450', bg: 'rgba(194,84,80,0.15)',  pulse: true  }
+  if (infDev > 1.5 || gapDev > 2 || credibility < 50)
+    return { label: 'ALERTE',      color: '#E8914A', bg: 'rgba(232,145,74,0.15)', pulse: true  }
+  if (infDev > 0.8 || gapDev > 1 || credibility < 70)
+    return { label: 'SURVEILLANCE', color: '#C9A86A', bg: 'rgba(201,168,106,0.15)', pulse: false }
+  return     { label: 'STABLE',    color: '#4A9D7C', bg: 'rgba(74,157,124,0.15)', pulse: false }
 }
 
 function generateNarrative(state: {
-  inflation: number
-  outputGap: number
-  externalDemand: number
-  gdpGrowth: number
-  unemployment: number
-  centralBankCredibility: number
+  inflation: number; outputGap: number; externalDemand: number
+  gdpGrowth: number; unemployment: number; centralBankCredibility: number
   currentAccountBalance: number
 }): string {
   const { inflation, outputGap, externalDemand, gdpGrowth, centralBankCredibility } = state
@@ -40,176 +65,401 @@ function generateNarrative(state: {
   }
 
   if (outputGap < -1.5) {
-    parts.push("La demande est en dessous du potentiel — l'économie sous-utilise ses capacités.")
+    parts.push("L'économie sous-utilise ses capacités.")
   } else if (outputGap > 1.5) {
-    parts.push("La demande dépasse le potentiel, source de pressions inflationnistes futures.")
+    parts.push("La demande dépasse le potentiel.")
   } else {
     parts.push("L'activité opère proche de son potentiel.")
   }
 
   if (externalDemand < -0.8) {
-    parts.push("La demande extérieure se contracte, pesant sur les exportations.")
+    parts.push("La demande extérieure se contracte.")
   } else if (gdpGrowth < 1) {
     parts.push("La croissance ralentit fortement.")
   }
 
   if (centralBankCredibility < 40) {
-    parts.push("La crédibilité de BAM est fragilisée — les anticipations risquent de se désancrer.")
+    parts.push("La crédibilité de BAM est fragilisée.")
   }
 
   return parts.join(' ')
 }
 
-function getEconomicStateColor(state: { inflation: number; outputGap: number }): string {
-  if (Math.abs(state.inflation - 2) > 3 || Math.abs(state.outputGap) > 3) return 'var(--data-negative)'
-  if (Math.abs(state.inflation - 2) > 1.5 || Math.abs(state.outputGap) > 1.5) return 'var(--data-warning)'
-  return 'var(--data-positive)'
+function ZonedBar({
+  value,
+  zones,
+  pulse = false,
+}: {
+  value: number
+  zones: { min: number; max: number; color: string; label: string }[]
+  pulse?: boolean
+}) {
+  const clamped = Math.max(0, Math.min(value, 100))
+  const activeZoneIdx = zones.findIndex(
+    (z, i) => clamped >= z.min && (i === zones.length - 1 ? clamped <= z.max : clamped < z.max)
+  )
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="relative h-3 flex gap-px" style={{ borderRadius: '3px', overflow: 'hidden' }}>
+        {zones.map((zone, i) => {
+          const span = zone.max - zone.min
+          const fill = Math.max(0, Math.min(clamped - zone.min, span))
+          const fillPct = (fill / span) * 100
+          const isActive = i === activeZoneIdx
+          return (
+            <div
+              key={i}
+              className="relative overflow-hidden"
+              style={{ flex: span, backgroundColor: `${zone.color}1A`, borderRadius: '2px' }}
+            >
+              <div
+                className={`absolute inset-y-0 left-0 transition-all duration-700${pulse && isActive ? ' animate-pulse' : ''}`}
+                style={{
+                  width: `${fillPct}%`,
+                  backgroundColor: zone.color,
+                  boxShadow: pulse && isActive && fillPct > 0 ? `0 0 8px ${zone.color}99` : 'none',
+                }}
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="flex">
+        {zones.map((zone, i) => {
+          const isActive = i === activeZoneIdx
+          return (
+            <div key={i} className="text-center" style={{ flex: zone.max - zone.min }}>
+              <span
+                style={{
+                  fontSize: '7px',
+                  fontFamily: 'monospace',
+                  color: isActive ? zone.color : 'var(--text-tertiary)',
+                  fontWeight: isActive ? 700 : 400,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {zone.label}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function MetricTile({
+  label,
+  value,
+  color,
+  icon: Icon,
+}: {
+  label: string
+  value: string
+  color?: string
+  icon?: React.ElementType
+}) {
+  return (
+    <div
+      className="rounded px-2.5 py-2 flex flex-col gap-0.5"
+      style={{
+        backgroundColor: 'var(--bg-elevated)',
+        border: '1px solid var(--border-subtle)',
+      }}
+    >
+      <div className="flex items-center gap-1 mb-0.5">
+        {Icon && <Icon size={8} style={{ color: color ?? 'var(--text-tertiary)' }} />}
+        <span
+          className="label-caps"
+          style={{ fontSize: '7.5px', color: 'var(--text-tertiary)' }}
+        >
+          {label}
+        </span>
+      </div>
+      <span
+        className="font-mono font-semibold tabular"
+        style={{ fontSize: '11px', color: color ?? 'var(--text-primary)', lineHeight: 1 }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function SectionLabel({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5 mb-2.5">
+      <Icon size={9} style={{ color: 'var(--text-tertiary)' }} />
+      <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+        {children}
+      </span>
+    </div>
+  )
 }
 
 export function LeftPanel() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { currentState, history, activeShocks } = useGameStore(
-    useShallow(s => ({
-      currentState: s.currentState,
-      history:      s.history,
-      activeShocks: s.activeShocks,
-    }))
+    useShallow(s => ({ currentState: s.currentState, history: s.history, activeShocks: s.activeShocks }))
   )
 
-  const narrative = generateNarrative(currentState)
+  const narrative  = generateNarrative(currentState)
   const fiscalMeta = FISCAL_LABELS[currentState.fiscalStance]
-  const stateColor = getEconomicStateColor(currentState)
+  const ecoStatus  = getEcoStatus(
+    currentState.inflation,
+    currentState.outputGap,
+    currentState.centralBankCredibility
+  )
 
   const credColor =
-    currentState.centralBankCredibility > 70 ? 'var(--data-positive)' :
-    currentState.centralBankCredibility > 40 ? 'var(--data-warning)' :
-    'var(--data-negative)'
+    currentState.centralBankCredibility > 70 ? '#4A9D7C' :
+    currentState.centralBankCredibility > 40 ? '#C9A86A' : '#C25450'
+
+  const bubbleIndex    = currentState.assetBubbleIndex ?? 0
+  const bubbleColor    =
+    bubbleIndex > 80 ? '#C25450' :
+    bubbleIndex > 60 ? '#E8914A' :
+    bubbleIndex > 30 ? '#C9A86A' : '#4A9D7C'
+  const isBubbleCrit   = bubbleIndex > 75
+  const showBubble     = bubbleIndex > 5
+
+  const rateColor = (r: number) =>
+    r > 5 ? '#C25450' : r > 3 ? '#C9A86A' : '#4A9D7C'
+
+  const creditColor =
+    currentState.creditGrowth > 15 ? '#C25450' :
+    currentState.creditGrowth > 10 ? '#C9A86A' : '#4A9D7C'
+
+  const caColor =
+    currentState.currentAccountBalance < -5 ? '#C25450' :
+    currentState.currentAccountBalance < -2 ? '#C9A86A' : '#4A9D7C'
 
   return (
     <div
       className="rounded-md overflow-hidden flex flex-col"
-      style={{
-        backgroundColor: 'var(--bg-panel)',
-        border: '1px solid var(--border-default)',
-      }}
+      style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-default)' }}
     >
-      {/* En-tête */}
+      {/* ── Header ── */}
       <div
-        className="px-4 py-3"
+        className="px-4 py-3 flex items-center justify-between"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}
       >
+        <div className="flex flex-col gap-0.5">
+          <span
+            className="font-mono"
+            style={{ fontSize: '8px', color: 'var(--text-tertiary)', letterSpacing: '0.12em' }}
+          >
+            BANK AL-MAGHRIB
+          </span>
+          <span
+            className="font-mono font-bold"
+            style={{ fontSize: '15px', color: 'var(--accent-primary)', lineHeight: 1 }}
+          >
+            {fmtQuarter(currentState.date.year, currentState.date.q)}
+          </span>
+        </div>
+
         <span
-          className="font-mono text-xs font-medium"
-          style={{ color: 'var(--accent-primary)' }}
+          className="inline-flex items-center gap-1.5 px-2 py-1 rounded"
+          style={{
+            backgroundColor: ecoStatus.bg,
+            color: ecoStatus.color,
+            fontSize: '9px',
+            fontFamily: 'monospace',
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+          }}
         >
-          {fmtQuarter(currentState.date.year, currentState.date.q)}
+          <span
+            style={{
+              width: '5px',
+              height: '5px',
+              borderRadius: '50%',
+              backgroundColor: ecoStatus.color,
+              display: 'inline-block',
+              boxShadow: `0 0 6px ${ecoStatus.color}`,
+              animation: ecoStatus.pulse ? 'pulse 1.5s ease-in-out infinite' : 'none',
+            }}
+          />
+          {ecoStatus.label}
         </span>
       </div>
 
-      {/* Bulletin de conjoncture */}
+      {/* ── Bulletin de conjoncture ── */}
       <div className="px-4 py-3">
-        {/* Fiscal stance badge */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2.5">
+          <Activity size={9} style={{ color: 'var(--text-tertiary)' }} />
+          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+            BULLETIN DE CONJONCTURE
+          </span>
           <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider"
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded ml-auto"
             style={{
               backgroundColor: fiscalMeta.bg,
               color: fiscalMeta.color,
+              fontSize: '8px',
+              fontFamily: 'monospace',
+              fontWeight: 600,
             }}
           >
-            <span style={{
-              width: '4px', height: '4px',
-              borderRadius: '50%',
-              backgroundColor: fiscalMeta.color,
-              display: 'inline-block',
-            }} />
-            Budget {fiscalMeta.label}
+            <span
+              style={{
+                width: '4px', height: '4px', borderRadius: '50%',
+                backgroundColor: fiscalMeta.color, display: 'inline-block',
+              }}
+            />
+            {fiscalMeta.label}
           </span>
         </div>
-        {/* Narrative card with accent left border */}
+
         <div
           className="rounded px-3 py-2.5"
           style={{
-            borderLeft: `3px solid ${stateColor}`,
+            borderLeft: `2px solid ${ecoStatus.color}`,
             backgroundColor: 'var(--bg-elevated)',
           }}
         >
-          <p className="text-xs leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>
+          <p
+            className="leading-relaxed"
+            style={{ fontSize: '10px', color: 'var(--text-secondary)', fontStyle: 'italic' }}
+          >
             {narrative}
           </p>
         </div>
       </div>
 
-      {/* Credibility bar */}
+      {/* ── Crédibilité BAM ── */}
       <div
-        className="px-4 py-3 flex flex-col gap-1.5"
+        className="px-4 py-3"
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
-        <div className="flex items-center justify-between">
-          <span className="label-caps">Crédibilité BAM</span>
-          <span className="font-mono text-xs tabular font-semibold" style={{ color: credColor }}>
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <Shield size={9} style={{ color: credColor }} />
+          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+            CRÉDIBILITÉ BAM
+          </span>
+          <span
+            className="font-mono font-bold tabular ml-auto"
+            style={{ fontSize: '12px', color: credColor, lineHeight: 1 }}
+          >
             {Math.round(currentState.centralBankCredibility)}
+            <span style={{ fontSize: '9px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+              /100
+            </span>
           </span>
         </div>
-        <div className="h-1.5 rounded-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
-          <div
-            className="h-1.5 rounded-full transition-all duration-500"
-            style={{
-              width: `${currentState.centralBankCredibility}%`,
-              background: `linear-gradient(to right, var(--data-negative), var(--data-warning), var(--data-positive))`,
-            }}
-          />
-        </div>
+
+        <ZonedBar value={currentState.centralBankCredibility} zones={CRED_ZONES} />
       </div>
 
-      {/* Current account warning */}
+      {/* ── Bulle spéculative ── */}
+      {showBubble && (
+        <div
+          className="px-4 py-3"
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
+        >
+          <div className="flex items-center gap-1.5 mb-2.5">
+            {isBubbleCrit
+              ? <Flame size={9} style={{ color: bubbleColor }} />
+              : <TrendingUp size={9} style={{ color: bubbleColor }} />
+            }
+            <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+              PRIX D&apos;ACTIFS / BULLE
+            </span>
+            <span
+              className="font-mono font-bold tabular ml-auto"
+              style={{ fontSize: '12px', color: bubbleColor, lineHeight: 1 }}
+            >
+              {Math.round(bubbleIndex)}
+              <span style={{ fontSize: '9px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+                /100
+              </span>
+            </span>
+          </div>
+
+          <ZonedBar value={bubbleIndex} zones={BUBBLE_ZONES} pulse={isBubbleCrit} />
+
+          {isBubbleCrit && (
+            <p
+              className="font-mono mt-2"
+              style={{ fontSize: '9px', color: '#C25450' }}
+            >
+              ⚠ Risque systémique — resserrement urgent recommandé
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ── Alerte solde courant ── */}
       {currentState.currentAccountBalance < -6 && (
         <div
-          className="mx-4 mb-2 px-2.5 py-2 rounded flex items-center gap-2"
+          className="mx-4 mb-1 px-2.5 py-2 rounded flex items-center gap-2"
           style={{
-            backgroundColor: 'rgba(194, 84, 80, 0.1)',
-            border: '1px solid rgba(194, 84, 80, 0.25)',
+            backgroundColor: 'rgba(194,84,80,0.1)',
+            border: '1px solid rgba(194,84,80,0.25)',
           }}
         >
-          <AlertTriangle size={12} style={{ color: 'var(--data-negative)', flexShrink: 0 }} />
-          <span className="text-[10px]" style={{ color: 'var(--data-negative)' }}>
+          <AlertTriangle size={11} style={{ color: '#C25450', flexShrink: 0 }} />
+          <span style={{ fontSize: '10px', color: '#C25450' }}>
             Solde courant critique ({fmtPct(currentState.currentAccountBalance)})
           </span>
         </div>
       )}
 
-      {/* Métriques secondaires */}
+      {/* ── Métriques monétaires ── */}
       <div
-        className="px-4 py-3 grid grid-cols-2 gap-y-2 gap-x-4"
+        className="px-4 py-3"
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
-        {[
-          { label: 'Taux directeur', value: fmtPct(currentState.policyRate, 2) },
-          { label: 'TMP',            value: fmtPct(currentState.interbankRate, 2) },
-          { label: 'Taux débiteur',  value: fmtPct(currentState.lendingRate, 2) },
-          { label: 'Crédit',         value: fmtPct(currentState.creditGrowth) },
-          { label: 'Solde courant',  value: fmtPct(currentState.currentAccountBalance) },
-          { label: 'Change',         value: currentState.exchangeRate.toFixed(1) },
-        ].map(item => (
-          <div key={item.label}>
-            <span className="label-caps block">{item.label}</span>
-            <span className="font-mono text-xs tabular" style={{ color: 'var(--text-primary)' }}>
-              {item.value}
-            </span>
-          </div>
-        ))}
+        <SectionLabel icon={BarChart3}>MÉTRIQUES MONÉTAIRES</SectionLabel>
+        <div className="grid grid-cols-2 gap-1.5">
+          <MetricTile
+            label="Taux directeur"
+            value={fmtPct(currentState.policyRate, 2)}
+            color={rateColor(currentState.policyRate)}
+          />
+          <MetricTile
+            label="TMP"
+            value={fmtPct(currentState.interbankRate, 2)}
+            color={rateColor(currentState.interbankRate)}
+          />
+          <MetricTile
+            label="Taux débiteur"
+            value={fmtPct(currentState.lendingRate, 2)}
+            color={rateColor(currentState.lendingRate)}
+          />
+          <MetricTile
+            label="Crédit"
+            value={fmtPct(currentState.creditGrowth)}
+            color={creditColor}
+          />
+          <MetricTile
+            label="Solde courant"
+            value={fmtPct(currentState.currentAccountBalance)}
+            color={caColor}
+          />
+          <MetricTile
+            label="Change (MAD/$)"
+            value={currentState.exchangeRate.toFixed(1)}
+          />
+        </div>
       </div>
 
-      {/* Chocs actifs */}
+      {/* ── Chocs actifs ── */}
       <div
         className="px-4 py-3 flex flex-col gap-2"
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
-        <div className="flex items-center gap-2">
-          <span className="label-caps">Chocs actifs</span>
+        <div className="flex items-center gap-1.5">
+          <Zap size={9} style={{ color: 'var(--text-tertiary)' }} />
+          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+            CHOCS ACTIFS
+          </span>
           {activeShocks.length > 0 && (
             <span
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full"
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full ml-auto"
               style={{
                 backgroundColor: 'var(--accent-primary)',
                 color: '#fff',
@@ -224,7 +474,7 @@ export function LeftPanel() {
         <ShockBannerList />
       </div>
 
-      {/* Bouton historique */}
+      {/* ── Bouton historique ── */}
       <div
         className="px-4 py-3"
         style={{ borderTop: '1px solid var(--border-subtle)', marginTop: 'auto' }}

@@ -97,6 +97,18 @@ export function step(
 
   const lendingRate = baseLendingRate
 
+  // ── Innovation Financière (Kuttner & Mosser) ─────────────────────
+  // La titrisation fragmente le bilan bancaire et affaiblit la transmission
+  // des taux directeurs vers l'économie réelle. Se déclenche après le 8e
+  // trimestre avec 15 % de probabilité par trimestre.
+  const currentFinancialInnovation = current.financialInnovationActive ?? false
+  let newFinancialInnovationActive = currentFinancialInnovation
+  if (!currentFinancialInnovation && current.quarter >= 8 && rand() < 0.15) {
+    newFinancialInnovationActive = true
+  }
+  // Si actif, σ est divisé par 2 : les hausses de taux mordent moins sur l'investissement
+  const effectiveSigma = newFinancialInnovationActive ? PARAMS.sigma / 2 : undefined
+
   // ── 4. Courbe IS ─────────────────────────────────────────────────
   const demandShockTotal = activeShocks
     .filter(s => s.type === 'demand' || s.type === 'external')
@@ -115,6 +127,7 @@ export function step(
     demandShock: demandShockTotal,
     communicationStance: action.communicationStance,
     fiscalStance: current.fiscalStance,
+    sigmaOverride: effectiveSigma,
   })
 
   // ── 5. Courbe de Phillips ────────────────────────────────────────
@@ -217,6 +230,27 @@ export function step(
   const currentNpl = current.nplRatio ?? PARAMS.nplBase
   const newNplRatio = clamp(currentNpl + deltaNpl * 0.25, 2.0, 25.0) // Lissage trimestriel
 
+  // ── Bulle Spéculative (BCE Risk-taking / Tobin's q) ─────────────
+  // Des taux bas prolongés stimulent la prise de risque excessive et gonflent
+  // le prix des actifs (canal de la prise de risque, Borio & Zhu 2012).
+  // Taux neutre théorique (règle de Taylor): r* + π^e
+  const neutralRate = PARAMS.rStar + current.inflationExpected
+  const rateGap = neutralRate - newPolicyRate // positif = taux directeur trop bas vs neutre
+
+  const currentBubble = current.assetBubbleIndex ?? 0
+  let newAssetBubbleIndex: number
+  if (rateGap > 0.5) {
+    // Chaque pp d'écart au taux neutre gonfle la bulle de ~3,5 pts/trimestre (max 8)
+    newAssetBubbleIndex = currentBubble + clamp(rateGap * 3.5, 1, 8)
+  } else if (rateGap < -0.5) {
+    // Resserrement actif : dégonflement accéléré
+    newAssetBubbleIndex = currentBubble - clamp(-rateGap * 3.0, 1, 6)
+  } else {
+    // Zone neutre : légère déflation naturelle
+    newAssetBubbleIndex = currentBubble - 0.5
+  }
+  newAssetBubbleIndex = clamp(newAssetBubbleIndex, 0, 100)
+
   // ── 8. Décrémenter les chocs ─────────────────────────────────────
   const updatedShocks = activeShocks
     .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))
@@ -246,6 +280,27 @@ export function step(
         triggeredShocks.push(shock)
         break
       }
+    }
+  }
+
+  // Éclatement de la bulle spéculative si l'indice atteint 100
+  // → destruction de richesse, credit crunch, récession (Minsky moment)
+  if (newAssetBubbleIndex >= 100 && currentBubble < 100) {
+    const alreadyBurst = updatedShocks.some(s => s.id.startsWith('bubble_burst'))
+    if (!alreadyBurst) {
+      triggeredShocks.push({
+        id: `bubble_burst_q${current.quarter}`,
+        label: 'Éclatement de la bulle spéculative',
+        type: 'financial',
+        magnitude: 1.0,
+        remainingQuarters: 4,
+        description: "L'accumulation excessive de risque sur les marchés a provoqué l'effondrement des prix d'actifs. Destruction de richesse, credit crunch et récession sévère.",
+        inflationImpact: -1.5,
+        outputGapImpact: -2.5,
+        lendingRateImpact: 2.0,
+        externalDemandImpact: -0.5,
+      })
+      newAssetBubbleIndex = 15 // Réinitialisation avec cicatrice post-crise
     }
   }
 
@@ -293,6 +348,8 @@ export function step(
     centralBankCredibility: newCredibility,
     currentAccountBalance: clamp(newCurrentAccountBalance, -15, 10),
     fiscalStance: newFiscalStance,
+    financialInnovationActive: newFinancialInnovationActive,
+    assetBubbleIndex: clamp(newAssetBubbleIndex, 0, 100),
   }
 
   const trace: SimulationResult['trace'] = {
@@ -309,8 +366,8 @@ export function step(
       explanation: `Chocs d'offre actifs : ${phillipsTrace.shockComponent.toFixed(2)} %`,
     },
     output_gap_real_rate: {
-      value: -(PARAMS.sigma * (current.lendingRate - current.inflationExpected)),
-      explanation: `Effet taux réel : −σ·(i^D − π^e) = −${PARAMS.sigma}×${(current.lendingRate - current.inflationExpected).toFixed(2)}`,
+      value: -((effectiveSigma ?? PARAMS.sigma) * (current.lendingRate - current.inflationExpected)),
+      explanation: `Effet taux réel : −σ·(i^D − π^e) = −${(effectiveSigma ?? PARAMS.sigma).toFixed(2)}×${(current.lendingRate - current.inflationExpected).toFixed(2)}${newFinancialInnovationActive ? ' [σ÷2 : canal affaibli par innovation financière]' : ''}`,
     },
   }
 

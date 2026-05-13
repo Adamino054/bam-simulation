@@ -1,18 +1,25 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
-  Clock, Star, ChevronRight, Flame, Award,
+  Clock, Star, ChevronRight, Award, History, GraduationCap,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
 import { SCENARIOS } from '@/engine/scenarios'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { PerformanceRadar } from '@/components/ui/PerformanceRadar'
 import { fmtPct } from '@/lib/format'
 import type { ScenarioId } from '@/engine/state'
+
+const ScoreProgressChart = dynamic(
+  () => import('@/components/ui/ScoreProgressChart').then(m => ({ default: m.ScoreProgressChart })),
+  { ssr: false }
+)
 
 const DIFFICULTY_META: Record<string, { label: string; color: string; bg: string }> = {
   normal: { label: 'Standard',  color: '#4A9D7C', bg: 'rgba(74, 157, 124, 0.12)' },
@@ -84,6 +91,10 @@ export default function DashboardPage() {
           <a href="/" className="font-editorial text-sm" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>CBS</a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>Tableau de bord</span>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
+            <GraduationCap size={10} /> Cours
+          </a>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
@@ -282,7 +293,20 @@ export default function DashboardPage() {
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.2 }}
           >
-            <h2 className="label-caps mb-4" style={{ color: 'var(--accent-warm)' }}>Historique des parties</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="label-caps" style={{ color: 'var(--accent-warm)' }}>Historique des parties</h2>
+              {gameHistory.length > 0 && (
+                <a
+                  href="/history"
+                  className="label-caps flex items-center gap-1 px-2 py-1 rounded"
+                  style={{ color: 'var(--accent-warm)', backgroundColor: 'rgba(201,168,106,0.08)', border: '1px solid rgba(201,168,106,0.2)', textDecoration: 'none', fontSize: '8px', transition: 'all 0.15s ease' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(201,168,106,0.16)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'rgba(201,168,106,0.08)' }}
+                >
+                  <History size={9} /> Voir tout
+                </a>
+              )}
+            </div>
 
             {gameHistory.length === 0 ? (
               <div
@@ -366,6 +390,98 @@ export default function DashboardPage() {
           </motion.div>
 
         </div>
+
+        {/* ══════ ANALYTICS ══════ */}
+        {gameHistory.length > 0 && (
+          <motion.div
+            className="mt-10"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <h2 className="label-caps" style={{ color: 'var(--accent-cool)' }}>Analyse de progression</h2>
+              <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--border-subtle)' }} />
+            </div>
+
+            <div className={`grid gap-4 ${gameHistory.length >= 2 ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1 lg:grid-cols-1 max-w-sm'}`}>
+
+              {/* Score progress chart */}
+              {gameHistory.length >= 2 && (
+                <div
+                  className="lg:col-span-2 rounded-lg p-4"
+                  style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                      Évolution du score
+                    </span>
+                    {stats && (
+                      <span style={{ fontFamily: 'monospace', fontSize: '10px', color: 'var(--text-secondary)' }}>
+                        Moy.&nbsp;
+                        <span style={{ color: 'var(--accent-primary)', fontWeight: 700 }}>{stats.avgScore}</span>
+                        &nbsp;/ 100
+                      </span>
+                    )}
+                  </div>
+                  <ScoreProgressChart games={gameHistory} />
+                </div>
+              )}
+
+              {/* Performance radar */}
+              <div className={gameHistory.length >= 2 ? 'lg:col-span-1' : ''}>
+                <PerformanceRadar games={gameHistory} />
+              </div>
+            </div>
+
+            {/* Grade distribution */}
+            {gameHistory.length >= 3 && (() => {
+              const grades = ['A', 'B', 'C', 'D', 'F']
+              const counts = Object.fromEntries(
+                grades.map(g => [g, gameHistory.filter(h => h.grade === g).length])
+              )
+              const max = Math.max(...Object.values(counts))
+              const gradeColors: Record<string, string> = {
+                A: '#4A9D7C', B: '#5C7E92', C: '#C9A86A', D: '#E8914A', F: '#C25450',
+              }
+              return (
+                <div
+                  className="rounded-lg p-4 mt-4"
+                  style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <span style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    Distribution des grades
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', marginTop: '16px', height: '72px' }}>
+                    {grades.map(g => {
+                      const count = counts[g]
+                      const pct = max > 0 ? count / max : 0
+                      return (
+                        <div key={g} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: 1 }}>
+                          <span style={{ fontFamily: 'monospace', fontSize: '9px', color: gradeColors[g] }}>
+                            {count > 0 ? count : ''}
+                          </span>
+                          <div style={{
+                            width: '100%', borderRadius: '3px 3px 0 0',
+                            backgroundColor: `${gradeColors[g]}${count > 0 ? '30' : '10'}`,
+                            border: count > 0 ? `1px solid ${gradeColors[g]}40` : '1px solid transparent',
+                            height: `${Math.max(pct * 52, count > 0 ? 8 : 2)}px`,
+                            transition: 'height 0.7s cubic-bezier(0.16,1,0.3,1)',
+                          }} />
+                          <span style={{
+                            fontFamily: 'monospace', fontSize: '11px', fontWeight: 700,
+                            color: count > 0 ? gradeColors[g] : 'var(--text-tertiary)',
+                          }}>{g}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+          </motion.div>
+        )}
+
       </main>
     </div>
   )

@@ -88,4 +88,8 @@ export const INITIAL_STATE: EconomicState = {
   centralBankCredibility: 70,
   currentAccountBalance: -2.5,
   fiscalStance: 'neutral',
+
+  // New fields (Gameplay v2)
+  financialInnovationActive: false,
+  assetBubbleIndex: 0,
 }

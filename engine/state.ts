@@ -45,6 +45,12 @@ export interface EconomicState {
 
   // --- Stance budgétaire (Task 2c) ---
   fiscalStance: FiscalStance           // stance budgétaire courante
+
+  // --- Innovation Financière (Kuttner & Mosser) ---
+  financialInnovationActive: boolean   // la titrisation a affaibli la transmission des taux (σ÷2)
+
+  // --- Bulle Spéculative (BCE Risk-taking / Tobin's q) ---
+  assetBubbleIndex: number             // 0-100 ; 100 = éclatement de la bulle
 }
 
 export interface PolicyAction {
