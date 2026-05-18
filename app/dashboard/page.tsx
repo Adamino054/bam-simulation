@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
-  Clock, Star, ChevronRight, Award, History, GraduationCap,
+  Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -94,6 +94,10 @@ export default function DashboardPage() {
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
             <GraduationCap size={10} /> Cours
+          </a>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/admin" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
+            <Users size={10} /> Joueurs
           </a>
         </div>
         <div className="flex items-center gap-4">

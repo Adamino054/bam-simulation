@@ -300,7 +300,7 @@ export function EconomyChart() {
             </ComposedChart>
           </ResponsiveContainer>
           <div style={{ display: 'flex', gap: '14px', marginTop: '8px', flexWrap: 'wrap' }}>
-            <LegendItem color="#4A9D7C" label="Crédibilité BAM (axe gauche)" />
+            <LegendItem color="#4A9D7C" label="Crédibilité Banque centrale (axe gauche)" />
             <LegendItem color="#C25450" label="NPL % (axe droit)" bar />
           </div>
         </div>

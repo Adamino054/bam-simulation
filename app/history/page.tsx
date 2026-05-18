@@ -513,7 +513,7 @@ export default function HistoryPage() {
       </main>
 
       <footer className="px-6 py-5 text-center" style={{ borderTop: '1px solid var(--border-subtle)', marginTop: '32px' }}>
-        <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Historique de vos parties · Bank Al-Maghrib</p>
+        <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Historique de vos parties · Banque centrale</p>
       </footer>
     </div>
   )

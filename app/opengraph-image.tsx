@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'Central Bank Simulator — Bank Al-Maghrib'
+export const alt = 'Central Bank Simulator — Banque centrale'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -31,7 +31,7 @@ export default async function Image() {
           Quatre instruments. Une cible : 2 % d'inflation.
         </div>
         <div style={{ position: 'absolute', bottom: 40, color: '#66686D', fontSize: 14, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-          Bank Al-Maghrib · Projet de Fin d'Année
+          Banque centrale · Projet de Fin d'Année
         </div>
       </div>
     ),

@@ -25,7 +25,7 @@ const FEATURES = [
   { icon: TrendingUp, title: 'Politique monétaire', color: '#B41923', description: 'Fixez le taux directeur, ajustez les réserves obligatoires et gérez les opérations de marché comme un vrai gouverneur de banque centrale.' },
   { icon: Shield,     title: 'Gestion de crise',     color: '#5C7E92', description: "Affrontez des chocs pétroliers, sécheresses, fuites de capitaux et récessions. Chaque décision a des conséquences sur l'économie réelle." },
   { icon: Zap,        title: '6 instruments',         color: '#C9A86A', description: 'Taux directeur, réserves, opérations de marché, forward guidance, intervention de change et emergency lending.' },
-  { icon: BarChart3,  title: 'Simulation réaliste',   color: '#4A9D7C', description: "Moteur calibré sur les données BAM : courbe IS, courbe de Phillips, canal du crédit, loi d'Okun, règle de Taylor." },
+  { icon: BarChart3,  title: 'Simulation réaliste',   color: '#4A9D7C', description: "Moteur calibré sur les données de la Banque centrale : courbe IS, courbe de Phillips, canal du crédit, loi d'Okun, règle de Taylor." },
   { icon: Target,     title: '2 % d\'inflation',       color: '#C25450', description: "Maintenez l'inflation proche de la cible tout en soutenant la croissance. Un équilibre délicat à maîtriser." },
   { icon: Users,      title: 'Suivi de performance',  color: '#C9A86A', description: 'Historique complet de vos parties, scores, grades et statistiques. Comparez-vous à la règle de Taylor.' },
 ]
@@ -39,7 +39,7 @@ const STEPS = [
 
 // ── Course modules preview ───────────────────────────────────────────────────
 const COURSE_PREVIEWS = [
-  { num: '01', title: 'Politique monétaire',    subtitle: 'Le mandat de BAM',          icon: Landmark,       color: '#5C7E92', category: 'Fondamentaux' },
+  { num: '01', title: 'Politique monétaire',    subtitle: 'Le mandat de la Banque centrale', icon: Landmark,       color: '#5C7E92', category: 'Fondamentaux' },
   { num: '02', title: 'Le taux directeur',      subtitle: 'Transmission et effets',    icon: Percent,        color: '#B41923', category: 'Instruments' },
   { num: '03', title: 'Courbe IS & Output Gap', subtitle: 'Demande agrégée',           icon: LineChartIcon,  color: '#4A9D7C', category: 'Modèles' },
   { num: '04', title: 'Courbe de Phillips',     subtitle: 'Inflation & activité',      icon: Activity,       color: '#4A9D7C', category: 'Modèles' },
@@ -118,7 +118,7 @@ function StatCounter({ target, suffix, label, icon: Icon }: {
         {count}
         <span style={{ fontSize: '1rem', color: 'var(--text-tertiary)' }}>{suffix}</span>
       </span>
-      <span className="label-caps" style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>{label}</span>
+      <span className="label-caps" style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>{label}</span>
     </div>
   )
 }
@@ -220,11 +220,11 @@ export default function LandingPage() {
               <span className="label-caps hidden sm:block" style={{ color: 'var(--text-tertiary)' }}>Central Bank Simulator</span>
             </div>
             <div className="hidden md:flex items-center gap-4 ml-4" style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '16px' }}>
-              <a href="/courses" className="nav-link label-caps" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '10px' }}>
+              <a href="/courses" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Cours
               </a>
               {currentUser && (
-                <a href="/history" className="nav-link label-caps" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '10px' }}>
+                <a href="/history" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                   Historique
                 </a>
               )}
@@ -248,7 +248,7 @@ export default function LandingPage() {
         <div className="overflow-hidden" style={{ backgroundColor: 'var(--bg-elevated)', borderBottom: '1px solid var(--border-subtle)', height: '26px' }}>
           <div className="flex items-center h-full whitespace-nowrap" style={{ animation: 'ticker-scroll 35s linear infinite' }}>
             {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span key={i} className="font-mono text-[10px] font-semibold tabular mx-4" style={{ color: 'var(--text-tertiary)' }}>
+              <span key={i} className="font-mono text-xs font-semibold tabular mx-4" style={{ color: 'var(--text-secondary)' }}>
                 {item}<span className="mx-3" style={{ color: 'var(--border-subtle)' }}>·</span>
               </span>
             ))}
@@ -304,20 +304,20 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.p
-            className="text-lg mb-3 max-w-lg"
-            style={{ color: 'var(--text-secondary)', lineHeight: 1.65 }}
+            className="text-xl mb-4 max-w-lg"
+            style={{ color: 'var(--text-primary)', lineHeight: 1.6, fontWeight: 500 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            Incarnez le gouverneur de Bank Al-Maghrib.
+            Incarnez le gouverneur de la Banque centrale.
             <br />Cinq ans, six instruments, une cible :{' '}
             <strong style={{ color: 'var(--accent-primary)' }}>2&nbsp;% d&apos;inflation</strong>.
           </motion.p>
 
           <motion.p
-            className="text-sm mb-12 max-w-xl leading-relaxed"
-            style={{ color: 'var(--text-tertiary)' }}
+            className="text-base mb-12 max-w-xl leading-relaxed"
+            style={{ color: 'var(--text-secondary)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.38 }}
@@ -380,7 +380,7 @@ export default function LandingPage() {
             <h2 className="font-editorial-roman text-2xl sm:text-3xl mb-2" style={{ color: 'var(--text-primary)' }}>
               Choc inflationniste 2022 — résolution en 20 trimestres
             </h2>
-            <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+            <p className="text-sm max-w-md mx-auto" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
               Inflation à 7,9 % · Hausses successives à 3,00 % · Retour à la cible 2 % en T14.
               C&apos;est exactement ce que vous piloterez dans le simulateur.
             </p>
@@ -423,7 +423,7 @@ export default function LandingPage() {
           <motion.div className="text-center mb-16" {...fadeUp}>
             <span className="label-caps block mb-3" style={{ color: 'var(--accent-primary)' }}>Fonctionnalités</span>
             <h2 className="font-editorial-roman text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text-primary)' }}>Un simulateur complet</h2>
-            <p className="text-sm max-w-lg mx-auto" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-base max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
               Conçu pour reproduire fidèlement les mécanismes de transmission de la politique monétaire marocaine.
             </p>
           </motion.div>
@@ -441,8 +441,8 @@ export default function LandingPage() {
                   <div className="w-10 h-10 rounded-md flex items-center justify-center mb-4" style={{ backgroundColor: `${feat.color}18` }}>
                     <Icon size={20} style={{ color: feat.color }} />
                   </div>
-                  <h3 className="font-semibold text-sm mb-2" style={{ color: 'var(--text-primary)' }}>{feat.title}</h3>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{feat.description}</p>
+                  <h3 className="font-semibold text-base mb-2" style={{ color: 'var(--text-primary)' }}>{feat.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{feat.description}</p>
                 </motion.div>
               )
             })}
@@ -454,7 +454,7 @@ export default function LandingPage() {
           <motion.div className="text-center mb-16" {...fadeUp}>
             <span className="label-caps block mb-3" style={{ color: 'var(--accent-warm)' }}>En 4 étapes</span>
             <h2 className="font-editorial-roman text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text-primary)' }}>Comment ça marche ?</h2>
-            <p className="text-sm max-w-lg mx-auto" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-base max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
               Accessible à tous — pas besoin d&apos;être économiste pour comprendre les fondamentaux.
             </p>
           </motion.div>
@@ -469,8 +469,8 @@ export default function LandingPage() {
               >
                 <span className="font-editorial text-3xl flex-shrink-0" style={{ color: 'var(--accent-primary)', opacity: 0.35, lineHeight: 1.1 }}>{step.number}</span>
                 <div>
-                  <h3 className="font-semibold text-sm mb-1.5" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{step.desc}</p>
+                  <h3 className="font-semibold text-base mb-1.5" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -484,7 +484,7 @@ export default function LandingPage() {
               <div>
                 <span className="label-caps block mb-3" style={{ color: 'var(--accent-cool)' }}>Apprendre</span>
                 <h2 className="font-editorial-roman text-3xl sm:text-4xl mb-2" style={{ color: 'var(--text-primary)' }}>Cours de macroéconomie</h2>
-                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>8 modules structurés pour comprendre chaque mécanisme du simulateur.</p>
+                <p className="text-base" style={{ color: 'var(--text-secondary)' }}>8 modules structurés pour comprendre chaque mécanisme du simulateur.</p>
               </div>
               <a
                 href="/courses"
@@ -512,12 +512,12 @@ export default function LandingPage() {
                       <Icon size={15} style={{ color: c.color }} />
                     </div>
                     <div>
-                      <span className="label-caps block mb-1" style={{ color: c.color, fontSize: '8px' }}>{c.category}</span>
-                      <span className="font-semibold text-xs block mb-0.5" style={{ color: 'var(--text-primary)' }}>
+                      <span className="label-caps block mb-1" style={{ color: c.color, fontSize: '11px' }}>{c.category}</span>
+                      <span className="font-semibold text-sm block mb-0.5" style={{ color: 'var(--text-primary)' }}>
                         <span style={{ color: 'var(--text-tertiary)', fontFamily: 'monospace', marginRight: '4px' }}>{c.num}.</span>
                         {c.title}
                       </span>
-                      <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{c.subtitle}</span>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{c.subtitle}</span>
                     </div>
                   </motion.a>
                 )
@@ -537,7 +537,7 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {[
                 { q: "C'est quoi le taux directeur ?", a: "C'est le \"prix de l'argent\" que la banque centrale fixe. Quand il monte, les crédits coûtent plus cher → les gens empruntent moins → l'économie ralentit et l'inflation baisse. Et inversement.", color: '#B41923' },
-                { q: "C'est quoi l'inflation ?",        a: "La hausse générale des prix. Si le pain coûtait 1 DH et coûte 1,02 DH, l'inflation est de 2 %. Bank Al-Maghrib vise 2 %/an : assez pour que l'économie avance, pas assez pour éroder le pouvoir d'achat.", color: '#4A9D7C' },
+                { q: "C'est quoi l'inflation ?",        a: "La hausse générale des prix. Si le pain coûtait 1 DH et coûte 1,02 DH, l'inflation est de 2 %. La Banque centrale vise 2 %/an : assez pour que l'économie avance, pas assez pour éroder le pouvoir d'achat.", color: '#4A9D7C' },
                 { q: "Pourquoi c'est difficile ?",      a: "Les effets de vos décisions mettent 2-3 trimestres à se manifester. Quand vous voyez l'inflation monter, il est déjà tard. Il faut anticiper — et des chocs imprévisibles viennent tout bouleverser.", color: '#C9A86A' },
                 { q: "C'est quoi la crédibilité ?",     a: "Si les entreprises font confiance à la banque centrale, elles n'augmentent pas leurs prix par anticipation. La crédibilité se construit lentement et se perd vite (décisions erratiques).", color: '#5C7E92' },
               ].map((item, i) => (
@@ -547,8 +547,8 @@ export default function LandingPage() {
                   style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', borderLeft: `3px solid ${item.color}` }}
                   {...stagger(i, 0.05)}
                 >
-                  <h3 className="font-semibold text-sm mb-2.5" style={{ color: 'var(--text-primary)' }}>{item.q}</h3>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{item.a}</p>
+                  <h3 className="font-semibold text-base mb-2.5" style={{ color: 'var(--text-primary)' }}>{item.q}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{item.a}</p>
                 </motion.div>
               ))}
             </div>
@@ -558,11 +558,11 @@ export default function LandingPage() {
         {/* ══ CTA FINAL ════════════════════════════════════════════════════ */}
         <section className="px-6 py-24 text-center" style={{ borderTop: '1px solid var(--border-subtle)', background: 'radial-gradient(ellipse at 50% 100%, rgba(180,25,35,0.08) 0%, transparent 60%)' }}>
           <motion.div className="max-w-lg mx-auto" {...fadeUp}>
-            <span className="label-caps block mb-6" style={{ color: 'var(--text-tertiary)' }}>Bank Al-Maghrib · Simulateur Officiel</span>
+            <span className="label-caps block mb-6" style={{ color: 'var(--text-tertiary)' }}>Banque centrale · Simulateur Officiel</span>
             <h2 className="font-editorial text-4xl sm:text-5xl mb-5" style={{ color: 'var(--text-primary)', lineHeight: 0.95 }}>
               Prêt à<br />gouverner ?
             </h2>
-            <p className="text-sm mb-10" style={{ color: 'var(--text-tertiary)', lineHeight: 1.7 }}>
+            <p className="text-base mb-10" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
               Créez votre profil en 10 secondes et lancez votre première simulation.<br />
               Ou commencez par les cours pour maîtriser les concepts.
             </p>
@@ -596,7 +596,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Landmark size={14} style={{ color: 'var(--accent-primary)' }} />
-              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2025 · Bank Al-Maghrib</span>
+              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2025 · Banque centrale</span>
             </div>
             <div className="flex items-center gap-6">
               {[
@@ -604,7 +604,7 @@ export default function LandingPage() {
                 { href: currentUser ? '/history' : '/login', label: 'Historique' },
                 { href: '/about', label: 'À propos' },
               ].map(link => (
-                <a key={link.href} href={link.href} className="label-caps nav-link" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
+                <a key={link.href} href={link.href} className="label-caps nav-link" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '12px' }}>
                   {link.label}
                 </a>
               ))}

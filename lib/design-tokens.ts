@@ -329,7 +329,7 @@ export const METRICS_CONFIG = {
     precision: 2,
     label: 'Taux directeur',
     labelShort: 'i^*',
-    description: 'Taux d\'intérêt directeur fixé par Bank Al-Maghrib',
+    description: 'Taux d\'intérêt directeur fixé par la Banque centrale',
   },
   interbankRate: {
     unit: '%',

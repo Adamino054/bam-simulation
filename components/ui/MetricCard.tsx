@@ -108,11 +108,11 @@ export function MetricCard({
           {tooltipContent && (
             <Tooltip content={tooltipContent}>
               <span
-                className="flex items-center justify-center w-[14px] h-[14px] rounded-full cursor-help select-none"
+                className="flex items-center justify-center w-[16px] h-[16px] rounded-full cursor-help select-none"
                 style={{
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-tertiary)',
-                  fontSize: '9px',
+                  border: '1px solid var(--border-strong)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '11px',
                   fontWeight: 600,
                 }}
               >

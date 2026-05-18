@@ -103,7 +103,7 @@ function AccordionSection({
           background: 'linear-gradient(to right, rgba(180,25,35,0.04), transparent)',
         }}
       >
-        <span className="label-caps" style={{ color: 'var(--accent-primary)', letterSpacing: '0.1em', fontSize: '9px' }}>
+        <span className="label-caps" style={{ color: 'var(--accent-primary)', letterSpacing: '0.08em', fontSize: '11px' }}>
           {title}
         </span>
         <motion.span
@@ -426,9 +426,9 @@ export function DecisionPanel() {
                     }}
                   />
                   <span
-                    className="text-[9px] font-semibold uppercase tracking-wider"
+                    className="text-[11px] font-semibold uppercase tracking-wider"
                     style={{
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                     }}
                   >
                     {opt.label}
@@ -437,7 +437,7 @@ export function DecisionPanel() {
               )
             })}
           </div>
-          <p className="text-[9px] text-center" style={{ color: 'var(--text-tertiary)' }}>
+          <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
             {GUIDANCE_OPTIONS.find(o => o.value === pendingAction.communicationStance)?.sublabel}
           </p>
         </div>
@@ -524,7 +524,7 @@ export function DecisionPanel() {
             style={{ borderBottom: '1px solid var(--border-subtle)' }}
           >
             <p className="label-caps">Projection +4 trimestres</p>
-            <span className="label-caps" style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>indicatif</span>
+            <span className="label-caps" style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>indicatif</span>
           </div>
           <div className="px-3 pb-2.5 grid grid-cols-2 gap-y-2 gap-x-4">
             {projectionItems.map(row => (

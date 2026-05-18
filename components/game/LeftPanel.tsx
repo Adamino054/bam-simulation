@@ -79,7 +79,7 @@ function generateNarrative(state: {
   }
 
   if (centralBankCredibility < 40) {
-    parts.push("La crédibilité de BAM est fragilisée.")
+    parts.push("La crédibilité de la Banque centrale est fragilisée.")
   }
 
   return parts.join(' ')
@@ -133,11 +133,11 @@ function ZonedBar({
             <div key={i} className="text-center" style={{ flex: zone.max - zone.min }}>
               <span
                 style={{
-                  fontSize: '7px',
+                  fontSize: '9px',
                   fontFamily: 'monospace',
                   color: isActive ? zone.color : 'var(--text-tertiary)',
                   fontWeight: isActive ? 700 : 400,
-                  letterSpacing: '0.04em',
+                  letterSpacing: '0.03em',
                 }}
               >
                 {zone.label}
@@ -163,24 +163,24 @@ function MetricTile({
 }) {
   return (
     <div
-      className="rounded px-2.5 py-2 flex flex-col gap-0.5"
+      className="rounded px-2.5 py-2 flex flex-col gap-1"
       style={{
         backgroundColor: 'var(--bg-elevated)',
         border: '1px solid var(--border-subtle)',
       }}
     >
       <div className="flex items-center gap-1 mb-0.5">
-        {Icon && <Icon size={8} style={{ color: color ?? 'var(--text-tertiary)' }} />}
+        {Icon && <Icon size={10} style={{ color: color ?? 'var(--text-tertiary)' }} />}
         <span
           className="label-caps"
-          style={{ fontSize: '7.5px', color: 'var(--text-tertiary)' }}
+          style={{ fontSize: '10px', color: 'var(--text-secondary)' }}
         >
           {label}
         </span>
       </div>
       <span
         className="font-mono font-semibold tabular"
-        style={{ fontSize: '11px', color: color ?? 'var(--text-primary)', lineHeight: 1 }}
+        style={{ fontSize: '13px', color: color ?? 'var(--text-primary)', lineHeight: 1 }}
       >
         {value}
       </span>
@@ -191,8 +191,8 @@ function MetricTile({
 function SectionLabel({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-1.5 mb-2.5">
-      <Icon size={9} style={{ color: 'var(--text-tertiary)' }} />
-      <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+      <Icon size={11} style={{ color: 'var(--text-tertiary)' }} />
+      <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em' }}>
         {children}
       </span>
     </div>
@@ -249,33 +249,33 @@ export function LeftPanel() {
         <div className="flex flex-col gap-0.5">
           <span
             className="font-mono"
-            style={{ fontSize: '8px', color: 'var(--text-tertiary)', letterSpacing: '0.12em' }}
+            style={{ fontSize: '11px', color: 'var(--text-secondary)', letterSpacing: '0.1em' }}
           >
-            BANK AL-MAGHRIB
+            BANQUE CENTRALE
           </span>
           <span
             className="font-mono font-bold"
-            style={{ fontSize: '15px', color: 'var(--accent-primary)', lineHeight: 1 }}
+            style={{ fontSize: '17px', color: 'var(--accent-primary)', lineHeight: 1 }}
           >
             {fmtQuarter(currentState.date.year, currentState.date.q)}
           </span>
         </div>
 
         <span
-          className="inline-flex items-center gap-1.5 px-2 py-1 rounded"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded"
           style={{
             backgroundColor: ecoStatus.bg,
             color: ecoStatus.color,
-            fontSize: '9px',
+            fontSize: '11px',
             fontFamily: 'monospace',
             fontWeight: 700,
-            letterSpacing: '0.1em',
+            letterSpacing: '0.08em',
           }}
         >
           <span
             style={{
-              width: '5px',
-              height: '5px',
+              width: '6px',
+              height: '6px',
               borderRadius: '50%',
               backgroundColor: ecoStatus.color,
               display: 'inline-block',
@@ -290,16 +290,16 @@ export function LeftPanel() {
       {/* ── Bulletin de conjoncture ── */}
       <div className="px-4 py-3">
         <div className="flex items-center gap-2 mb-2.5">
-          <Activity size={9} style={{ color: 'var(--text-tertiary)' }} />
-          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+          <Activity size={11} style={{ color: 'var(--text-tertiary)' }} />
+          <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em' }}>
             BULLETIN DE CONJONCTURE
           </span>
           <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded ml-auto"
+            className="inline-flex items-center gap-1 px-2 py-1 rounded ml-auto"
             style={{
               backgroundColor: fiscalMeta.bg,
               color: fiscalMeta.color,
-              fontSize: '8px',
+              fontSize: '10px',
               fontFamily: 'monospace',
               fontWeight: 600,
             }}
@@ -323,29 +323,29 @@ export function LeftPanel() {
         >
           <p
             className="leading-relaxed"
-            style={{ fontSize: '10px', color: 'var(--text-secondary)', fontStyle: 'italic' }}
+            style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}
           >
             {narrative}
           </p>
         </div>
       </div>
 
-      {/* ── Crédibilité BAM ── */}
+      {/* ── Crédibilité Banque centrale ── */}
       <div
         className="px-4 py-3"
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
         <div className="flex items-center gap-1.5 mb-2.5">
-          <Shield size={9} style={{ color: credColor }} />
-          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
-            CRÉDIBILITÉ BAM
+          <Shield size={11} style={{ color: credColor }} />
+          <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em' }}>
+            CRÉDIBILITÉ BANQUE CENTRALE
           </span>
           <span
             className="font-mono font-bold tabular ml-auto"
-            style={{ fontSize: '12px', color: credColor, lineHeight: 1 }}
+            style={{ fontSize: '14px', color: credColor, lineHeight: 1 }}
           >
             {Math.round(currentState.centralBankCredibility)}
-            <span style={{ fontSize: '9px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+            <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
               /100
             </span>
           </span>
@@ -362,18 +362,18 @@ export function LeftPanel() {
         >
           <div className="flex items-center gap-1.5 mb-2.5">
             {isBubbleCrit
-              ? <Flame size={9} style={{ color: bubbleColor }} />
-              : <TrendingUp size={9} style={{ color: bubbleColor }} />
+              ? <Flame size={11} style={{ color: bubbleColor }} />
+              : <TrendingUp size={11} style={{ color: bubbleColor }} />
             }
-            <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+            <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em' }}>
               PRIX D&apos;ACTIFS / BULLE
             </span>
             <span
               className="font-mono font-bold tabular ml-auto"
-              style={{ fontSize: '12px', color: bubbleColor, lineHeight: 1 }}
+              style={{ fontSize: '14px', color: bubbleColor, lineHeight: 1 }}
             >
               {Math.round(bubbleIndex)}
-              <span style={{ fontSize: '9px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
+              <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-tertiary)' }}>
                 /100
               </span>
             </span>
@@ -384,7 +384,7 @@ export function LeftPanel() {
           {isBubbleCrit && (
             <p
               className="font-mono mt-2"
-              style={{ fontSize: '9px', color: '#C25450' }}
+              style={{ fontSize: '11px', color: '#C25450' }}
             >
               ⚠ Risque systémique — resserrement urgent recommandé
             </p>
@@ -401,8 +401,8 @@ export function LeftPanel() {
             border: '1px solid rgba(194,84,80,0.25)',
           }}
         >
-          <AlertTriangle size={11} style={{ color: '#C25450', flexShrink: 0 }} />
-          <span style={{ fontSize: '10px', color: '#C25450' }}>
+          <AlertTriangle size={13} style={{ color: '#C25450', flexShrink: 0 }} />
+          <span style={{ fontSize: '12px', color: '#C25450' }}>
             Solde courant critique ({fmtPct(currentState.currentAccountBalance)})
           </span>
         </div>
@@ -453,17 +453,17 @@ export function LeftPanel() {
         style={{ borderTop: '1px solid var(--border-subtle)' }}
       >
         <div className="flex items-center gap-1.5">
-          <Zap size={9} style={{ color: 'var(--text-tertiary)' }} />
-          <span className="label-caps" style={{ fontSize: '8px', letterSpacing: '0.1em' }}>
+          <Zap size={11} style={{ color: 'var(--text-tertiary)' }} />
+          <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em' }}>
             CHOCS ACTIFS
           </span>
           {activeShocks.length > 0 && (
             <span
-              className="inline-flex items-center justify-center w-4 h-4 rounded-full ml-auto"
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full ml-auto"
               style={{
                 backgroundColor: 'var(--accent-primary)',
                 color: '#fff',
-                fontSize: '9px',
+                fontSize: '11px',
                 fontWeight: 700,
               }}
             >

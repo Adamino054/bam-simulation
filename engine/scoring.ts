@@ -212,7 +212,7 @@ function generateCommentary(
   }
 
   if (avgCredibility > 75) {
-    parts.push('La crédibilité de BAM s\'est renforcée, ancrant durablement les anticipations.')
+    parts.push('La crédibilité de la Banque centrale s\'est renforcée, ancrant durablement les anticipations.')
   } else if (avgCredibility < 45) {
     parts.push('La crédibilité de la banque centrale a été mise à mal, fragilisant la transmission monétaire.')
   }

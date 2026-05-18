@@ -48,7 +48,7 @@ export function ScoreBreakdown() {
   const items = [
     { label: 'Stabilité des prix',  sublabel: 'π proche de 2 %',    pct: 35, color: '#B41923' },
     { label: 'Croissance du PIB',   sublabel: 'ỹ proche de 0 %',    pct: 25, color: '#4A9D7C' },
-    { label: 'Crédibilité BAM',     sublabel: 'Anticipations ancrées', pct: 20, color: '#5C7E92' },
+    { label: 'Crédibilité Banque centrale',     sublabel: 'Anticipations ancrées', pct: 20, color: '#5C7E92' },
     { label: 'Emploi',              sublabel: 'u proche de u*',      pct: 10, color: '#C9A86A' },
     { label: 'Stabilité financière',sublabel: 'NPL < 10 %',          pct: 10, color: '#C25450' },
   ]
@@ -83,7 +83,7 @@ export function ScoreBreakdown() {
 /* ── MODULE 02 : Transmission Chain ─────────────────────────────────────── */
 export function TransmissionChain() {
   const steps = [
-    { label: 'i*', sublabel: 'Décision BAM', color: '#B41923', delay: 'T+0' },
+    { label: 'i*', sublabel: 'Décision Banque centrale', color: '#B41923', delay: 'T+0' },
     { label: 'TMP', sublabel: 'Marché interbancaire', color: '#C25450', delay: '+1T' },
     { label: 'i^D', sublabel: 'Taux débiteur', color: '#C9A86A', delay: '+2T' },
     { label: 'Crédit', sublabel: 'Volume bancaire', color: '#A68A4F', delay: '+3T' },
@@ -115,7 +115,7 @@ export function TransmissionChain() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        λ = 0,35 : seulement 35 % d'une hausse de BAM est transmise au taux débiteur après 2 trimestres au Maroc. Anticipez toujours 2 trimestres en avance.
+        λ = 0,35 : seulement 35 % d'une hausse de la Banque centrale est transmise au taux débiteur après 2 trimestres au Maroc. Anticipez toujours 2 trimestres en avance.
       </p>
     </DiagramFrame>
   )
@@ -294,8 +294,8 @@ const TAYLOR_DATA = [
 ]
 
 const TAYLOR_POINTS = [
-  { inflation: 6.1, bam: 3.0,  label: 'BAM 2022' },
-  { inflation: 2.0, bam: 2.75, label: 'BAM 2024' },
+  { inflation: 6.1, bam: 3.0,  label: 'Banque centrale 2022' },
+  { inflation: 2.0, bam: 2.75, label: 'Banque centrale 2024' },
 ]
 
 export function TaylorRuleChart() {
@@ -320,9 +320,9 @@ export function TaylorRuleChart() {
           {/* ZLB */}
           <ReferenceLine y={0.5} stroke="rgba(92,126,146,0.4)" strokeDasharray="4 4"
             label={{ value: 'ZLB 0,5%', position: 'insideTopRight', style: { ...AXIS, fill: '#5C7E92' } }} />
-          {/* BAM 2022 */}
+          {/* Banque centrale 2022 */}
           <ReferenceLine y={3.0} stroke="rgba(180,25,35,0.35)" strokeDasharray="3 3"
-            label={{ value: 'BAM 2022 (3%)', position: 'insideTopLeft', style: { ...AXIS, fill: '#B41923' } }} />
+            label={{ value: 'Banque centrale 2022 (3%)', position: 'insideTopLeft', style: { ...AXIS, fill: '#B41923' } }} />
           <Area type="monotone" dataKey="taylor" name="Taux de Taylor" stroke="#C9A86A" strokeWidth={2.5}
             fill="url(#taylorGrad)" dot={false}
             activeDot={{ r: 4, fill: '#C9A86A', stroke: 'rgba(201,168,106,0.3)', strokeWidth: 4 }} />
@@ -337,7 +337,7 @@ export function TaylorRuleChart() {
             <span style={{ fontFamily: 'monospace', fontSize: '8px', color: 'var(--text-tertiary)' }}>
               {pt.label} : π={pt.inflation}% →{' '}
               <span style={{ color: '#C9A86A', fontWeight: 700 }}>Taylor={((0.5 + 1.5 * pt.inflation)).toFixed(1)}%</span>
-              {' '}vs BAM={pt.bam}%
+              {' '}vs Banque centrale={pt.bam}%
             </span>
           </div>
         ))}

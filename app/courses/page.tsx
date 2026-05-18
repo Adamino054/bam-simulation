@@ -10,6 +10,7 @@ import {
   FlaskConical, Gamepad2, GraduationCap, BarChart2,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { BlockKatex } from '@/components/ui/InlineKatex'
 import {
   ScoreBreakdown, TransmissionChain, ISCurveDiagram,
   PhillipsCurveDiagram, ChannelsDiagram, TaylorRuleChart,
@@ -40,21 +41,21 @@ const MODULES: Module[] = [
     id: 'intro',
     number: '01',
     title: 'La Politique Monétaire',
-    subtitle: 'Le mandat de Bank Al-Maghrib',
+    subtitle: 'Le mandat de la Banque centrale',
     category: 'Fondamentaux',
     categoryColor: '#5C7E92',
     readTime: '5 min',
     icon: Landmark,
     overview:
-      "La politique monétaire est l'ensemble des décisions par lesquelles une banque centrale contrôle la masse monétaire et les taux d'intérêt pour atteindre ses objectifs macroéconomiques. Bank Al-Maghrib (BAM), banque centrale du Maroc, a pour mandat principal d'assurer la stabilité des prix — définie par une inflation proche de 2 % par an — tout en soutenant la croissance économique.",
+      "La politique monétaire est l'ensemble des décisions par lesquelles une banque centrale contrôle la masse monétaire et les taux d'intérêt pour atteindre ses objectifs macroéconomiques. La Banque centrale du Maroc a pour mandat principal d'assurer la stabilité des prix — définie par une inflation proche de 2 % par an — tout en soutenant la croissance économique.",
     keyPoints: [
-      "BAM opère en indépendance vis-à-vis du gouvernement pour éviter les biais inflationnistes politiques (pression à des taux trop bas avant les élections).",
+      "La Banque centrale opère en indépendance vis-à-vis du gouvernement pour éviter les biais inflationnistes politiques (pression à des taux trop bas avant les élections).",
       "La stabilité des prix est la condition préalable à une croissance durable : une inflation trop élevée érode le pouvoir d'achat et décourage l'investissement.",
-      "BAM dispose d'un double mandat implicite : stabilité des prix (priorité) + soutien à la croissance (objectif secondaire).",
-      "La crédibilité est cruciale : si les agents économiques croient que BAM tiendra sa cible, ils n'augmentent pas leurs prix par anticipation — réduisant ainsi le coût de la désinflation.",
+      "La Banque centrale dispose d'un double mandat implicite : stabilité des prix (priorité) + soutien à la croissance (objectif secondaire).",
+      "La crédibilité est cruciale : si les agents économiques croient que la Banque centrale tiendra sa cible, ils n'augmentent pas leurs prix par anticipation — réduisant ainsi le coût de la désinflation.",
     ],
     moroccanExample:
-      "En 2022, face à une inflation de 6,1 % — son plus haut niveau depuis 30 ans — BAM a relevé son taux directeur de 1,5 % à 3,0 % en deux étapes (septembre 2022 et mars 2023). Cette décision tardive, après des années de politique accommodante, a eu un coût en crédibilité.",
+      "En 2022, face à une inflation de 6,1 % — son plus haut niveau depuis 30 ans — la Banque centrale a relevé son taux directeur de 1,5 % à 3,0 % en deux étapes (septembre 2022 et mars 2023). Cette décision tardive, après des années de politique accommodante, a eu un coût en crédibilité.",
     gameTip:
       "Votre score final est calculé à 35 % sur l'inflation, 25 % sur la croissance et 20 % sur la crédibilité. La stabilité des prix est l'objectif central — mais sacrifier entièrement la croissance pour atteindre 2 % n'est pas optimal.",
     diagram: ScoreBreakdown,
@@ -79,13 +80,13 @@ const MODULES: Module[] = [
     formula: {
       latex: 'i^{TMP}_t = i^*_t + \\text{pression liquidité}',
       legend: [
-        'i* = taux directeur fixé par BAM',
+        'i* = taux directeur fixé par la Banque centrale',
         'TMP = taux du marché monétaire (interbancaire)',
         'λ = vitesse de transmission TMP → taux débiteur (≈ 0,35 au Maroc)',
       ],
     },
     moroccanExample:
-      "En juin 2020, BAM a baissé son taux de 2,25 % à 1,5 % — son plus bas historique — pour soutenir l'économie face à la pandémie. En septembre 2022, le cycle s'est inversé avec une première hausse à 2,0 % pour lutter contre l'inflation importée. La borne basse effective au Maroc est estimée à 0,5 %.",
+      "En juin 2020, la Banque centrale a baissé son taux de 2,25 % à 1,5 % — son plus bas historique — pour soutenir l'économie face à la pandémie. En septembre 2022, le cycle s'est inversé avec une première hausse à 2,0 % pour lutter contre l'inflation importée. La borne basse effective au Maroc est estimée à 0,5 %.",
     gameTip:
       "Dans le simulateur, chaque variation de taux se fait par pas de 25 points de base (0,25 %). Les effets sur l'output gap et l'inflation apparaissent avec un décalage d'1 à 2 trimestres. Anticipez toujours 2 trimestres en avance.",
     diagram: TransmissionChain,
@@ -119,7 +120,7 @@ const MODULES: Module[] = [
       ],
     },
     moroccanExample:
-      "En 2020, l'output gap marocain a plongé à −4 % du PIB potentiel, causé par la fermeture du tourisme (8 % du PIB), l'effondrement des transferts MRE et la récession européenne. La réponse de BAM (baisse de 75 bp + emergency lending 120 mds MAD) a contribué à ramener l'output gap à −1,5 % en 2021.",
+      "En 2020, l'output gap marocain a plongé à −4 % du PIB potentiel, causé par la fermeture du tourisme (8 % du PIB), l'effondrement des transferts MRE et la récession européenne. La réponse de la Banque centrale (baisse de 75 bp + emergency lending 120 mds MAD) a contribué à ramener l'output gap à −1,5 % en 2021.",
     gameTip:
       "Regardez l'output gap comme un thermomètre de tension économique. En dessous de −1,5 % : relâchez les taux pour éviter la spirale déflationniste. Au-dessus de +1,5 % : resserrez avant que l'inflation ne s'emballe. La diagonale entre −1,5 % et +1,5 % est votre 'zone verte'.",
     diagram: ISCurveDiagram,
@@ -172,11 +173,11 @@ const MODULES: Module[] = [
     keyPoints: [
       "Canal des taux d'intérêt : i* ↑ → TMP ↑ → i^D ↑ → Crédit plus cher → Investissement ↓ → Output gap ↓ → Inflation ↓. C'est le canal principal.",
       "Canal du crédit : des taux élevés augmentent les NPL (créances douteuses), ce qui pousse les banques à rationner le crédit indépendamment du taux directeur. C'est le canal Mishkin.",
-      "Canal des anticipations : si BAM est crédible, une simple communication hawkish suffit à ancrer les anticipations à 2 % — sans même bouger le taux. C'est le canal de Forward Guidance.",
+      "Canal des anticipations : si la Banque centrale est crédible, une simple communication hawkish suffit à ancrer les anticipations à 2 % — sans même bouger le taux. C'est le canal de Forward Guidance.",
       "Canal du taux de change : hausse de i* → entrées de capitaux étrangers → appréciation du dirham → importations moins chères → inflation importée ↓. Pertinent au Maroc avec sa politique de change géré.",
     ],
     moroccanExample:
-      "L'expérience 2022-2023 a montré les limites du canal des taux au Maroc : les banques ont tardé à répercuter les hausses de BAM sur les taux débiteurs (λ = 0,35 seulement). BAM a compensé via le canal des anticipations — en signalant clairement sa détermination à lutter contre l'inflation.",
+      "L'expérience 2022-2023 a montré les limites du canal des taux au Maroc : les banques ont tardé à répercuter les hausses de la Banque centrale sur les taux débiteurs (λ = 0,35 seulement). La Banque centrale a compensé via le canal des anticipations — en signalant clairement sa détermination à lutter contre l'inflation.",
     gameTip:
       "La Communication (Forward Guidance) est votre 4e instrument gratuit dans le simulateur. Un signal 'hawkish' réduit l'output gap via le canal des anticipations sans modifier le taux directeur — utile quand vous voulez peser sur l'inflation sans écraser la croissance.",
     diagram: ChannelsDiagram,
@@ -208,7 +209,7 @@ const MODULES: Module[] = [
       ],
     },
     moroccanExample:
-      "En 2022, avec π = 6,1 % et ỹ ≈ 0,5 %, la règle de Taylor prescrivait : i* = 1,5 + 2,0 + 1,5×(6,1−2,0) + 0,5×0,5 ≈ 9,9 %. BAM n'est monté qu'à 3 % — justifié par la structure de financement des entreprises marocaines (très sensibles aux taux) et la faiblesse du marché obligataire.",
+      "En 2022, avec π = 6,1 % et ỹ ≈ 0,5 %, la règle de Taylor prescrivait : i* = 1,5 + 2,0 + 1,5×(6,1−2,0) + 0,5×0,5 ≈ 9,9 %. La Banque centrale n'est montée qu'à 3 % — justifié par la structure de financement des entreprises marocaines (très sensibles aux taux) et la faiblesse du marché obligataire.",
     gameTip:
       "Dans l'écran de débrief, vous voyez votre taux moyen vs le taux de Taylor. Un écart négatif persistant (trop accommodant) génère presque toujours une inflation au-dessus de la cible. Utilisez la règle de Taylor comme boussole, pas comme contrainte stricte.",
     diagram: TaylorRuleChart,
@@ -231,7 +232,7 @@ const MODULES: Module[] = [
       "Les chocs durent 2 à 6 trimestres dans le simulateur. L'inflation core (hors volatile) est votre meilleur indicateur de la tendance fondamentale.",
     ],
     moroccanExample:
-      "La sécheresse historique de 2022 a réduit la valeur ajoutée agricole de −14,6 %, impactant 35 % de la population active rurale. Simultanément, les prix pétroliers ont bondi de +60 % suite à la guerre en Ukraine. BAM a dû gérer un choc d'offre double — le pire scénario.",
+      "La sécheresse historique de 2022 a réduit la valeur ajoutée agricole de −14,6 %, impactant 35 % de la population active rurale. Simultanément, les prix pétroliers ont bondi de +60 % suite à la guerre en Ukraine. La Banque centrale a dû gérer un choc d'offre double — le pire scénario.",
     gameTip:
       "Face à un choc d'offre (pétrole, sécheresse), regardez l'inflation core — si elle reste ancré proche de 2 %, le choc est probablement temporaire et ne justifie pas un resserrement agressif. Un resserrement excessif sur un choc temporaire coûte 1-2 points de croissance inutilement.",
     diagram: ShockMatrix,
@@ -246,7 +247,7 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: Shield,
     overview:
-      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. BAM surveille les créances en souffrance (NPL), la croissance du crédit, et peut activer le coussin contracyclique (CCyB) pour préparer le système bancaire aux crises futures.",
+      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. La Banque centrale surveille les créances en souffrance (NPL), la croissance du crédit, et peut activer le coussin contracyclique (CCyB) pour préparer le système bancaire aux crises futures.",
     keyPoints: [
       "NPL (Non-Performing Loans) : au-delà de 10-12 %, les banques commencent à rationner le crédit même si le taux directeur est bas — le canal du crédit est bloqué.",
       "CCyB (Coussin Contracyclique) : constituer des réserves en période de boom (quand le crédit croît trop vite) pour les libérer en période de crise.",
@@ -254,7 +255,7 @@ const MODULES: Module[] = [
       "La Borne Zéro (ZLB) : quand le taux est à 0,5 % et l'inflation est négative, le taux réel monte automatiquement — paradoxe déflationniste. Seul l'Emergency Lending permet de briser la spirale.",
     ],
     moroccanExample:
-      "Le ratio NPL marocain a atteint 8,9 % en 2023 (vs 7,5 % en 2019), principalement dans le segment PME post-COVID. BAM a activé des moratoires et des garanties de l'État pour éviter que les NPL ne dépassent le seuil critique de 12 % qui aurait déclenché un credit crunch.",
+      "Le ratio NPL marocain a atteint 8,9 % en 2023 (vs 7,5 % en 2019), principalement dans le segment PME post-COVID. La Banque centrale a activé des moratoires et des garanties de l'État pour éviter que les NPL ne dépassent le seuil critique de 12 % qui aurait déclenché un credit crunch.",
     gameTip:
       "Dans le simulateur, si votre NPL dépasse 12 % ET l'inflation devient négative simultanément, vous êtes dans le 'Piège de la Dette-Déflation' — une alerte rouge apparaîtra. Activez l'Emergency Lending (10-20 mds MAD) immédiatement pour recapitaliser le système. Ne baissez plus le taux directeur — il est déjà inefficace.",
     diagram: NplRiskZones,
@@ -376,39 +377,13 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete }: {
                 <div className="mb-5 rounded-md p-4" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderLeft: `3px solid ${mod.categoryColor}` }}>
                   <div className="flex items-center gap-2 mb-3">
                     <FlaskConical size={11} style={{ color: mod.categoryColor }} />
-                    <span className="label-caps" style={{ color: mod.categoryColor, fontSize: '9px' }}>Formule mathématique</span>
+                    <span className="label-caps" style={{ color: mod.categoryColor, fontSize: '11px' }}>Formule mathématique</span>
                   </div>
-                  <div className="font-mono text-sm mb-3 px-2 py-2 rounded" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', fontSize: '12px', letterSpacing: '0.02em', lineHeight: 1.8, overflowX: 'auto', whiteSpace: 'nowrap' }}>
-                    {mod.formula.latex
-                      .replace(/\\cdot/g, '·')
-                      .replace(/\\tilde\{y\}/g, 'ỹ')
-                      .replace(/\\tilde\{y\}\^?\*?_?[t\d]?/g, 'ỹ')
-                      .replace(/\\pi\^e_t/g, 'πᵉ')
-                      .replace(/\\pi\^e/g, 'πᵉ')
-                      .replace(/\\pi\^?\*/g, 'π*')
-                      .replace(/\\pi_t/g, 'πₜ')
-                      .replace(/\\pi/g, 'π')
-                      .replace(/\\phi_\\pi/g, 'φ_π')
-                      .replace(/\\phi_y/g, 'φ_y')
-                      .replace(/\\rho/g, 'ρ')
-                      .replace(/\\sigma/g, 'σ')
-                      .replace(/\\delta/g, 'δ')
-                      .replace(/\\alpha/g, 'α')
-                      .replace(/\\beta/g, 'β')
-                      .replace(/\\kappa/g, 'κ')
-                      .replace(/\\gamma/g, 'γ')
-                      .replace(/\\Delta e_t/g, 'Δeₜ')
-                      .replace(/\^?\{([^}]+)\}/g, (_, g) => g.length === 1 ? `^${g}` : `^(${g})`)
-                      .replace(/_?\{([^}]+)\}/g, (_, g) => `_(${g})`)
-                      .replace(/\\\\/g, '')
-                      .replace(/\\text\{([^}]+)\}/g, '$1')
-                      .replace(/\{|\}/g, '')
-                    }
-                  </div>
-                  <ul className="flex flex-col gap-1">
+                  <BlockKatex math={mod.formula.latex} color={mod.categoryColor} />
+                  <ul className="flex flex-col gap-1.5 mt-3">
                     {mod.formula.legend.map((leg, i) => (
-                      <li key={i} className="flex gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        <span style={{ color: mod.categoryColor, fontFamily: 'monospace' }}>·</span>
+                      <li key={i} className="flex gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ color: mod.categoryColor, fontFamily: 'monospace', flexShrink: 0 }}>·</span>
                         {leg}
                       </li>
                     ))}
@@ -541,7 +516,7 @@ export default function CoursesPage() {
               <GraduationCap size={20} style={{ color: 'var(--accent-cool)' }} />
             </div>
             <div>
-              <span className="label-caps block" style={{ color: 'var(--accent-cool)', marginBottom: '2px' }}>Bank Al-Maghrib · Simulateur</span>
+              <span className="label-caps block" style={{ color: 'var(--accent-cool)', marginBottom: '2px' }}>Banque centrale · Simulateur</span>
               <h1 className="font-editorial text-2xl sm:text-3xl" style={{ color: 'var(--text-primary)', lineHeight: 1.1 }}>
                 Cours de Macroéconomie
               </h1>
@@ -651,7 +626,7 @@ export default function CoursesPage() {
 
       <footer className="px-6 py-5 text-center" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-          Projet de Fin d&apos;Année 2025 · Bank Al-Maghrib · Simulateur de politique monétaire
+          Projet de Fin d&apos;Année 2025 · Banque centrale · Simulateur de politique monétaire
         </p>
       </footer>
     </div>

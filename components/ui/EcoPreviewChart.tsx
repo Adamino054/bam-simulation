@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { Activity, Percent, TrendingDown, Shield } from 'lucide-react'
 
-// 20 quarters of the 2022 Morocco inflation shock — calibrated on BAM data
+// 20 quarters of the 2022 Morocco inflation shock — calibrated on central bank data
 const DATA = [
   { q: 'T1',  inflation: 1.4, rate: 1.50 },
   { q: 'T2',  inflation: 2.1, rate: 1.50 },
@@ -118,7 +118,7 @@ export function EcoPreviewChart() {
             ))}
           </div>
           <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#3E4046', letterSpacing: '0.08em' }}>
-            CBS · TERMINAL — BANK AL-MAGHRIB
+            CBS · TERMINAL — BANQUE CENTRALE
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>

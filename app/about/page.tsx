@@ -24,8 +24,8 @@ export default function AboutPage() {
         <div className="space-y-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           <p>
             Ce serious game est développé dans le cadre d'un Projet de Fin d'Année
-            commandité par <strong style={{ color: 'var(--text-primary)' }}>Bank Al-Maghrib</strong>,
-            la banque centrale du Royaume du Maroc.
+            commandité par <strong style={{ color: 'var(--text-primary)' }}>la Banque centrale</strong>
+            du Royaume du Maroc.
           </p>
           <p>
             Il constitue la composante jouable d'un moteur de simulation macroéconomique

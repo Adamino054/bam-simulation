@@ -19,11 +19,11 @@
   --bg-overlay:     rgba(14, 15, 18, 0.85);
 
   /* Text */
-  --text-primary:   #F0F0EA;
-  --text-secondary: #9A9B9B;
-  --text-tertiary:  #5E6066;
+  --text-primary:   #F2F2EC;
+  --text-secondary: #B8B9BA;
+  --text-tertiary:  #808288;
   --text-inverse:   #141418;
-  --text-link:      #B41923;
+  --text-link:      #C94048;
 
   /* Border */
   --border-subtle:  rgba(240, 240, 234, 0.05);
@@ -56,8 +56,8 @@
   --bg-overlay:     rgba(248, 248, 244, 0.92);
 
   --text-primary:   #141418;
-  --text-secondary: #4E4E54;
-  --text-tertiary:  #888890;
+  --text-secondary: #3C3C44;
+  --text-tertiary:  #646470;
   --text-inverse:   #F0F0EA;
   --text-link:      #8B131B;
 
@@ -98,8 +98,10 @@
   body {
     @apply bg-bg-base text-text-primary antialiased;
     font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
+    font-size: 16px;
+    line-height: 1.65;
+    font-weight: 400;
+    letter-spacing: -0.01em;
   }
 
   /* Focus visible */
@@ -147,7 +149,7 @@
 @layer components {
   /* Label institutionnel small-caps */
   .label-caps {
-    @apply text-[10px] font-semibold uppercase tracking-widest text-text-tertiary;
+    @apply text-[11px] font-semibold uppercase tracking-widest text-text-secondary;
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
   }

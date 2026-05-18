@@ -201,7 +201,7 @@ export function Dashboard() {
                 <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Inflation (π)</p>
                 <p>Variation générale des prix à la consommation, en glissement annuel.</p>
                 <InlineKatex>{'\\pi_t = \\beta\\pi^e + \\kappa\\tilde{y} + \\alpha\\Delta p^{imp}'}</InlineKatex>
-                <p>La cible de BAM est de 2 %. Au-delà, un resserrement est justifié.</p>
+                <p>La cible de la Banque centrale est de 2 %. Au-delà, un resserrement est justifié.</p>
               </div>
             }
           />
@@ -255,7 +255,7 @@ export function Dashboard() {
           {/* Crédibilité avec icône contextuelle (Étape 4 BCE) */}
           <div className="relative">
             <MetricCard
-              label="Crédibilité BAM"
+              label="Crédibilité Banque centrale"
               value={currentState.centralBankCredibility}
               unit=""
               precision={0}
@@ -265,7 +265,7 @@ export function Dashboard() {
               tooltipContent={
                 <div className="space-y-1.5">
                   <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Crédibilité (0–100)</p>
-                  <p>Indice de confiance des agents dans la politique de BAM.</p>
+                  <p>Indice de confiance des agents dans la politique de la Banque centrale.</p>
                   <p>{"Augmente quand l'inflation reste proche de 2 %. Diminue en cas de déviation >2 pt ou de reversal de politique."}</p>
                 </div>
               }

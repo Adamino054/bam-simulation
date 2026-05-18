@@ -131,7 +131,7 @@ export function NewsAlert({
                   whiteSpace: 'nowrap',
                 }}
               >
-                FLASH INFO — BANK AL-MAGHRIB
+                FLASH INFO — BANQUE CENTRALE
               </span>
             </div>
 
