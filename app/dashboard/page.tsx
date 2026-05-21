@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
   Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
+  Sliders, ShieldAlert,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -14,7 +15,9 @@ import { SCENARIOS } from '@/engine/scenarios'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { PerformanceRadar } from '@/components/ui/PerformanceRadar'
 import { fmtPct } from '@/lib/format'
-import type { ScenarioId } from '@/engine/state'
+import type { ScenarioId, DifficultyLevel } from '@/engine/state'
+import { AssistantBot } from '@/components/ui/AssistantBot'
+import { DASHBOARD_MESSAGES } from '@/engine/botMessages'
 
 const ScoreProgressChart = dynamic(
   () => import('@/components/ui/ScoreProgressChart').then(m => ({ default: m.ScoreProgressChart })),
@@ -49,6 +52,8 @@ export default function DashboardPage() {
   const startGame = useGameStore(s => s.startGame)
   const freeMode = useGameStore(s => s.freeMode)
   const setFreeMode = useGameStore(s => s.setFreeMode)
+  const difficultyLevel = useGameStore(s => s.difficultyLevel)
+  const setDifficultyLevel = useGameStore(s => s.setDifficultyLevel)
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -71,7 +76,7 @@ export default function DashboardPage() {
   }
 
   const handleStart = () => {
-    startGame(selected)
+    startGame(selected, difficultyLevel)
     router.push('/play')
   }
 
@@ -94,6 +99,14 @@ export default function DashboardPage() {
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
             <GraduationCap size={10} /> Cours
+          </a>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/lab" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
+            <Sliders size={10} style={{ color: 'var(--accent-cool)' }} /> Lab
+          </a>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/campaign" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
+            <ShieldAlert size={10} style={{ color: 'var(--accent-warm)' }} /> Campagnes
           </a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <a href="/admin" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
@@ -167,6 +180,106 @@ export default function DashboardPage() {
             })}
           </motion.div>
         )}
+        {/* ══════ SPECIAL MODES ══════ */}
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10"
+          {...fadeUp}
+          transition={{ ...fadeUp.transition, delay: 0.15 }}
+        >
+          {/* Macro Lab Sandbox */}
+          <div
+            className="relative rounded-xl p-5 border overflow-hidden flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--bg-panel)',
+              borderColor: 'rgba(92, 126, 146, 0.25)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+              background: 'linear-gradient(135deg, var(--bg-panel) 0%, rgba(92, 126, 146, 0.05) 100%)',
+            }}
+          >
+            <div aria-hidden="true" style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: 'radial-gradient(circle, rgba(92,126,146,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(92, 126, 146, 0.12)' }}>
+                  <Sliders size={16} style={{ color: 'var(--accent-cool)' }} />
+                </div>
+                <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--accent-cool)' }}>
+                  LABORATOIRE EXPÉRIMENTAL
+                </span>
+                <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold" style={{ letterSpacing: '0.05em' }}>
+                  SANDBOX
+                </span>
+              </div>
+              <h3 className="font-editorial text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
+                Simulateur Macroéconomique Interactif
+              </h3>
+              <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                Modifiez librement les paramètres constants du modèle ($\sigma$, $\kappa$, $\delta$, $\beta$) à l&apos;aide de curseurs et visualisez instantanément la déformation des courbes <strong>IS</strong> et de <strong>Phillips</strong>.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/lab')}
+              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-cool)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' }}
+            >
+              Lancer le Laboratoire
+              <ChevronRight size={12} />
+            </button>
+          </div>
+
+          {/* Historical Campaigns */}
+          <div
+            className="relative rounded-xl p-5 border overflow-hidden flex flex-col justify-between"
+            style={{
+              backgroundColor: 'var(--bg-panel)',
+              borderColor: 'rgba(201, 168, 106, 0.25)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+              background: 'linear-gradient(135deg, var(--bg-panel) 0%, rgba(201, 168, 106, 0.05) 100%)',
+            }}
+          >
+            <div aria-hidden="true" style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: 'radial-gradient(circle, rgba(201,168,106,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(201, 168, 106, 0.12)' }}>
+                  <ShieldAlert size={16} style={{ color: 'var(--accent-warm)' }} />
+                </div>
+                <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--accent-warm)' }}>
+                  ARCHIVES DE SÉCURITÉ
+                </span>
+                <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold" style={{ letterSpacing: '0.05em' }}>
+                  CAMPAGNES
+                </span>
+              </div>
+              <h3 className="font-editorial text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
+                Scénarios de Crises Historiques
+              </h3>
+              <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                Prenez les commandes lors de crises majeures : l&apos;hyperinflation Volcker (1979) ou l&apos;effondrement des Subprimes (2008). Relevez le défi sous contraintes strictes d&apos;objectifs de mandat.
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/campaign')}
+              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-primary)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-warm)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' }}
+            >
+              Ouvrir les Dossiers Classified
+              <ChevronRight size={12} />
+            </button>
+          </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -229,15 +342,158 @@ export default function DashboardPage() {
               })}
             </div>
 
-            {/* Scenario description */}
+            {/* Difficulty Level Selector */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2">
+                <Target size={16} style={{ color: 'var(--accent-primary)' }} />
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  Difficulté de la Simulation :
+                </span>
+              </div>
+              <div className="flex rounded-lg overflow-hidden p-0.5" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-default)' }}>
+                {(['beginner', 'intermediate', 'expert'] as DifficultyLevel[]).map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => setDifficultyLevel(lvl)}
+                    className="px-4 py-1.5 rounded-md text-xs font-semibold transition-all"
+                    style={{
+                      backgroundColor: difficultyLevel === lvl ? 'var(--accent-primary)' : 'transparent',
+                      color: difficultyLevel === lvl ? '#fff' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {lvl === 'beginner' ? '🌱 Débutant' : lvl === 'intermediate' ? '📈 Intermédiaire' : '🎯 Expert'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Fiche de Conjoncture Initiale */}
             <div
-              className="rounded-md px-4 py-3 mb-4 text-sm leading-relaxed"
+              className="rounded-xl p-5 mb-5 transition-all duration-300"
               style={{
-                backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)',
-                borderLeft: `3px solid ${selectedMeta.color}`, color: 'var(--text-secondary)', fontStyle: 'italic',
+                backgroundColor: 'var(--bg-panel)',
+                border: '1px solid var(--border-default)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
               }}
             >
-              {SCENARIOS[selected].description}
+              {/* Header de la Fiche */}
+              <div className="flex items-center justify-between border-b pb-3 mb-4 text-left" style={{ borderColor: 'var(--border-subtle)' }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full animate-pulse-soft" style={{ backgroundColor: selectedMeta.color }} />
+                  <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                    FICHE DE CONJONCTURE INITIALE
+                  </span>
+                </div>
+                <span className="font-mono text-[9px] px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
+                  Scénario : {SCENARIOS[selected].title}
+                </span>
+              </div>
+
+              {/* Contenu principal en grille */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                {/* 1. Mètres de conjoncture (MD: 5) */}
+                <div className="md:col-span-5 flex flex-col gap-2 justify-center border-b md:border-b-0 md:border-r pb-4 md:pb-0 md:pr-4" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <span className="label-caps font-semibold text-[8px] mb-2 text-left" style={{ color: 'var(--text-tertiary)' }}>
+                    INDICATEURS MACRO DE DÉPART
+                  </span>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
+                      <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.inflation > 4 ? 'var(--data-negative)' : SCENARIOS[selected].initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
+                        {SCENARIOS[selected].initialState.inflation.toFixed(1)} %
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Croissance PIB</span>
+                      <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
+                        {SCENARIOS[selected].initialState.gdpGrowth.toFixed(1)} %
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Taux Directeur</span>
+                      <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {SCENARIOS[selected].initialState.policyRate.toFixed(2)} %
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Crédibilité</span>
+                      <span className="font-mono text-sm font-semibold" style={{ color: 'var(--accent-warm)' }}>
+                        {SCENARIOS[selected].initialState.centralBankCredibility} / 100
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left mt-1">
+                    <div className="flex justify-between items-center text-[8px] label-caps mb-1" style={{ color: 'var(--text-tertiary)' }}>
+                      <span>Impact des chocs initiaux</span>
+                      <span className="font-mono font-bold" style={{ color: SCENARIOS[selected].initialShocks.length > 0 ? 'var(--data-negative)' : 'var(--data-positive)' }}>
+                        {SCENARIOS[selected].initialShocks.length > 0 ? 'ACTIF' : 'AUCUN'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] leading-tight" style={{ color: 'var(--text-secondary)' }}>
+                      {SCENARIOS[selected].initialShocks.length > 0 
+                        ? SCENARIOS[selected].initialShocks[0].label + ' : ' + SCENARIOS[selected].initialShocks[0].description
+                        : 'Aucun choc majeur en cours.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 2. Analyse éditoriale & Conseils (MD: 7) */}
+                <div className="md:col-span-7 flex flex-col justify-between gap-3 text-left">
+                  <div>
+                    <span className="label-caps font-semibold text-[8px] block mb-1" style={{ color: 'var(--text-tertiary)' }}>
+                      ANALYSE DE CONJONCTURE ({difficultyLevel === 'beginner' ? 'DÉBUTANT' : difficultyLevel === 'intermediate' ? 'INTERMÉDIAIRE' : 'EXPERT'})
+                    </span>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
+                      &ldquo;{SCENARIOS[selected].descriptionByLevel[difficultyLevel] || SCENARIOS[selected].description}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Règle de scoring & Spécificités du niveau */}
+                  <div className="p-3 rounded-lg border text-[11px] leading-relaxed" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
+                    <span className="font-semibold block mb-1" style={{ color: 'var(--text-primary)' }}>Règles du niveau {difficultyLevel === 'beginner' ? 'Débutant' : difficultyLevel === 'intermediate' ? 'Intermédiaire' : 'Expert'} :</span>
+                    <ul className="list-disc list-inside space-y-0.5 text-xs text-[var(--text-secondary)]" style={{ color: 'var(--text-secondary)' }}>
+                      {difficultyLevel === 'beginner' ? (
+                        <>
+                          <li><span style={{ color: 'var(--data-positive)', fontWeight: 600 }}>Scoring indulgent :</span> Écarts mineurs tolérés.</li>
+                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments simplifiés :</span> Taux directeur uniquement.</li>
+                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs modérés :</span> 16 trimestres de simulation.</li>
+                        </>
+                      ) : difficultyLevel === 'intermediate' ? (
+                        <>
+                          <li><span style={{ color: 'var(--accent-warm)', fontWeight: 600 }}>Scoring standard :</span> Pondération stricte de la crédibilité.</li>
+                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments avancés :</span> Forward guidance, réserves, CCyB.</li>
+                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs stochastiques :</span> 20 trimestres de simulation.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><span style={{ color: 'var(--data-negative)', fontWeight: 600 }}>Scoring institutionnel :</span> Zéro marge d'erreur, pass-through accentué.</li>
+                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Arsenal complet :</span> Tous les leviers de politique monétaire activés.</li>
+                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs sévères :</span> 25 trimestres. Pas de conseils en cours de jeu.</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  {/* Conseils du BAM Bot */}
+                  {SCENARIOS[selected].hintsByLevel[difficultyLevel] && SCENARIOS[selected].hintsByLevel[difficultyLevel].length > 0 && (
+                    <div className="rounded-lg p-2.5 text-xs" style={{ backgroundColor: 'rgba(201, 168, 106, 0.06)', border: '1px solid rgba(201, 168, 106, 0.15)', color: 'var(--text-secondary)' }}>
+                      <span className="font-semibold block mb-1" style={{ color: 'var(--accent-warm)' }}>Recommandations stratégiques du BAM Bot :</span>
+                      <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                        {SCENARIOS[selected].hintsByLevel[difficultyLevel].map((hint, i) => (
+                          <li key={i}>{hint}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Mode Libre */}
@@ -487,6 +743,9 @@ export default function DashboardPage() {
         )}
 
       </main>
+
+      {/* Mascot Bot */}
+      <AssistantBot messages={DASHBOARD_MESSAGES[difficultyLevel]?.map(m => m.text) ?? []} context="dashboard" />
     </div>
   )
 }

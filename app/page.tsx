@@ -7,11 +7,12 @@ import {
   TrendingUp, Shield, Zap, BarChart3, Target, Users,
   ChevronRight, Landmark, ArrowRight, BookOpen,
   GraduationCap, History, Percent, Activity, Calculator,
-  Network, LineChart as LineChartIcon,
+  Network, LineChart as LineChartIcon, Sliders, ShieldAlert,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { useAuthStore } from '@/store/authStore'
 import { EcoPreviewChart } from '@/components/ui/EcoPreviewChart'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 
 // ── Ticker data ─────────────────────────────────────────────────────────────
 const TICKER_ITEMS = [
@@ -207,7 +208,7 @@ export default function LandingPage() {
         {/* ══ NAV ══════════════════════════════════════════════════════════ */}
         <motion.nav
           className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(8px)', backgroundColor: 'rgba(14,15,18,0.7)', position: 'sticky', top: 0, zIndex: 50 }}
+          style={{ borderBottom: '1px solid var(--border-subtle)', backdropFilter: 'blur(8px)', backgroundColor: 'var(--bg-overlay)', position: 'sticky', top: 0, zIndex: 50 }}
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -222,6 +223,12 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-4 ml-4" style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '16px' }}>
               <a href="/courses" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Cours
+              </a>
+              <a href="/lab" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Macro Lab
+              </a>
+              <a href="/campaign" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Campagnes
               </a>
               {currentUser && (
                 <a href="/history" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
@@ -612,6 +619,7 @@ export default function LandingPage() {
           </div>
         </footer>
 
+        <AssistantBot messages={[]} context="landing" />
       </div>
     </div>
   )

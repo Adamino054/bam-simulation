@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,6 +8,7 @@ import {
   Calculator, Zap, Shield, ChevronDown, ChevronRight,
   BookOpen, CheckCircle2, Circle, ArrowLeft, Lightbulb,
   FlaskConical, Gamepad2, GraduationCap, BarChart2,
+  Award, Sparkles, FileText, Check
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { BlockKatex } from '@/components/ui/InlineKatex'
@@ -16,6 +17,15 @@ import {
   PhillipsCurveDiagram, ChannelsDiagram, TaylorRuleChart,
   ShockMatrix, NplRiskZones,
 } from '@/components/ui/CourseDiagrams'
+import { QuizCard } from '@/components/ui/QuizCard'
+import { NotePad } from '@/components/ui/NotePad'
+import { BadgeDisplay } from '@/components/ui/BadgeDisplay'
+import { useAuthStore } from '@/store/authStore'
+import { getQuiz } from '@/engine/quizzes'
+import { BADGES, checkBadgeEligibility } from '@/engine/badges'
+import { AssistantBot } from '@/components/ui/AssistantBot'
+import { COURSE_MESSAGES } from '@/engine/botMessages'
+import type { DifficultyLevel } from '@/engine/difficulty'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface Module {
@@ -276,14 +286,22 @@ function CategoryBadge({ label, color }: { label: string; color: string }) {
 }
 
 // ── Module card (accordion) ───────────────────────────────────────────────────
-function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete }: {
+// ── Module card (accordion) ───────────────────────────────────────────────────
+function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredLevel, onQuizComplete }: {
   mod: Module
   isOpen: boolean
   onToggle: () => void
   isCompleted: boolean
   onComplete: () => void
+  preferredLevel: DifficultyLevel
+  onQuizComplete: (score: number, total: number) => void
 }) {
   const Icon = mod.icon
+  const [retryCount, setRetryCount] = useState(0)
+
+  const quizQuestions = useMemo(() => {
+    return getQuiz(mod.id, preferredLevel)
+  }, [mod.id, preferredLevel, retryCount])
 
   return (
     <motion.div
@@ -413,6 +431,21 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete }: {
                 </p>
               </div>
 
+              {/* Quiz Card integration */}
+              <div className="mb-5 border-t pt-5" style={{ borderColor: 'var(--border-subtle)' }}>
+                <QuizCard
+                  questions={quizQuestions}
+                  moduleColor={mod.categoryColor}
+                  onComplete={onQuizComplete}
+                  onRetry={() => setRetryCount(prev => prev + 1)}
+                />
+              </div>
+
+              {/* NotePad integration */}
+              <div className="mb-5 border-t pt-5" style={{ borderColor: 'var(--border-subtle)' }}>
+                <NotePad moduleId={mod.id} moduleColor={mod.categoryColor} />
+              </div>
+
               {/* Complete button */}
               <button
                 type="button"
@@ -442,6 +475,19 @@ export default function CoursesPage() {
   const [mounted, setMounted] = useState(false)
   const [openModule, setOpenModule] = useState<string | null>('intro')
   const [completed, setCompleted] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<'courses' | 'badges'>('courses')
+
+  const player = useAuthStore(s => s.getCurrentPlayer())
+  const storePreferredLevel = player?.preferredLevel ?? 'beginner'
+  const setPreferredLevel = useAuthStore(s => s.setPreferredLevel)
+  const [localLevel, setLocalLevel] = useState<DifficultyLevel>('beginner')
+
+  // Sync store preferredLevel with local state
+  useEffect(() => {
+    if (player) {
+      setLocalLevel(player.preferredLevel)
+    }
+  }, [player, player?.preferredLevel])
 
   useEffect(() => {
     setMounted(true)
@@ -451,14 +497,59 @@ export default function CoursesPage() {
     } catch { /* ignore */ }
   }, [])
 
+  const checkAndAwardBadges = (currentCompleted: string[]) => {
+    const playerState = useAuthStore.getState().getCurrentPlayer()
+    if (!playerState) return
+    
+    const data = {
+      completedModules: currentCompleted,
+      quizScores: playerState.quizScores ?? [],
+      gameHistory: playerState.gameHistory ?? [],
+    }
+
+    BADGES.forEach(badge => {
+      if (!playerState.badges?.includes(badge.id)) {
+        if (checkBadgeEligibility(badge.id, data)) {
+          useAuthStore.getState().addBadge(badge.id)
+        }
+      }
+    })
+  }
+
   const toggleComplete = (id: string) => {
     setCompleted(prev => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
-      try { localStorage.setItem('cbs-courses-completed', JSON.stringify([...next])) } catch { /* ignore */ }
+      const nextArr = Array.from(next)
+      try { localStorage.setItem('cbs-courses-completed', JSON.stringify(nextArr)) } catch { /* ignore */ }
+      
+      // Check and award course badges
+      setTimeout(() => checkAndAwardBadges(nextArr), 50)
       return next
     })
+  }
+
+  const handleQuizComplete = (moduleId: string, score: number, total: number) => {
+    if (!player) return
+    const addQuizScore = useAuthStore.getState().addQuizScore
+    addQuizScore({
+      moduleId,
+      score,
+      total,
+      date: new Date().toISOString(),
+      level: localLevel,
+    })
+    
+    // Check and award quiz/course badges
+    setTimeout(() => checkAndAwardBadges(Array.from(completed)), 50)
+  }
+
+  const handleLevelChange = (level: DifficultyLevel) => {
+    setLocalLevel(level)
+    if (player) {
+      setPreferredLevel(level)
+    }
   }
 
   if (!mounted) return null
@@ -550,52 +641,121 @@ export default function CoursesPage() {
           )}
         </motion.div>
 
-        {/* ── Quick nav by category ────────────────────────────────────── */}
-        <motion.div
-          className="flex flex-wrap gap-2 mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-        >
-          {Object.entries(categoryGroups).map(([cat, { color }]) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => {
-                const firstMod = categoryGroups[cat].modules[0]
-                setOpenModule(firstMod.id)
-                setTimeout(() => document.getElementById(`mod-${firstMod.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
-              }}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-              style={{ backgroundColor: `${color}14`, color, border: `1px solid ${color}30`, cursor: 'pointer' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = `${color}28` }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = `${color}14` }}
-            >
-              {cat}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* ── Modules accordion ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-3">
-          {MODULES.map((mod, i) => (
-            <motion.div
-              key={mod.id}
-              id={`mod-${mod.id}`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <ModuleCard
-                mod={mod}
-                isOpen={openModule === mod.id}
-                onToggle={() => setOpenModule(openModule === mod.id ? null : mod.id)}
-                isCompleted={completed.has(mod.id)}
-                onComplete={() => toggleComplete(mod.id)}
-              />
-            </motion.div>
-          ))}
+        {/* ── Tabs selector ────────────────────────────────────────────── */}
+        <div className="flex border-b mb-8" style={{ borderColor: 'var(--border-subtle)' }}>
+          <button
+            onClick={() => setActiveTab('courses')}
+            className="px-6 py-3 font-semibold text-sm transition-all relative"
+            style={{
+              color: activeTab === 'courses' ? 'var(--accent-cool)' : 'var(--text-tertiary)',
+              borderBottom: activeTab === 'courses' ? '2px solid var(--accent-cool)' : '2px solid transparent',
+              background: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            📚 Cours & Modules
+          </button>
+          <button
+            onClick={() => setActiveTab('badges')}
+            className="px-6 py-3 font-semibold text-sm transition-all relative"
+            style={{
+              color: activeTab === 'badges' ? 'var(--accent-cool)' : 'var(--text-tertiary)',
+              borderBottom: activeTab === 'badges' ? '2px solid var(--accent-cool)' : '2px solid transparent',
+              background: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            🏆 Mes Badges & Succès
+          </button>
         </div>
+
+        {activeTab === 'courses' ? (
+          <>
+            {/* Study Level Control */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2">
+                <GraduationCap size={16} style={{ color: 'var(--accent-cool)' }} />
+                <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  Niveau d&apos;étude des Quizzes :
+                </span>
+              </div>
+              <div className="flex rounded-lg overflow-hidden p-0.5" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-default)' }}>
+                {(['beginner', 'intermediate', 'expert'] as DifficultyLevel[]).map((lvl) => (
+                  <button
+                    key={lvl}
+                    onClick={() => handleLevelChange(lvl)}
+                    className="px-4 py-1.5 rounded-md text-xs font-semibold transition-all"
+                    style={{
+                      backgroundColor: localLevel === lvl ? 'var(--accent-cool)' : 'transparent',
+                      color: localLevel === lvl ? '#fff' : 'var(--text-secondary)',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {lvl === 'beginner' ? '🌱 Débutant' : lvl === 'intermediate' ? '📈 Intermédiaire' : '🎯 Expert'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick nav by category */}
+            <motion.div
+              className="flex flex-wrap gap-2 mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
+              {Object.entries(categoryGroups).map(([cat, { color }]) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => {
+                    const firstMod = categoryGroups[cat].modules[0]
+                    setOpenModule(firstMod.id)
+                    setTimeout(() => document.getElementById(`mod-${firstMod.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+                  }}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                  style={{ backgroundColor: `${color}14`, color, border: `1px solid ${color}30`, cursor: 'pointer' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = `${color}28` }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = `${color}14` }}
+                >
+                  {cat}
+                </button>
+              ))}
+            </motion.div>
+
+            {/* Modules accordion */}
+            <div className="flex flex-col gap-3">
+              {MODULES.map((mod, i) => (
+                <motion.div
+                  key={mod.id}
+                  id={`mod-${mod.id}`}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <ModuleCard
+                    mod={mod}
+                    isOpen={openModule === mod.id}
+                    onToggle={() => setOpenModule(openModule === mod.id ? null : mod.id)}
+                    isCompleted={completed.has(mod.id)}
+                    onComplete={() => toggleComplete(mod.id)}
+                    preferredLevel={localLevel}
+                    onQuizComplete={(score, total) => handleQuizComplete(mod.id, score, total)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <BadgeDisplay />
+          </motion.div>
+        )}
 
         {/* ── CTA bas de page ──────────────────────────────────────────── */}
         <motion.div
@@ -629,6 +789,10 @@ export default function CoursesPage() {
           Projet de Fin d&apos;Année 2025 · Banque centrale · Simulateur de politique monétaire
         </p>
       </footer>
+
+      {/* Mascot Bot */}
+      <AssistantBot messages={COURSE_MESSAGES[openModule || 'intro']?.map(m => m.text) ?? []} context="courses" />
     </div>
   )
 }
+

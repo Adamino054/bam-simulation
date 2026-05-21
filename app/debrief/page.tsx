@@ -13,7 +13,10 @@ import { SCENARIOS } from '@/engine/scenarios'
 import { step } from '@/engine/simulator'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
-import type { ScenarioId, EconomicState, PolicyAction, Shock } from '@/engine/state'
+import type { ScenarioId, EconomicState, PolicyAction, Shock, DifficultyLevel } from '@/engine/state'
+import { getLevelConfig } from '@/engine/difficulty'
+import { getDebriefMessage } from '@/engine/botMessages'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 
 const DebriefChart = dynamic(
   () => import('@/components/game/DebriefChart').then(m => ({ default: m.DebriefChart })),
@@ -28,13 +31,14 @@ const GRADE_COLOR: Record<string, string> = {
   F: 'var(--data-negative)',
 }
 
-function computeTaylorOptimal(scenario: ScenarioId, seed: number): number {
+function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLevel: DifficultyLevel): number {
   const scenarioData = SCENARIOS[scenario]
   let state: EconomicState = { ...scenarioData.initialState }
   let activeShocks: Shock[] = [...scenarioData.initialShocks]
   const allStates: EconomicState[] = [state]
+  const levelConfig = getLevelConfig(difficultyLevel)
 
-  for (let q = 0; q < 19; q++) {
+  for (let q = 0; q < levelConfig.quarters - 1; q++) {
     const taylorRate = computeTaylorRate(state.inflation, state.outputGap)
     const rateChange = Math.round((taylorRate - state.policyRate) * 100 / 25) * 25
     const clampedChange = Math.max(-100, Math.min(100, rateChange))
@@ -47,7 +51,7 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number): number {
     ]
     allStates.push(state)
   }
-  return computeScore(allStates).total
+  return computeScore(allStates, difficultyLevel).total
 }
 
 export default function DebriefPage() {
@@ -55,7 +59,7 @@ export default function DebriefPage() {
   const [mounted, setMounted] = useState(false)
   const savedRef = useRef(false)
 
-  const { history, currentState, scenario, status, seed, reset, startGame } = useGameStore(
+  const { history, currentState, scenario, status, seed, reset, startGame, difficultyLevel } = useGameStore(
     useShallow(s => ({
       history:      s.history,
       currentState: s.currentState,
@@ -65,6 +69,7 @@ export default function DebriefPage() {
       reset:        s.reset,
       startGame:    s.startGame,
       freeMode:     s.freeMode,
+      difficultyLevel: s.difficultyLevel,
     }))
   )
   const freeMode = useGameStore(s => s.freeMode)
@@ -73,12 +78,18 @@ export default function DebriefPage() {
 
   useEffect(() => { setMounted(true) }, [])
 
+  const levelConfig = useMemo(() => getLevelConfig(difficultyLevel), [difficultyLevel])
+  const maxTotal = useMemo(() => {
+    const w = levelConfig.scoringWeights
+    return w.inflation + w.growth + w.stability + w.credibility
+  }, [levelConfig])
+
   const allStates = useMemo(() => [...history, currentState], [history, currentState])
-  const score = useMemo(() => computeScore(allStates), [allStates])
+  const score = useMemo(() => computeScore(allStates, difficultyLevel), [allStates, difficultyLevel])
   const report = useMemo(() => generateGovernorReport(allStates), [allStates])
   const taylorScore = useMemo(
-    () => scenario ? computeTaylorOptimal(scenario as ScenarioId, seed) : 0,
-    [scenario, seed],
+    () => scenario ? computeTaylorOptimal(scenario as ScenarioId, seed, difficultyLevel) : 0,
+    [scenario, seed, difficultyLevel],
   )
 
   // ── Sauvegarde automatique en historique joueur ──────────────────
@@ -101,8 +112,9 @@ export default function DebriefPage() {
       avgGrowth,
       avgCredibility,
       freeMode,
+      difficultyLevel,
     })
-  }, [mounted, currentUser, scenario, allStates, score, addGameRecord, freeMode])
+  }, [mounted, currentUser, scenario, allStates, score, addGameRecord, freeMode, difficultyLevel])
 
   // ── Guards ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -133,9 +145,22 @@ export default function DebriefPage() {
 
         {/* ── Hero grade ── */}
         <div className="text-center mb-12">
-          <p className="label-caps mb-4" style={{ color: 'var(--text-tertiary)' }}>
-            Bilan de mandat — {SCENARIOS[scenario as ScenarioId]?.title}
-          </p>
+          <div className="flex flex-col items-center justify-center gap-2 mb-4">
+            <p className="label-caps" style={{ color: 'var(--text-tertiary)', margin: 0 }}>
+              Bilan de mandat — {SCENARIOS[scenario as ScenarioId]?.title}
+            </p>
+            <span
+              className="label-caps px-3 py-1 rounded-full text-[10px] flex items-center gap-1.5"
+              style={{
+                backgroundColor: levelConfig.bgColor,
+                color: levelConfig.color,
+                border: `1px solid ${levelConfig.color}40`,
+                fontWeight: 600,
+              }}
+            >
+              {levelConfig.emoji} Niveau {levelConfig.labelFr}
+            </span>
+          </div>
           <div className="flex items-baseline justify-center gap-6 mb-6">
             <span
               className="font-editorial"
@@ -149,7 +174,7 @@ export default function DebriefPage() {
             </span>
             <div className="text-left">
               <p className="font-editorial-roman" style={{ fontSize: '2.5rem', color: 'var(--text-primary)' }}>
-                {score.total} / 100
+                {score.total} / {maxTotal}
               </p>
               <p className="label-caps" style={{ color: 'var(--text-tertiary)' }}>Score final</p>
             </div>
@@ -169,10 +194,10 @@ export default function DebriefPage() {
         {/* ── Score détaillé ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {[
-            { label: 'Stabilité des prix',    score: score.inflation,   max: 35, detail: `Déviation moy. : ${score.details.avgInflationDeviation.toFixed(2)} pt` },
-            { label: 'Croissance',            score: score.growth,      max: 25, detail: `Croissance moy. : ${fmtPct(score.details.avgGdpGrowth)}` },
-            { label: 'Stabilité trajectoire', score: score.stability,   max: 20, detail: `Variance inflation : ${score.details.inflationVariance.toFixed(2)}` },
-            { label: 'Crédibilité',           score: score.credibility, max: 20, detail: `Crédibilité moy. : ${score.details.avgCredibility.toFixed(0)}` },
+            { label: 'Stabilité des prix',    score: score.inflation,   max: levelConfig.scoringWeights.inflation, detail: `Déviation moy. : ${score.details.avgInflationDeviation.toFixed(2)} pt` },
+            { label: 'Croissance',            score: score.growth,      max: levelConfig.scoringWeights.growth, detail: `Croissance moy. : ${fmtPct(score.details.avgGdpGrowth)}` },
+            { label: 'Stabilité trajectoire', score: score.stability,   max: levelConfig.scoringWeights.stability, detail: `Variance inflation : ${score.details.inflationVariance.toFixed(2)}` },
+            { label: 'Crédibilité',           score: score.credibility, max: levelConfig.scoringWeights.credibility, detail: `Crédibilité moy. : ${score.details.avgCredibility.toFixed(0)}` },
           ].map(item => (
             <div key={item.label} className="rounded p-5" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
               <p className="label-caps mb-3">{item.label}</p>
@@ -189,20 +214,57 @@ export default function DebriefPage() {
           ))}
         </div>
 
-        {/* ── Rapport de Gouverneur ── */}
-        <div className="rounded p-6 mb-12" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--accent-primary)' }}>
-          <p className="label-caps mb-4">Rapport de Gouverneur</p>
-          <div className="space-y-3">
-            {[
-              { icon: '⚠', color: 'var(--data-negative)', text: report.biggestMistake },
-              { icon: '✓', color: 'var(--data-positive)', text: report.bestDecision },
-              { icon: '→', color: 'var(--accent-cool)',   text: report.finalTrajectory },
-            ].map((row, i) => (
-              <div key={i} className="flex gap-3">
-                <span className="text-sm flex-shrink-0" style={{ color: row.color }}>{row.icon}</span>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{row.text}</p>
+        {/* ── Rapports side-by-side ── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {/* ── Rapport de Gouverneur ── */}
+          <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--accent-primary)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <p className="label-caps mb-4">Rapport de Gouverneur</p>
+              <div className="space-y-3">
+                {[
+                  { icon: '⚠', color: 'var(--data-negative)', text: report.biggestMistake },
+                  { icon: '✓', color: 'var(--data-positive)', text: report.bestDecision },
+                  { icon: '→', color: 'var(--accent-cool)',   text: report.finalTrajectory },
+                ].map((row, i) => (
+                  <div key={i} className="flex gap-3">
+                    <span className="text-sm flex-shrink-0" style={{ color: row.color }}>{row.icon}</span>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{row.text}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* ── BAM Bot Débriefing (Glassmorphism) ── */}
+          <div className="rounded p-6 relative overflow-hidden" style={{
+            backgroundColor: 'rgba(var(--bg-panel-rgb, 30, 32, 38), 0.65)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid var(--border-subtle)',
+            borderLeft: '3px solid var(--accent-warm)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+          }}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-500/10 to-amber-500/10 blur-2xl pointer-events-none rounded-full" />
+            
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">🤖</span>
+                <p className="label-caps" style={{ color: 'var(--accent-warm)', margin: 0 }}>Debriefing de BAM Bot</p>
+              </div>
+              <p className="text-sm leading-relaxed font-sans" style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                "{getDebriefMessage(score.grade, score.total, difficultyLevel)}"
+              </p>
+            </div>
+            
+            <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
+              <span className="text-[10px] label-caps" style={{ color: 'var(--text-tertiary)' }}>
+                Niveau : {levelConfig.labelFr}
+              </span>
+              <span className="text-[10px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
+                Score : {score.total} pts
+              </span>
+            </div>
           </div>
         </div>
 
@@ -234,7 +296,7 @@ export default function DebriefPage() {
 
         {/* ── Graphe ── */}
         <div className="rounded p-6 mb-12" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
-          <p className="label-caps mb-4">Trajectoire complète — 5 ans</p>
+          <p className="label-caps mb-4">Trajectoire complète — {levelConfig.quarters / 4} ans</p>
           <DebriefChart />
         </div>
 
@@ -259,6 +321,9 @@ export default function DebriefPage() {
             Nouveau scénario
           </button>
         </div>
+
+        {/* ── Mascot Assistant ── */}
+        <AssistantBot messages={[getDebriefMessage(score.grade, score.total, difficultyLevel)]} context="debrief" />
 
       </main>
     </div>

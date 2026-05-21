@@ -1,14 +1,16 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { EconomicState, PolicyAction, Shock, ScenarioId } from '@/engine/state'
+import type { EconomicState, PolicyAction, Shock, ScenarioId, DifficultyLevel } from '@/engine/state'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
-import { TOTAL_QUARTERS, FREE_MODE_QUARTERS } from '@/lib/constants'
+import { getLevelConfig } from '@/engine/difficulty'
+import { FREE_MODE_QUARTERS } from '@/lib/constants'
 
 interface GameStore {
   scenario: ScenarioId | null
+  difficultyLevel: DifficultyLevel
   currentState: EconomicState
   history: EconomicState[]
   activeShocks: Shock[]
@@ -21,8 +23,10 @@ interface GameStore {
   previousPolicyRateChangeBp: number
   /** Track FX intervention history for credibility boost */
   fxInterventionHistory: number[]
+  campaignStatus: 'won' | 'lost' | null
 
-  startGame: (scenario: ScenarioId) => void
+  startGame: (scenario: ScenarioId, level?: DifficultyLevel) => void
+  setDifficultyLevel: (level: DifficultyLevel) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
   reset: () => void
@@ -38,6 +42,7 @@ export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
       scenario: null,
+      difficultyLevel: 'intermediate' as DifficultyLevel,
       currentState: INITIAL_STATE,
       history: [],
       activeShocks: [],
@@ -48,11 +53,14 @@ export const useGameStore = create<GameStore>()(
       freeMode: false,
       previousPolicyRateChangeBp: 0,
       fxInterventionHistory: [],
+      campaignStatus: null,
 
-      startGame(scenarioId) {
+      startGame(scenarioId, level) {
         const scenario = SCENARIOS[scenarioId]
+        const chosenLevel = level ?? get().difficultyLevel
         set({
           scenario: scenarioId,
+          difficultyLevel: chosenLevel,
           currentState: { ...scenario.initialState },
           history: [],
           activeShocks: [...scenario.initialShocks],
@@ -62,7 +70,12 @@ export const useGameStore = create<GameStore>()(
           isTransitioning: false,
           previousPolicyRateChangeBp: 0,
           fxInterventionHistory: [],
+          campaignStatus: null,
         })
+      },
+
+      setDifficultyLevel(level) {
+        set({ difficultyLevel: level })
       },
 
       setPendingAction(action) {
@@ -74,9 +87,27 @@ export const useGameStore = create<GameStore>()(
           currentState, pendingAction, activeShocks, seed, history,
           scenario, previousPolicyRateChangeBp, fxInterventionHistory, freeMode,
         } = get()
-        const maxQuarters = freeMode ? FREE_MODE_QUARTERS : TOTAL_QUARTERS
+        const { difficultyLevel } = get()
+        const levelConfig = getLevelConfig(difficultyLevel)
+        
+        const isCampaign = scenario === 'volcker1979' || scenario === 'crisis2008'
+        const maxQuarters = isCampaign ? 8 : (freeMode ? FREE_MODE_QUARTERS : levelConfig.quarters)
+
         if (currentState.quarter >= maxQuarters - 1) {
-          set({ status: 'finished' })
+          if (isCampaign) {
+            let won = false
+            if (scenario === 'volcker1979') {
+              won = currentState.inflation < 3.0 && currentState.centralBankCredibility > 0
+            } else if (scenario === 'crisis2008') {
+              won = currentState.nplRatio < 10.0 && currentState.creditGrowth > 2.0
+            }
+            set({
+              status: 'finished',
+              campaignStatus: won ? 'won' : 'lost'
+            })
+          } else {
+            set({ status: 'finished' })
+          }
           return
         }
 
@@ -94,14 +125,36 @@ export const useGameStore = create<GameStore>()(
 
         const newFxHistory = [...fxInterventionHistory, pendingAction.fxInterventionBnMad].slice(-4)
 
+        let immediateFinished = false
+        let nextCampaignStatus: 'won' | 'lost' | null = null
+
+        if (scenario === 'volcker1979' && result.newState.centralBankCredibility <= 0) {
+          immediateFinished = true
+          nextCampaignStatus = 'lost'
+        }
+
+        const isNextStepFinish = result.newState.quarter >= maxQuarters
+
+        if (isNextStepFinish && isCampaign && !immediateFinished) {
+          immediateFinished = true
+          if (scenario === 'volcker1979') {
+            const won = result.newState.inflation < 3.0 && result.newState.centralBankCredibility > 0
+            nextCampaignStatus = won ? 'won' : 'lost'
+          } else if (scenario === 'crisis2008') {
+            const won = result.newState.nplRatio < 10.0 && result.newState.creditGrowth > 2.0
+            nextCampaignStatus = won ? 'won' : 'lost'
+          }
+        }
+
         set({
           history: [...history, currentState],
           currentState: result.newState,
           activeShocks: newActiveShocks,
           pendingAction: { ...DEFAULT_POLICY_ACTION },
-          status: result.newState.quarter >= maxQuarters ? 'finished' : 'playing',
+          status: immediateFinished ? 'finished' : (result.newState.quarter >= maxQuarters ? 'finished' : 'playing'),
           previousPolicyRateChangeBp: pendingAction.policyRateChangeBp,
           fxInterventionHistory: newFxHistory,
+          campaignStatus: nextCampaignStatus,
         })
       },
 
@@ -117,6 +170,7 @@ export const useGameStore = create<GameStore>()(
           isTransitioning: false,
           previousPolicyRateChangeBp: 0,
           fxInterventionHistory: [],
+          campaignStatus: null,
         })
       },
 
@@ -132,6 +186,7 @@ export const useGameStore = create<GameStore>()(
       name: 'cbs-game-state',
       partialize: (state) => ({
         scenario: state.scenario,
+        difficultyLevel: state.difficultyLevel,
         currentState: state.currentState,
         history: state.history,
         activeShocks: state.activeShocks,
@@ -141,6 +196,7 @@ export const useGameStore = create<GameStore>()(
         freeMode: state.freeMode,
         previousPolicyRateChangeBp: state.previousPolicyRateChangeBp,
         fxInterventionHistory: state.fxInterventionHistory,
+        campaignStatus: state.campaignStatus,
       }),
     },
   ),

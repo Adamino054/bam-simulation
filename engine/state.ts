@@ -4,6 +4,8 @@
  * Il peut être porté tel quel vers un environnement Python (Sujet 1 du PFA).
  */
 
+export type { DifficultyLevel } from './difficulty'
+
 export type CommunicationStance = 'dovish' | 'neutral' | 'hawkish'
 export type FiscalStance = 'expansionary' | 'neutral' | 'contractionary'
 
@@ -100,4 +102,4 @@ export interface SimulationResult {
   trace: Record<string, { value: number; explanation: string }>
 }
 
-export type ScenarioId = 'standard' | 'inflation2022' | 'covid2020' | 'flexibilite'
+export type ScenarioId = 'standard' | 'inflation2022' | 'covid2020' | 'flexibilite' | 'volcker1979' | 'crisis2008'

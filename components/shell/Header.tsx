@@ -18,12 +18,13 @@ interface HeaderProps {
 export function Header({ variant }: HeaderProps) {
   const router = useRouter()
 
-  const { scenario, status, history, currentState } = useGameStore(
+  const { scenario, status, history, currentState, difficultyLevel } = useGameStore(
     useShallow(s => ({
       scenario:     s.scenario,
       status:       s.status,
       history:      s.history,
       currentState: s.currentState,
+      difficultyLevel: s.difficultyLevel,
     }))
   )
 
@@ -36,8 +37,8 @@ export function Header({ variant }: HeaderProps) {
 
   const partialScore = useMemo(() => {
     if (history.length < 2) return null
-    return computeScore([...history, currentState]).total
-  }, [history, currentState])
+    return computeScore([...history, currentState], difficultyLevel).total
+  }, [history, currentState, difficultyLevel])
 
   const handleLogout = () => {
     logout()
@@ -88,17 +89,58 @@ export function Header({ variant }: HeaderProps) {
 
         <ThemeToggle />
 
-        {/* Pseudo + dashboard link */}
+        {/* Governor Profile Capsule */}
         {currentUser && player && (
           <button
             onClick={() => router.push('/dashboard')}
-            className="hidden sm:flex items-center gap-1.5 label-caps transition-colors duration-200"
-            style={{ color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--text-tertiary)' }}
+            className="profile-capsule flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-mono transition-all duration-200"
+            style={{
+              cursor: 'pointer',
+              border: '1px solid var(--border-default)',
+            }}
           >
-            <LayoutDashboard size={11} />
-            {player.pseudo}
+            {/* Avatar Circle */}
+            <div
+              className="flex items-center justify-center w-5 h-5 rounded-full font-editorial text-xs font-bold"
+              style={{
+                backgroundColor: 'var(--accent-primary)',
+                color: '#fff',
+              }}
+            >
+              {player.pseudo.slice(0, 2).toUpperCase()}
+            </div>
+
+            {/* Username & Level */}
+            <div className="flex flex-col items-start text-left leading-none">
+              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                Gouv. {player.pseudo}
+              </span>
+              <span className="flex items-center gap-1" style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse-soft"
+                  style={{
+                    backgroundColor:
+                      difficultyLevel === 'beginner'
+                        ? '#4A9D7C'
+                        : difficultyLevel === 'intermediate'
+                        ? '#C9A86A'
+                        : '#E05A47',
+                    boxShadow: `0 0 4px ${
+                      difficultyLevel === 'beginner'
+                        ? '#4A9D7C'
+                        : difficultyLevel === 'intermediate'
+                        ? '#C9A86A'
+                        : '#E05A47'
+                    }`,
+                  }}
+                />
+                {difficultyLevel === 'beginner'
+                  ? 'Débutant'
+                  : difficultyLevel === 'intermediate'
+                  ? 'Intermédiaire'
+                  : 'Expert'}
+              </span>
+            </div>
           </button>
         )}
 

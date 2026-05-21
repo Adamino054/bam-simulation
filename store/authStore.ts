@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { DifficultyLevel } from '@/engine/state'
 
 export interface GameRecord {
   id: string
@@ -13,6 +14,15 @@ export interface GameRecord {
   avgGrowth: number
   avgCredibility: number
   freeMode: boolean
+  difficultyLevel: DifficultyLevel
+}
+
+export interface QuizScore {
+  moduleId: string
+  score: number
+  total: number
+  date: string
+  level: DifficultyLevel
 }
 
 export interface PlayerProfile {
@@ -20,6 +30,10 @@ export interface PlayerProfile {
   passwordHash: string
   createdAt: string
   gameHistory: GameRecord[]
+  badges: string[]
+  quizScores: QuizScore[]
+  notes: Record<string, string>  // moduleId -> note text
+  preferredLevel: DifficultyLevel
 }
 
 interface AuthStore {
@@ -40,6 +54,14 @@ interface AuthStore {
     favoriteScenario: string
     winRate: number
   } | null
+
+  // New: badges, quizzes, notes
+  addBadge: (badge: string) => void
+  hasBadge: (badge: string) => boolean
+  addQuizScore: (score: QuizScore) => void
+  setNote: (moduleId: string, text: string) => void
+  getNote: (moduleId: string) => string
+  setPreferredLevel: (level: DifficultyLevel) => void
 }
 
 /** Simple hash function for client-side password storage (not cryptographically secure) */
@@ -74,6 +96,10 @@ export const useAuthStore = create<AuthStore>()(
               passwordHash: simpleHash(password),
               createdAt: new Date().toISOString(),
               gameHistory: [],
+              badges: [],
+              quizScores: [],
+              notes: {},
+              preferredLevel: 'beginner' as DifficultyLevel,
             },
           },
           currentUser: key,
@@ -146,6 +172,76 @@ export const useAuthStore = create<AuthStore>()(
         const winRate = Math.round((games.filter(g => g.grade === 'A' || g.grade === 'B').length / totalGames) * 100)
 
         return { totalGames, avgScore, bestScore, bestGrade, favoriteScenario, winRate }
+      },
+
+      addBadge(badge) {
+        const { currentUser, players } = get()
+        if (!currentUser || !players[currentUser]) return
+        const player = players[currentUser]
+        if (player.badges?.includes(badge)) return
+        set({
+          players: {
+            ...players,
+            [currentUser]: {
+              ...player,
+              badges: [...(player.badges ?? []), badge],
+            },
+          },
+        })
+      },
+
+      hasBadge(badge) {
+        const player = get().getCurrentPlayer()
+        return player?.badges?.includes(badge) ?? false
+      },
+
+      addQuizScore(score) {
+        const { currentUser, players } = get()
+        if (!currentUser || !players[currentUser]) return
+        const player = players[currentUser]
+        set({
+          players: {
+            ...players,
+            [currentUser]: {
+              ...player,
+              quizScores: [...(player.quizScores ?? []), score],
+            },
+          },
+        })
+      },
+
+      setNote(moduleId, text) {
+        const { currentUser, players } = get()
+        if (!currentUser || !players[currentUser]) return
+        const player = players[currentUser]
+        set({
+          players: {
+            ...players,
+            [currentUser]: {
+              ...player,
+              notes: { ...(player.notes ?? {}), [moduleId]: text },
+            },
+          },
+        })
+      },
+
+      getNote(moduleId) {
+        const player = get().getCurrentPlayer()
+        return player?.notes?.[moduleId] ?? ''
+      },
+
+      setPreferredLevel(level) {
+        const { currentUser, players } = get()
+        if (!currentUser || !players[currentUser]) return
+        set({
+          players: {
+            ...players,
+            [currentUser]: {
+              ...players[currentUser],
+              preferredLevel: level,
+            },
+          },
+        })
       },
     }),
     {

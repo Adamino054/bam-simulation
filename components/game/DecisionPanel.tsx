@@ -12,6 +12,10 @@ import { POLICY_RATE_BOUNDS, FX_INTERVENTION_OPTIONS, EMERGENCY_LENDING_OPTIONS,
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { simulateN } from '@/engine/simulator'
 import type { CommunicationStance } from '@/engine/state'
+import { isInstrumentVisible, getLevelConfig } from '@/engine/difficulty'
+import { BotHelpPopover } from './BotHelpPopover'
+import { generateInflationFanChart } from '@/engine/monteCarlo'
+import { FanChartModal } from './FanChartModal'
 
 const RATE_CHANGE_OPTIONS = [
   { value: -100, label: '−100' },
@@ -133,6 +137,8 @@ function AccordionSection({
 }
 
 export function DecisionPanel() {
+  const [isFanChartOpen, setIsFanChartOpen] = useState(false)
+
   const {
     currentState,
     pendingAction,
@@ -141,6 +147,8 @@ export function DecisionPanel() {
     scenario,
     setPendingAction,
     isTransitioning,
+    difficultyLevel,
+    history,
   } = useGameStore(
     useShallow(s => ({
       currentState:     s.currentState,
@@ -150,6 +158,8 @@ export function DecisionPanel() {
       scenario:         s.scenario,
       setPendingAction: s.setPendingAction,
       isTransitioning:  s.isTransitioning,
+      difficultyLevel:  s.difficultyLevel,
+      history:          s.history,
     }))
   )
 
@@ -157,6 +167,9 @@ export function DecisionPanel() {
     POLICY_RATE_BOUNDS.min,
     currentState.policyRate + pendingAction.policyRateChangeBp / 100,
   )
+
+  const levelConfig = getLevelConfig(difficultyLevel)
+  const showTaylorHint = levelConfig.showTaylorHint
 
   const taylor = useMemo(
     () => computeTaylorRate(currentState.inflation, currentState.outputGap),
@@ -166,6 +179,17 @@ export function DecisionPanel() {
     () => simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000, scenario ?? undefined),
     [currentState, pendingAction, activeShocks, seed, scenario],
   )
+
+  const fanChartData = useMemo(() => {
+    return generateInflationFanChart(
+      currentState,
+      history,
+      pendingAction,
+      activeShocks,
+      seed,
+      scenario ?? undefined
+    )
+  }, [currentState, history, pendingAction, activeShocks, seed, scenario])
 
   const taylorDiff = newPolicyRate - taylor
   const taylorAlignment = Math.max(0, Math.min(100, 100 - Math.abs(taylorDiff) * 40))
@@ -237,8 +261,18 @@ export function DecisionPanel() {
           </span>
         </div>
         <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-          6 instruments
+          {levelConfig.visibleInstruments.length} instrument{levelConfig.visibleInstruments.length > 1 ? 's' : ''}
         </span>
+      </div>
+
+      {/* Bot Help Pop-it de Décision */}
+      <div 
+        className="p-3 bg-black/10 border-b border-[var(--border-subtle)]"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.01) 0%, transparent 100%)'
+        }}
+      >
+        <BotHelpPopover />
       </div>
 
       {/* ══ Section 1: Taux & Liquidité ══ */}
@@ -277,32 +311,34 @@ export function DecisionPanel() {
           />
 
           {/* Taylor benchmark */}
-          <div
-            className="flex items-center justify-between px-2.5 py-1.5 rounded"
-            style={{
-              backgroundColor: 'var(--bg-elevated)',
-              borderLeft: `2px solid ${
-                Math.abs(taylorDiff) > 1 ? 'var(--data-warning)'
-                : Math.abs(taylorDiff) >= 0.1 ? 'var(--border-strong)'
-                : 'var(--data-positive)'
-              }`,
-            }}
-          >
-            <span className="label-caps">Règle de Taylor</span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs tabular" style={{ color: 'var(--text-secondary)' }}>
-                {fmtPct(taylor, 2)}
-              </span>
-              {Math.abs(taylorDiff) >= 0.1 && (
-                <span
-                  className="label-caps"
-                  style={{ color: Math.abs(taylorDiff) > 1 ? 'var(--data-warning)' : 'var(--text-tertiary)' }}
-                >
-                  {taylorDiff > 0 ? '+' : ''}{(taylorDiff * 100).toFixed(0)} bp
+          {showTaylorHint && (
+            <div
+              className="flex items-center justify-between px-2.5 py-1.5 rounded"
+              style={{
+                backgroundColor: 'var(--bg-elevated)',
+                borderLeft: `2px solid ${
+                  Math.abs(taylorDiff) > 1 ? 'var(--data-warning)'
+                  : Math.abs(taylorDiff) >= 0.1 ? 'var(--border-strong)'
+                  : 'var(--data-positive)'
+                }`,
+              }}
+            >
+              <span className="label-caps">Règle de Taylor</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs tabular" style={{ color: 'var(--text-secondary)' }}>
+                  {fmtPct(taylor, 2)}
                 </span>
-              )}
+                {Math.abs(taylorDiff) >= 0.1 && (
+                  <span
+                    className="label-caps"
+                    style={{ color: Math.abs(taylorDiff) > 1 ? 'var(--data-warning)' : 'var(--text-tertiary)' }}
+                  >
+                    {taylorDiff > 0 ? '+' : ''}{(taylorDiff * 100).toFixed(0)} bp
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <SectionDivider />
@@ -349,167 +385,184 @@ export function DecisionPanel() {
           />
         </div>
 
-        <SectionDivider />
-
         {/* ── Emergency Lending Facility ── */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <SectionLabel>Facilité de prêt d&apos;urgence</SectionLabel>
-            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-              mds MAD
-            </span>
-          </div>
-          {emergencyAvailable ? (
-            <Stepper
-              value={pendingAction.emergencyLendingBnMad}
-              options={EMERGENCY_LENDING_OPTIONS.map(v => ({
-                value: v,
-                label: EMERGENCY_LABELS[v] ?? String(v),
-              }))}
-              onChange={v => setPendingAction({ emergencyLendingBnMad: v })}
-              label="Facilité de prêt d'urgence en milliards MAD"
-            />
-          ) : (
-            <div
-              className="px-2.5 py-2 rounded text-xs"
-              style={{
-                backgroundColor: 'var(--bg-elevated)',
-                color: 'var(--text-tertiary)',
-                border: '1px solid var(--border-subtle)',
-              }}
-              title="Aucune tension de liquidité détectée"
-            >
-              Aucune tension de liquidité détectée
+        {isInstrumentVisible('emergencyLendingBnMad', difficultyLevel) && (
+          <>
+            <SectionDivider />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <SectionLabel>Facilité de prêt d&apos;urgence</SectionLabel>
+                <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+                  mds MAD
+                </span>
+              </div>
+              {emergencyAvailable ? (
+                <Stepper
+                  value={pendingAction.emergencyLendingBnMad}
+                  options={EMERGENCY_LENDING_OPTIONS.map(v => ({
+                    value: v,
+                    label: EMERGENCY_LABELS[v] ?? String(v),
+                  }))}
+                  onChange={v => setPendingAction({ emergencyLendingBnMad: v })}
+                  label="Facilité de prêt d'urgence en milliards MAD"
+                />
+              ) : (
+                <div
+                  className="px-2.5 py-2 rounded text-xs"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    color: 'var(--text-tertiary)',
+                    border: '1px solid var(--border-subtle)',
+                  }}
+                  title="Aucune tension de liquidité détectée"
+                >
+                  Aucune tension de liquidité détectée
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </AccordionSection>
 
       {/* ══ Section 2: Communication & Change ══ */}
-      <AccordionSection title="COMMUNICATION & CHANGE">
-        {/* ── Forward Guidance ── */}
-        <div className="flex flex-col gap-3">
-          <SectionLabel>Forward guidance</SectionLabel>
-          <div
-            className="flex gap-[2px] p-[3px] rounded-md"
-            role="group"
-            aria-label="Forward guidance"
-            style={{
-              backgroundColor: 'var(--bg-elevated)',
-              border: '1px solid var(--border-subtle)',
-            }}
-          >
-            {GUIDANCE_OPTIONS.map(opt => {
-              const isActive = pendingAction.communicationStance === opt.value
-              const Icon = opt.icon
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => setPendingAction({ communicationStance: opt.value })}
-                  className="flex-1 flex flex-col items-center gap-1 rounded py-2 px-1 transition-all duration-100"
-                  style={{
-                    backgroundColor: isActive ? opt.tint : 'transparent',
-                    border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <Icon
-                    size={14}
-                    style={{
-                      color: isActive
-                        ? opt.value === 'dovish' ? 'var(--data-positive)'
-                          : opt.value === 'hawkish' ? 'var(--data-negative)'
-                          : 'var(--text-secondary)'
-                        : 'var(--text-tertiary)',
-                    }}
-                  />
-                  <span
-                    className="text-[11px] font-semibold uppercase tracking-wider"
-                    style={{
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    }}
-                  >
-                    {opt.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-            {GUIDANCE_OPTIONS.find(o => o.value === pendingAction.communicationStance)?.sublabel}
-          </p>
-        </div>
+      {(isInstrumentVisible('communicationStance', difficultyLevel) || isInstrumentVisible('fxInterventionBnMad', difficultyLevel)) && (
+        <AccordionSection title="COMMUNICATION & CHANGE">
+          {/* ── Forward Guidance ── */}
+          {isInstrumentVisible('communicationStance', difficultyLevel) && (
+            <div className="flex flex-col gap-3">
+              <SectionLabel>Forward guidance</SectionLabel>
+              <div
+                className="flex gap-[2px] p-[3px] rounded-md"
+                role="group"
+                aria-label="Forward guidance"
+                style={{
+                  backgroundColor: 'var(--bg-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                {GUIDANCE_OPTIONS.map(opt => {
+                  const isActive = pendingAction.communicationStance === opt.value
+                  const Icon = opt.icon
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      aria-pressed={isActive}
+                      onClick={() => setPendingAction({ communicationStance: opt.value })}
+                      className="flex-1 flex flex-col items-center gap-1 rounded py-2 px-1 transition-all duration-100"
+                      style={{
+                        backgroundColor: isActive ? opt.tint : 'transparent',
+                        border: isActive ? '1px solid var(--border-strong)' : '1px solid transparent',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Icon
+                        size={14}
+                        style={{
+                          color: isActive
+                            ? opt.value === 'dovish' ? 'var(--data-positive)'
+                              : opt.value === 'hawkish' ? 'var(--data-negative)'
+                              : 'var(--text-secondary)'
+                            : 'var(--text-tertiary)',
+                        }}
+                      />
+                      <span
+                        className="text-[11px] font-semibold uppercase tracking-wider"
+                        style={{
+                          color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        }}
+                      >
+                        {opt.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+                {GUIDANCE_OPTIONS.find(o => o.value === pendingAction.communicationStance)?.sublabel}
+              </p>
+            </div>
+          )}
 
-        <SectionDivider />
+          {isInstrumentVisible('communicationStance', difficultyLevel) && isInstrumentVisible('fxInterventionBnMad', difficultyLevel) && (
+            <SectionDivider />
+          )}
 
-        {/* ── FX Intervention ── */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <SectionLabel>Intervention change</SectionLabel>
-            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-              mds MAD
-            </span>
-          </div>
-          <Stepper
-            value={pendingAction.fxInterventionBnMad}
-            options={FX_INTERVENTION_OPTIONS.map(v => ({
-              value: v,
-              label: FX_LABELS[v] ?? String(v),
-            }))}
-            onChange={v => setPendingAction({ fxInterventionBnMad: v })}
-            label="Intervention sur le marché des changes en milliards MAD"
-          />
-        </div>
-      </AccordionSection>
+          {/* ── FX Intervention ── */}
+          {isInstrumentVisible('fxInterventionBnMad', difficultyLevel) && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <SectionLabel>Intervention change</SectionLabel>
+                <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+                  mds MAD
+                </span>
+              </div>
+              <Stepper
+                value={pendingAction.fxInterventionBnMad}
+                options={FX_INTERVENTION_OPTIONS.map(v => ({
+                  value: v,
+                  label: FX_LABELS[v] ?? String(v),
+                }))}
+                onChange={v => setPendingAction({ fxInterventionBnMad: v })}
+                label="Intervention sur le marché des changes en milliards MAD"
+              />
+            </div>
+          )}
+        </AccordionSection>
+      )}
 
       {/* ══ Section 3: Macroprudentiel ══ */}
-      <AccordionSection title="MACROPRUDENTIEL">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <SectionLabel>Coussin en capital (CCyB)</SectionLabel>
-            <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
-              % RWA
-            </span>
+      {isInstrumentVisible('ccybRate', difficultyLevel) && (
+        <AccordionSection title="MACROPRUDENTIEL">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <SectionLabel>Coussin en capital (CCyB)</SectionLabel>
+              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>
+                % RWA
+              </span>
+            </div>
+            <Stepper
+              value={pendingAction.ccybRate ?? 0}
+              options={CCYB_OPTIONS.map(v => ({
+                value: v,
+                label: CCYB_LABELS[v] ?? String(v),
+              }))}
+              onChange={v => setPendingAction({ ccybRate: v })}
+              label="Coussin de fonds propres contracyclique"
+              compact
+            />
           </div>
-          <Stepper
-            value={pendingAction.ccybRate ?? 0}
-            options={CCYB_OPTIONS.map(v => ({
-              value: v,
-              label: CCYB_LABELS[v] ?? String(v),
-            }))}
-            onChange={v => setPendingAction({ ccybRate: v })}
-            label="Coussin de fonds propres contracyclique"
-            compact
-          />
-        </div>
-      </AccordionSection>
+        </AccordionSection>
+      )}
 
       {/* ══ Projections & Actions ══ */}
       <div className="px-4 py-4 flex flex-col gap-4">
         {/* Confiance Taylor meter */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <span className="label-caps">Confiance Taylor</span>
-            <span className="font-mono text-xs tabular" style={{
-              color: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
-            }}>
-              {Math.round(taylorAlignment)} %
-            </span>
-          </div>
-          <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
-            <div
-              className="h-1 rounded-full transition-all duration-300"
-              style={{
-                width: `${taylorAlignment}%`,
-                backgroundColor: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
-              }}
-            />
-          </div>
-        </div>
+        {showTaylorHint && (
+          <>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="label-caps">Confiance Taylor</span>
+                <span className="font-mono text-xs tabular" style={{
+                  color: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+                }}>
+                  {Math.round(taylorAlignment)} %
+                </span>
+              </div>
+              <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
+                <div
+                  className="h-1 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${taylorAlignment}%`,
+                    backgroundColor: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+                  }}
+                />
+              </div>
+            </div>
 
-        <SectionDivider />
+            <SectionDivider />
+          </>
+        )}
 
         {/* ── 6-variable projection ── */}
         <div
@@ -536,8 +589,39 @@ export function DecisionPanel() {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setIsFanChartOpen(true)}
+          className="w-full py-2 px-3 rounded flex items-center justify-center gap-2 text-xs font-semibold tracking-wider transition-all"
+          style={{
+            background: 'linear-gradient(to right, rgba(180, 25, 35, 0.12), rgba(180, 25, 35, 0.04))',
+            border: '1px solid rgba(180, 25, 35, 0.25)',
+            color: 'var(--accent-primary)',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(to right, rgba(180, 25, 35, 0.2), rgba(180, 25, 35, 0.08))'
+            e.currentTarget.style.borderColor = 'var(--accent-primary)'
+            e.currentTarget.style.boxShadow = '0 0 8px rgba(180, 25, 35, 0.15)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(to right, rgba(180, 25, 35, 0.12), rgba(180, 25, 35, 0.04))'
+            e.currentTarget.style.borderColor = 'rgba(180, 25, 35, 0.25)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
+        >
+          <TrendingUp size={14} className="animate-pulse-soft" />
+          Prévisions Monte-Carlo
+        </button>
+
         {/* ── Bouton ── */}
         <TurnButton />
+
+        <FanChartModal
+          isOpen={isFanChartOpen}
+          onClose={() => setIsFanChartOpen(false)}
+          data={fanChartData}
+        />
       </div>
     </div>
   )

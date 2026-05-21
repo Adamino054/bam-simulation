@@ -97,11 +97,52 @@
 
   body {
     @apply bg-bg-base text-text-primary antialiased;
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-    font-size: 16px;
-    line-height: 1.65;
+    font-family: var(--font-inter), system-ui, -apple-system, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+    font-size: 14.5px; /* Refined dense professional font size for financial dashboard layouts */
+    line-height: 1.6;
+    font-weight: 450; /* Slightly thicker for superb contrast and readability in dark mode */
+    letter-spacing: -0.015em;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01", "ss03"; /* Enable custom premium commercial alternates */
+    font-variant-ligatures: common-ligatures;
+  }
+
+  /* Executive headings typographic scale */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-inter), system-ui, -apple-system, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
+    line-height: 1.25;
+  }
+
+  h1 {
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 2.2vw, 1.75rem);
+    letter-spacing: -0.025em;
+  }
+
+  h3 {
+    font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+    letter-spacing: -0.02em;
+  }
+
+  /* Global Emoji Styling - Elevates native rendering to look sharp, clean, and desaturated */
+  .emoji, span[role="img"], button[role="img"], .emoji-char {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Android Emoji", sans-serif;
     font-weight: 400;
-    letter-spacing: -0.01em;
+    font-style: normal;
+    line-height: 1;
+    display: inline-block;
+    vertical-align: -0.12em;
+    transform: scale(0.95);
+    opacity: 0.92;
+    -webkit-font-smoothing: auto;
+    filter: saturate(0.85) contrast(1.03); /* Tone down childish mobile emoji neon colors */
   }
 
   /* Focus visible */
@@ -349,4 +390,81 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =====================================================
+   PRO EDITION ADDITIONS — CBS v2.0
+   ===================================================== */
+
+/* Fil de presse défilant Bloomberg */
+.news-feed-container {
+  overflow: hidden;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 6px;
+  position: relative;
+}
+
+.news-feed-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll 45s linear infinite;
+}
+
+.news-feed-ticker:hover {
+  animation-play-state: paused;
+}
+
+.news-feed-item {
+  padding: 8px 24px;
+  font-size: 11px;
+  font-family: monospace;
+  white-space: nowrap;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Chat bubble styling for AssistantBot */
+.chat-messages-container::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-messages-container::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+.chat-bubble-bot {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  border-top-left-radius: 2px;
+}
+
+.chat-bubble-user {
+  background-color: rgba(180, 25, 35, 0.12);
+  border: 1px solid rgba(180, 25, 35, 0.25);
+  color: var(--text-primary);
+  border-top-right-radius: 2px;
+}
+
+/* Checklist items styling */
+.checklist-item {
+  transition: all 0.2s ease;
+}
+.checklist-item:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Profile pill styling */
+.profile-capsule {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.profile-capsule:hover {
+  border-color: var(--border-strong);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }

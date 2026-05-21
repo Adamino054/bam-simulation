@@ -9,16 +9,19 @@ import { Timeline } from '@/components/game/Timeline'
 import { Dashboard } from '@/components/game/Dashboard'
 import { DecisionPanel } from '@/components/game/DecisionPanel'
 import { LeftPanel } from '@/components/game/LeftPanel'
+import { BloombergTicker } from '@/components/game/BloombergTicker'
 import { useGameStore } from '@/store/gameStore'
 import { useAuthStore } from '@/store/authStore'
 import { SCENARIOS } from '@/engine/scenarios'
 import { fmtQuarter } from '@/lib/format'
-import { TOTAL_QUARTERS, FREE_MODE_QUARTERS, INFLATION_TARGET } from '@/lib/constants'
+import { FREE_MODE_QUARTERS, INFLATION_TARGET } from '@/lib/constants'
+import { AssistantBot } from '@/components/ui/AssistantBot'
+import { getSimulationTips } from '@/engine/botMessages'
 import type { ScenarioId } from '@/engine/state'
 
-function computeYearDots(history: Array<{ inflation: number; quarter: number }>, currentQuarter: number) {
+function computeYearDots(history: Array<{ inflation: number; quarter: number }>, currentQuarter: number, maxQuarters: number) {
   const dots: Array<{ year: number; status: 'pending' | 'green' | 'amber' | 'red' }> = []
-  const maxYears = 5
+  const maxYears = Math.ceil(maxQuarters / 4)
   for (let y = 0; y < maxYears; y++) {
     const startQ = y * 4
     const endQ = startQ + 3
@@ -55,6 +58,7 @@ export default function PlayPage() {
   const currentState = useGameStore(s => s.currentState)
   const history = useGameStore(s => s.history)
   const freeMode = useGameStore(s => s.freeMode)
+  const difficultyLevel = useGameStore(s => s.difficultyLevel)
   const currentUser = useAuthStore(s => s.currentUser)
 
   useEffect(() => {
@@ -72,9 +76,10 @@ export default function PlayPage() {
     } else if (status === 'menu' || !scenario) {
       router.push('/dashboard')
     }
-    // router exclu des deps intentionnellement — l'instance change à chaque render dans Next.js 14
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, status, scenario])
+
+  const maxQuarters = freeMode ? FREE_MODE_QUARTERS : (difficultyLevel === 'beginner' ? 16 : difficultyLevel === 'intermediate' ? 20 : 25)
 
   const allStates = useMemo(
     () => [...history.map(s => ({ inflation: s.inflation, quarter: s.quarter })), { inflation: currentState.inflation, quarter: currentState.quarter }],
@@ -82,8 +87,8 @@ export default function PlayPage() {
   )
 
   const yearDots = useMemo(
-    () => computeYearDots(allStates, currentState.quarter),
-    [allStates, currentState.quarter],
+    () => computeYearDots(allStates, currentState.quarter, maxQuarters),
+    [allStates, currentState.quarter, maxQuarters],
   )
 
   const scenarioMeta = scenario ? SCENARIOS[scenario as ScenarioId] : null
@@ -135,6 +140,21 @@ export default function PlayPage() {
               }}
             >
               {scenarioMeta.title}
+            </span>
+          )}
+          {difficultyLevel && (
+            <span
+              className="px-1.5 py-0.5 rounded text-[8px] font-semibold uppercase tracking-wider"
+              style={{
+                backgroundColor: difficultyLevel === 'beginner' ? 'rgba(74, 157, 124, 0.12)'
+                  : difficultyLevel === 'intermediate' ? 'rgba(201, 168, 106, 0.12)'
+                  : 'rgba(194, 84, 80, 0.12)',
+                color: difficultyLevel === 'beginner' ? '#4A9D7C'
+                  : difficultyLevel === 'intermediate' ? '#C9A86A'
+                  : '#C25450',
+              }}
+            >
+              {difficultyLevel === 'beginner' ? '🌱 DÉBUTANT' : difficultyLevel === 'intermediate' ? '📈 INTERMÉDIAIRE' : '🎯 EXPERT'}
             </span>
           )}
           {freeMode && (
@@ -208,6 +228,7 @@ export default function PlayPage() {
           {/* Zone centrale — dashboard + graphes (6 col) */}
           <section className="col-span-12 lg:col-span-6 flex flex-col gap-3">
             <Dashboard />
+            <BloombergTicker />
           </section>
 
           {/* Sidebar droite — décision (3 col) */}
@@ -222,6 +243,9 @@ export default function PlayPage() {
           <LeftPanel />
         </div>
       </main>
+
+      {/* Mascot Bot */}
+      <AssistantBot messages={getSimulationTips(currentState, difficultyLevel)} context="simulation" />
     </div>
   )
 }

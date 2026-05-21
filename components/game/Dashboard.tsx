@@ -8,6 +8,7 @@ import { useGameStore } from '@/store/gameStore'
 import { MetricCard } from '@/components/ui/MetricCard'
 import { InlineKatex } from '@/components/ui/InlineKatex'
 import { NewsAlert } from '@/components/ui/NewsAlert'
+import { getLevelConfig } from '@/engine/difficulty'
 
 const EconomyChart = dynamic(
   () => import('./EconomyChart').then(m => ({ default: m.EconomyChart })),
@@ -41,12 +42,15 @@ const ALERT_CONTENT: Record<AlertType, { severity: 'warning' | 'critical'; title
 }
 
 export function Dashboard() {
-  const { currentState, history } = useGameStore(
+  const { currentState, history, difficultyLevel } = useGameStore(
     useShallow(s => ({
       currentState: s.currentState,
       history:      s.history,
+      difficultyLevel: s.difficultyLevel,
     }))
   )
+
+  const showAdvancedMetrics = getLevelConfig(difficultyLevel).showAdvancedMetrics
 
   const prev = history[history.length - 1]
 
@@ -93,7 +97,7 @@ export function Dashboard() {
 
   // ── Étape 2 : Détection Debt-Deflation (Mishkin / Irving Fisher) ───
   const isDebtDeflation =
-    currentState.inflation < 0 && (currentState.nplRatio ?? 7) > 12
+    showAdvancedMetrics && currentState.inflation < 0 && (currentState.nplRatio ?? 7) > 12
 
   // ── Étape 4 : Icône crédibilité (BCE Expectations Channel) ────────
   const credibilityStatus: 'anchor' | 'storm' | null =
@@ -251,7 +255,7 @@ export function Dashboard() {
         </div>
 
         {/* ── MetricCards row 2 ──────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className={`grid grid-cols-1 ${showAdvancedMetrics ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-2`}>
           {/* Crédibilité avec icône contextuelle (Étape 4 BCE) */}
           <div className="relative">
             <MetricCard
@@ -341,22 +345,24 @@ export function Dashboard() {
               </div>
             }
           />
-          <MetricCard
-            label="Créances douteuses"
-            value={currentState.nplRatio ?? 7.0}
-            unit="%"
-            invertDelta
-            delta={prev ? (currentState.nplRatio ?? 7.0) - (prev.nplRatio ?? 7.0) : undefined}
-            history={nplHistory}
-            accentColor={currentState.nplRatio > 10.0 ? 'var(--data-negative)' : currentState.nplRatio > 8.0 ? 'var(--data-warning)' : 'var(--data-positive)'}
-            tooltipContent={
-              <div className="space-y-1.5">
-                <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Créances en souffrance (NPL)</p>
-                <p>Indice de stabilité financière. Les défauts de crédit étouffent le prêt bancaire.</p>
-                <p>Augmente avec les taux d&apos;intérêt élevés et les récessions économiques.</p>
-              </div>
-            }
-          />
+          {showAdvancedMetrics && (
+            <MetricCard
+              label="Créances douteuses"
+              value={currentState.nplRatio ?? 7.0}
+              unit="%"
+              invertDelta
+              delta={prev ? (currentState.nplRatio ?? 7.0) - (prev.nplRatio ?? 7.0) : undefined}
+              history={nplHistory}
+              accentColor={(currentState.nplRatio ?? 7.0) > 10.0 ? 'var(--data-negative)' : (currentState.nplRatio ?? 7.0) > 8.0 ? 'var(--data-warning)' : 'var(--data-positive)'}
+              tooltipContent={
+                <div className="space-y-1.5">
+                  <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Créances en souffrance (NPL)</p>
+                  <p>Indice de stabilité financière. Les défauts de crédit étouffent le prêt bancaire.</p>
+                  <p>Augmente avec les taux d&apos;intérêt élevés et les récessions économiques.</p>
+                </div>
+              }
+            />
+          )}
         </div>
 
         {/* ── Étape 2 : Panel Debt-Deflation (Mishkin / Irving Fisher) ── */}

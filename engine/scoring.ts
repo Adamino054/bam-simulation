@@ -9,6 +9,8 @@
 
 import type { EconomicState } from './state'
 import { SCORE_THRESHOLDS } from '../lib/constants'
+import { getLevelConfig } from './difficulty'
+import type { DifficultyLevel } from './difficulty'
 
 export interface ScoreResult {
   total: number
@@ -30,7 +32,7 @@ export interface ScoreResult {
 
 const INFLATION_TARGET = 2.0
 
-export function computeScore(history: EconomicState[]): ScoreResult {
+export function computeScore(history: EconomicState[], level: DifficultyLevel = 'intermediate'): ScoreResult {
   if (history.length === 0) {
     return {
       total: 0, inflation: 0, growth: 0, stability: 0, credibility: 0,
@@ -40,20 +42,24 @@ export function computeScore(history: EconomicState[]): ScoreResult {
   }
 
   const n = history.length
+  const levelConfig = getLevelConfig(level)
+  const weights = levelConfig.scoringWeights
 
-  // ── Score inflation (35 pts) ────────────────────────────────────
+  // ── Score inflation (weights.inflation pts) ─────────────────────────
   const deviations = history.map(s => Math.abs(s.inflation - INFLATION_TARGET))
   const avgDeviation = deviations.reduce((a, b) => a + b, 0) / n
-  // 0 déviation → 35 pts ; déviation ≥ 4 pts → 0 pt (interpolation linéaire)
-  const inflationScore = Math.max(0, 35 * (1 - avgDeviation / 4))
+  // 0 déviation → weights.inflation pts ; déviation au-dessus de inflationTolerancePp descend linéairement à 0 à 4.0 pp
+  const inflationTolerancePp = levelConfig.inflationTolerancePp
+  const inflationScore = Math.max(0, weights.inflation * (1 - Math.max(0, avgDeviation - inflationTolerancePp) / (4 - inflationTolerancePp)))
 
-  // ── Score croissance (25 pts) ───────────────────────────────────
+  // ── Score croissance (weights.growth pts) ──────────────────────────
   const growthValues = history.map(s => s.gdpGrowth)
   const avgGrowth = growthValues.reduce((a, b) => a + b, 0) / n
-  // 4 %+ → 25 pts ; 1 % → 0 pt (interpolation linéaire)
-  const growthScore = Math.max(0, Math.min(25, 25 * (avgGrowth - 1) / 3))
+  // 4 %+ → max pts ; growthThreshold → 0 pt (interpolation linéaire)
+  const growthThreshold = level === 'beginner' ? 0.5 : level === 'expert' ? 1.5 : 1.0
+  const growthScore = Math.max(0, Math.min(weights.growth, weights.growth * (avgGrowth - growthThreshold) / (4 - growthThreshold)))
 
-  // ── Score stabilité (20 pts) ────────────────────────────────────
+  // ── Score stabilité (weights.stability pts) ─────────────────────────
   const inflMean = history.map(s => s.inflation).reduce((a, b) => a + b, 0) / n
   const inflVariance = history.map(s => (s.inflation - inflMean) ** 2).reduce((a, b) => a + b, 0) / n
   const gapMean = history.map(s => s.outputGap).reduce((a, b) => a + b, 0) / n
@@ -61,26 +67,30 @@ export function computeScore(history: EconomicState[]): ScoreResult {
   const avgNplRatio = history.map(s => s.nplRatio ?? 7.0).reduce((a, b) => a + b, 0) / n
 
   const combinedVariance = inflVariance + 0.5 * gapVariance
-  // Variance ≤ 0.5 → base 20 pts ; variance ≥ 5 → 0 pt
-  let stabilityScore = Math.max(0, 20 * (1 - combinedVariance / 5))
-  // Pénalité macroprudentielle (NPL élevés)
-  if (avgNplRatio > 7.5) {
+  // Variance ≤ 0.5 → base max pts ; variance ≥ varianceDenominator → 0 pt
+  const varianceDenominator = level === 'beginner' ? 7 : level === 'expert' ? 3 : 5
+  let stabilityScore = Math.max(0, weights.stability * (1 - combinedVariance / varianceDenominator))
+  
+  // Pénalité macroprudentielle (NPL élevés) - Réservé au mode Expert uniquement
+  if (level === 'expert' && avgNplRatio > 7.5) {
     stabilityScore = Math.max(0, stabilityScore - (avgNplRatio - 7.5) * 2) // -2 pts par point de NPL au-dessus de 7.5%
   }
 
-  // ── Score crédibilité (20 pts) ──────────────────────────────────
+  // ── Score crédibilité (weights.credibility pts) ─────────────────────
   const credibilityValues = history.map(s => s.centralBankCredibility ?? 70)
   const avgCredibility = credibilityValues.reduce((a, b) => a + b, 0) / n
-  // 80+ → 20 pts ; 30 → 0 pt (interpolation linéaire)
-  const credibilityScore = Math.max(0, Math.min(20, 20 * (avgCredibility - 30) / 50))
+  // 80+ → max pts ; credibilityThreshold → 0 pt (interpolation linéaire)
+  const credibilityThreshold = level === 'beginner' ? 20 : level === 'expert' ? 40 : 30
+  const credibilityScore = Math.max(0, Math.min(weights.credibility, weights.credibility * (avgCredibility - credibilityThreshold) / (80 - credibilityThreshold)))
 
   // ── Total et grade ───────────────────────────────────────────────
   const total = Math.round(inflationScore + growthScore + stabilityScore + credibilityScore)
+  const thresholds = levelConfig.gradeThresholds
   let grade: ScoreResult['grade'] = 'F'
-  if (total >= SCORE_THRESHOLDS.A) grade = 'A'
-  else if (total >= SCORE_THRESHOLDS.B) grade = 'B'
-  else if (total >= SCORE_THRESHOLDS.C) grade = 'C'
-  else if (total >= SCORE_THRESHOLDS.D) grade = 'D'
+  if (total >= thresholds.A) grade = 'A'
+  else if (total >= thresholds.B) grade = 'B'
+  else if (total >= thresholds.C) grade = 'C'
+  else if (total >= thresholds.D) grade = 'D'
 
   // ── Commentaire généré ───────────────────────────────────────────
   const commentary = generateCommentary(grade, avgDeviation, avgGrowth, combinedVariance, avgCredibility)

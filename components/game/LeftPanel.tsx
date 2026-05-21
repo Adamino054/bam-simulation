@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import {
   TableProperties, AlertTriangle, TrendingUp, Flame,
-  Activity, Shield, Zap, BarChart3,
+  Activity, Shield, Zap, BarChart3, Target, Check,
 } from 'lucide-react'
 import { useGameStore } from '@/store/gameStore'
 import { ShockBannerList } from './ShockBannerList'
@@ -236,6 +236,11 @@ export function LeftPanel() {
     currentState.currentAccountBalance < -5 ? '#C25450' :
     currentState.currentAccountBalance < -2 ? '#C9A86A' : '#4A9D7C'
 
+  const isInflationTargetMet = currentState.inflation >= 1.5 && currentState.inflation <= 2.5
+  const isOutputGapMet = currentState.outputGap >= -1.5 && currentState.outputGap <= 1.5
+  const isCredibilityMet = currentState.centralBankCredibility >= 70
+  const isNplMet = (currentState.nplRatio ?? 7.0) < 10
+
   return (
     <div
       className="rounded-md overflow-hidden flex flex-col"
@@ -327,6 +332,129 @@ export function LeftPanel() {
           >
             {narrative}
           </p>
+        </div>
+      </div>
+
+      {/* ── Objectifs de Politique Monétaire ── */}
+      <div
+        className="px-4 py-3"
+        style={{ borderTop: '1px solid var(--border-subtle)' }}
+      >
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <Target size={11} style={{ color: 'var(--accent-warm)' }} />
+          <span className="label-caps" style={{ fontSize: '11px', letterSpacing: '0.08em', color: 'var(--text-primary)' }}>
+            OBJECTIFS DE POLITIQUE MONÉTAIRE
+          </span>
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          {/* Objectif 1: Inflation */}
+          <div 
+            className="checklist-item flex items-start gap-2.5 p-2 rounded border border-border-default"
+            style={{ backgroundColor: 'var(--bg-elevated)' }}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+              {isInflationTargetMet ? (
+                <div className="w-4 h-4 rounded-full flex items-center justify-center bg-data-positive text-white" style={{ backgroundColor: 'rgba(74, 157, 124, 0.2)', border: '1px solid #4A9D7C' }}>
+                  <Check size={10} style={{ color: '#4A9D7C' }} />
+                </div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-border-strong flex-shrink-0" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-text-primary">Stabilité des Prix (Inflation)</span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: isInflationTargetMet ? '#4A9D7C' : '#C25450' }}>
+                  {currentState.inflation.toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
+                Cible : 1.5% - 2.5% (Actuel : {isInflationTargetMet ? 'Stable' : currentState.inflation > 2.5 ? 'Trop élevée' : 'Trop basse'})
+              </p>
+            </div>
+          </div>
+
+          {/* Objectif 2: Output Gap */}
+          <div 
+            className="checklist-item flex items-start gap-2.5 p-2 rounded border border-border-default"
+            style={{ backgroundColor: 'var(--bg-elevated)' }}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+              {isOutputGapMet ? (
+                <div className="w-4 h-4 rounded-full flex items-center justify-center bg-data-positive text-white" style={{ backgroundColor: 'rgba(74, 157, 124, 0.2)', border: '1px solid #4A9D7C' }}>
+                  <Check size={10} style={{ color: '#4A9D7C' }} />
+                </div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-border-strong flex-shrink-0" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-text-primary">Plein Potentiel PIB (Output Gap)</span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: isOutputGapMet ? '#4A9D7C' : '#C9A86A' }}>
+                  {currentState.outputGap > 0 ? '+' : ''}{currentState.outputGap.toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
+                Zone confort : -1.5% à +1.5% (Actuel : {isOutputGapMet ? 'Équilibré' : currentState.outputGap > 1.5 ? 'Surchauffe' : 'Sous-utilisation'})
+              </p>
+            </div>
+          </div>
+
+          {/* Objectif 3: Crédibilité */}
+          <div 
+            className="checklist-item flex items-start gap-2.5 p-2 rounded border border-border-default"
+            style={{ backgroundColor: 'var(--bg-elevated)' }}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+              {isCredibilityMet ? (
+                <div className="w-4 h-4 rounded-full flex items-center justify-center bg-data-positive text-white" style={{ backgroundColor: 'rgba(74, 157, 124, 0.2)', border: '1px solid #4A9D7C' }}>
+                  <Check size={10} style={{ color: '#4A9D7C' }} />
+                </div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-border-strong flex-shrink-0" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-text-primary">Crédibilité de l&apos;Institution</span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: isCredibilityMet ? '#4A9D7C' : '#C25450' }}>
+                  {Math.round(currentState.centralBankCredibility)}/100
+                </span>
+              </div>
+              <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
+                Seuil de confiance : &ge; 70 (Actuel : {isCredibilityMet ? 'Élevé' : 'Insuffisant'})
+              </p>
+            </div>
+          </div>
+
+          {/* Objectif 4: Stabilité Financière (NPL) */}
+          <div 
+            className="checklist-item flex items-start gap-2.5 p-2 rounded border border-border-default"
+            style={{ backgroundColor: 'var(--bg-elevated)' }}
+          >
+            <div className="mt-0.5 flex-shrink-0">
+              {isNplMet ? (
+                <div className="w-4 h-4 rounded-full flex items-center justify-center bg-data-positive text-white" style={{ backgroundColor: 'rgba(74, 157, 124, 0.2)', border: '1px solid #4A9D7C' }}>
+                  <Check size={10} style={{ color: '#4A9D7C' }} />
+                </div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border border-border-strong flex-shrink-0" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-text-primary">Stabilité Financière (Créances / NPL)</span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: isNplMet ? '#4A9D7C' : '#C25450' }}>
+                  {(currentState.nplRatio ?? 7.0).toFixed(1)}%
+                </span>
+              </div>
+              <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
+                Seuil d&apos;alerte : &lt; 10% (Actuel : {isNplMet ? 'Résistant' : 'Critique'})
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
