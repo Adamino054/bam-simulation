@@ -265,7 +265,7 @@ export function DecisionPanel() {
         </span>
       </div>
 
-      {/* Bot Help Pop-it de Décision */}
+      {/* Assistant CBS Pop-it de Décision */}
       <div 
         className="p-3 bg-black/10 border-b border-[var(--border-subtle)]"
         style={{

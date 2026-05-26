@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Play, ShieldAlert, Award, Calendar, HelpCircle, FileText } from 'lucide-react'
 import { CAMPAIGNS, type CampaignConfig } from '@/engine/campaigns'
 import { useGameStore } from '@/store/gameStore'
-import { BlockKatex } from '@/components/ui/InlineKatex'
+import { BlockKatex, MarkdownText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 
 export default function CampaignPage() {
@@ -125,7 +125,7 @@ export default function CampaignPage() {
               {/* Mission Header Banner */}
               <div className="border-b border-[var(--border-subtle)] pb-5">
                 <span className="label-caps font-mono tracking-widest text-xs uppercase" style={{ color: 'var(--accent-primary)' }}>
-                  Briefing Officiel · Confidentiel BAM
+                  Briefing Officiel · Confidentiel CBS
                 </span>
                 <h2 className="font-editorial text-3xl font-bold mt-1 text-[var(--text-primary)] leading-tight">
                   {activeCampaign.title}
@@ -161,13 +161,8 @@ export default function CampaignPage() {
                       <h4 className="text-xs uppercase font-mono font-bold tracking-wider text-[var(--data-positive)] mb-2">
                         ✓ Conditions de Victoire
                       </h4>
-                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed space-y-2">
-                        {activeCampaign.winConditionsMarkdown.split('\n').filter(l => l.trim().startsWith('*')).map((l, i) => (
-                          <div key={i} className="flex gap-2">
-                            <span className="text-[var(--data-positive)] font-bold">•</span>
-                            <p>{l.replace(/^\*\s+\*\*(.*?)\*\*:\s*/, '$1: ')}</p>
-                          </div>
-                        ))}
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        <MarkdownText text={activeCampaign.winConditionsMarkdown} />
                       </div>
                     </div>
 
@@ -175,13 +170,8 @@ export default function CampaignPage() {
                       <h4 className="text-xs uppercase font-mono font-bold tracking-wider text-[var(--data-negative)] mb-2">
                         ✗ Facteurs d&apos;Échec
                       </h4>
-                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed space-y-2">
-                        {activeCampaign.lossConditionsMarkdown.split('\n').filter(l => l.trim().startsWith('*')).map((l, i) => (
-                          <div key={i} className="flex gap-2">
-                            <span className="text-[var(--data-negative)] font-bold">•</span>
-                            <p>{l.replace(/^\*\s+\*\*(.*?)\*\*:\s*/, '$1: ')}</p>
-                          </div>
-                        ))}
+                      <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                        <MarkdownText text={activeCampaign.lossConditionsMarkdown} />
                       </div>
                     </div>
                   </div>

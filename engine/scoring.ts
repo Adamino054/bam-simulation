@@ -4,7 +4,7 @@
  * — Inflation (35 pts) : déviation absolue moyenne à la cible 2 %
  * — Croissance (25 pts) : croissance PIB moyenne
  * — Stabilité (20 pts) : faible variance de l'inflation et de l'output gap
- * — Crédibilité (20 pts) : crédibilité moyenne de BAM sur le mandat
+ * — Crédibilité (20 pts) : crédibilité moyenne CBS sur le mandat
  */
 
 import type { EconomicState } from './state'

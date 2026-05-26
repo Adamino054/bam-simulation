@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
   Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
-  Sliders, ShieldAlert,
+  Sliders, ShieldAlert, LayoutDashboard,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -18,6 +18,7 @@ import { fmtPct } from '@/lib/format'
 import type { ScenarioId, DifficultyLevel } from '@/engine/state'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 import { DASHBOARD_MESSAGES } from '@/engine/botMessages'
+import { sound } from '@/lib/audio'
 
 const ScoreProgressChart = dynamic(
   () => import('@/components/ui/ScoreProgressChart').then(m => ({ default: m.ScoreProgressChart })),
@@ -44,6 +45,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [selected, setSelected] = useState<ScenarioId>('standard')
+  const [activeView, setActiveView] = useState<'scenarios' | 'leaderboard'>('scenarios')
 
   const currentUser = useAuthStore(s => s.currentUser)
   const getCurrentPlayer = useAuthStore(s => s.getCurrentPlayer)
@@ -66,6 +68,36 @@ export default function DashboardPage() {
 
   const player = useMemo(() => mounted ? getCurrentPlayer() : null, [mounted, getCurrentPlayer])
   const stats = useMemo(() => mounted ? getPlayerStats() : null, [mounted, getPlayerStats])
+
+  const leaderboard = useMemo(() => {
+    const userBest = stats ? stats.bestScore : 0
+    const competitors = [
+      { name: 'Abdellatif Jouahri', score: 96, title: "Gouverneur de Légende", avatar: "🇲🇦" },
+      { name: 'Taylor Rule Bot', score: 91, title: "Gouverneur d'Or", avatar: "🤖" },
+      { name: 'Ilyass E.', score: 87, title: "Gouverneur d'Or", avatar: "👨‍💻" },
+      { name: 'Prof. Alami', score: 82, title: "Gouverneur d'Argent", avatar: "👨‍🏫" },
+      { name: 'Claude Sonnet', score: 78, title: "Gouverneur d'Argent", avatar: "🦾" },
+      { name: 'Simulation Rookie', score: 52, title: "Stagiaire au guichet", avatar: "👶" },
+    ]
+    
+    if (userBest > 0) {
+      let userTitle = "Stagiaire au guichet"
+      if (userBest >= 90) userTitle = "Gouverneur de Platine"
+      else if (userBest >= 80) userTitle = "Gouverneur d'Or"
+      else if (userBest >= 70) userTitle = "Gouverneur d'Argent"
+      else if (userBest >= 50) userTitle = "Gouverneur de Bronze"
+
+      competitors.push({
+        name: `${player?.pseudo} (Vous)`,
+        score: userBest,
+        title: userTitle,
+        avatar: "👑"
+      })
+    }
+    
+    return competitors.sort((a, b) => b.score - a.score)
+  }, [stats, player])
+
 
   if (!mounted || !currentUser) {
     return (
@@ -95,22 +127,20 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <a href="/" className="font-editorial text-sm" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>CBS</a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
-          <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>Tableau de bord</span>
-          <span style={{ color: 'var(--border-default)' }}>·</span>
-          <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
-            <GraduationCap size={10} /> Cours
+          <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
+            <GraduationCap size={12} /> Cours
           </a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
-          <a href="/lab" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
-            <Sliders size={10} style={{ color: 'var(--accent-cool)' }} /> Lab
+          <a href="/training" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
+            <Sliders size={12} style={{ color: 'var(--accent-cool)' }} /> Entraînement
           </a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
-          <a href="/campaign" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
-            <ShieldAlert size={10} style={{ color: 'var(--accent-warm)' }} /> Campagnes
+          <a href="/dashboard" className="label-caps flex items-center gap-1 font-bold text-[var(--text-primary)]" style={{ textDecoration: 'none', fontSize: '11px' }}>
+            <LayoutDashboard size={12} style={{ color: 'var(--accent-warm)' }} /> Simulation
           </a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
-          <a href="/admin" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-tertiary)', textDecoration: 'none', fontSize: '9px' }}>
-            <Users size={10} /> Joueurs
+          <a href="/players" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
+            <Users size={12} /> Joueurs
           </a>
         </div>
         <div className="flex items-center gap-4">
@@ -180,372 +210,394 @@ export default function DashboardPage() {
             })}
           </motion.div>
         )}
-        {/* ══════ SPECIAL MODES ══════ */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10"
-          {...fadeUp}
-          transition={{ ...fadeUp.transition, delay: 0.15 }}
-        >
-          {/* Macro Lab Sandbox */}
-          <div
-            className="relative rounded-xl p-5 border overflow-hidden flex flex-col justify-between"
-            style={{
-              backgroundColor: 'var(--bg-panel)',
-              borderColor: 'rgba(92, 126, 146, 0.25)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-              background: 'linear-gradient(135deg, var(--bg-panel) 0%, rgba(92, 126, 146, 0.05) 100%)',
-            }}
-          >
-            <div aria-hidden="true" style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: 'radial-gradient(circle, rgba(92,126,146,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(92, 126, 146, 0.12)' }}>
-                  <Sliders size={16} style={{ color: 'var(--accent-cool)' }} />
-                </div>
-                <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--accent-cool)' }}>
-                  LABORATOIRE EXPÉRIMENTAL
-                </span>
-                <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold" style={{ letterSpacing: '0.05em' }}>
-                  SANDBOX
-                </span>
-              </div>
-              <h3 className="font-editorial text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
-                Simulateur Macroéconomique Interactif
-              </h3>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Modifiez librement les paramètres constants du modèle ($\sigma$, $\kappa$, $\delta$, $\beta$) à l&apos;aide de curseurs et visualisez instantanément la déformation des courbes <strong>IS</strong> et de <strong>Phillips</strong>.
-              </p>
-            </div>
-            <button
-              onClick={() => router.push('/lab')}
-              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
-              style={{
-                backgroundColor: 'var(--bg-elevated)',
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-cool)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' }}
-            >
-              Lancer le Laboratoire
-              <ChevronRight size={12} />
-            </button>
-          </div>
 
-          {/* Historical Campaigns */}
-          <div
-            className="relative rounded-xl p-5 border overflow-hidden flex flex-col justify-between"
-            style={{
-              backgroundColor: 'var(--bg-panel)',
-              borderColor: 'rgba(201, 168, 106, 0.25)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
-              background: 'linear-gradient(135deg, var(--bg-panel) 0%, rgba(201, 168, 106, 0.05) 100%)',
-            }}
-          >
-            <div aria-hidden="true" style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: 'radial-gradient(circle, rgba(201,168,106,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(201, 168, 106, 0.12)' }}>
-                  <ShieldAlert size={16} style={{ color: 'var(--accent-warm)' }} />
-                </div>
-                <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--accent-warm)' }}>
-                  ARCHIVES DE SÉCURITÉ
-                </span>
-                <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold" style={{ letterSpacing: '0.05em' }}>
-                  CAMPAGNES
-                </span>
-              </div>
-              <h3 className="font-editorial text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
-                Scénarios de Crises Historiques
-              </h3>
-              <p className="text-xs leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
-                Prenez les commandes lors de crises majeures : l&apos;hyperinflation Volcker (1979) ou l&apos;effondrement des Subprimes (2008). Relevez le défi sous contraintes strictes d&apos;objectifs de mandat.
-              </p>
-            </div>
-            <button
-              onClick={() => router.push('/campaign')}
-              className="w-full py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
-              style={{
-                backgroundColor: 'var(--bg-elevated)',
-                border: '1px solid var(--border-default)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-warm)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-hover)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)'; (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' }}
-            >
-              Ouvrir les Dossiers Classified
-              <ChevronRight size={12} />
-            </button>
-          </div>
-        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-          {/* ══════ LEFT: SCENARIO PICKER ══════ */}
+          {/* ══════ LEFT: SCENARIO PICKER & LEADERBOARD ══════ */}
           <motion.div
             className="lg:col-span-2"
             {...fadeUp}
             transition={{ ...fadeUp.transition, delay: 0.15 }}
           >
-            <h2 className="label-caps mb-4" style={{ color: 'var(--accent-primary)' }}>Nouvelle partie</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-              {scenarios.map(sc => {
-                const isSelected = sc.id === selected
-                const meta = DIFFICULTY_META[sc.difficulty]
-                return (
-                  <button
-                    key={sc.id}
-                    type="button"
-                    onClick={() => setSelected(sc.id)}
-                    className="relative text-left rounded-lg p-5 transition-all duration-200"
-                    style={{
-                      backgroundColor: isSelected ? 'var(--bg-elevated)' : 'var(--bg-panel)',
-                      border: `1px solid ${isSelected ? meta.color + '55' : 'var(--border-default)'}`,
-                      boxShadow: isSelected ? `0 0 0 1px ${meta.color}22, 0 6px 24px rgba(0,0,0,0.2)` : 'none',
-                      transform: isSelected ? 'translateY(-2px)' : 'translateY(0)',
-                      cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' } }}
-                    onMouseLeave={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-panel)' } }}
-                  >
-                    <span
-                      className="inline-flex items-center gap-1.5 mb-3 px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: meta.bg, color: meta.color,
-                        fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-                      }}
-                    >
-                      <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: meta.color, display: 'inline-block' }} />
-                      {meta.label}
-                    </span>
-                    <span className="block font-medium mb-1" style={{ color: 'var(--text-primary)', fontSize: '13px' }}>
-                      {sc.title}
-                    </span>
-                    <span className="block text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>
-                      {sc.subtitle}
-                    </span>
-                    {sc.keyKpi && (
-                      <span className="block font-mono text-[10px] font-semibold tabular" style={{ color: meta.color }}>
-                        {sc.keyKpi}
-                      </span>
-                    )}
-                    {isSelected && (
-                      <span className="absolute top-3 right-3 flex items-center justify-center w-[18px] h-[18px] rounded-full" style={{ backgroundColor: meta.color }}>
-                        <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* Difficulty Level Selector */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
-              <div className="flex items-center gap-2">
-                <Target size={16} style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                  Difficulté de la Simulation :
-                </span>
-              </div>
-              <div className="flex rounded-lg overflow-hidden p-0.5" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-default)' }}>
-                {(['beginner', 'intermediate', 'expert'] as DifficultyLevel[]).map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => setDifficultyLevel(lvl)}
-                    className="px-4 py-1.5 rounded-md text-xs font-semibold transition-all"
-                    style={{
-                      backgroundColor: difficultyLevel === lvl ? 'var(--accent-primary)' : 'transparent',
-                      color: difficultyLevel === lvl ? '#fff' : 'var(--text-secondary)',
-                      border: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {lvl === 'beginner' ? '🌱 Débutant' : lvl === 'intermediate' ? '📈 Intermédiaire' : '🎯 Expert'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Fiche de Conjoncture Initiale */}
-            <div
-              className="rounded-xl p-5 mb-5 transition-all duration-300"
-              style={{
-                backgroundColor: 'var(--bg-panel)',
-                border: '1px solid var(--border-default)',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-              }}
-            >
-              {/* Header de la Fiche */}
-              <div className="flex items-center justify-between border-b pb-3 mb-4 text-left" style={{ borderColor: 'var(--border-subtle)' }}>
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full animate-pulse-soft" style={{ backgroundColor: selectedMeta.color }} />
-                  <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--text-secondary)' }}>
-                    FICHE DE CONJONCTURE INITIALE
-                  </span>
-                </div>
-                <span className="font-mono text-[9px] px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
-                  Scénario : {SCENARIOS[selected].title}
-                </span>
-              </div>
-
-              {/* Contenu principal en grille */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-                {/* 1. Mètres de conjoncture (MD: 5) */}
-                <div className="md:col-span-5 flex flex-col gap-2 justify-center border-b md:border-b-0 md:border-r pb-4 md:pb-0 md:pr-4" style={{ borderColor: 'var(--border-subtle)' }}>
-                  <span className="label-caps font-semibold text-[8px] mb-2 text-left" style={{ color: 'var(--text-tertiary)' }}>
-                    INDICATEURS MACRO DE DÉPART
-                  </span>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
-                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
-                      <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.inflation > 4 ? 'var(--data-negative)' : SCENARIOS[selected].initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
-                        {SCENARIOS[selected].initialState.inflation.toFixed(1)} %
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
-                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Croissance PIB</span>
-                      <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
-                        {SCENARIOS[selected].initialState.gdpGrowth.toFixed(1)} %
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
-                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Taux Directeur</span>
-                      <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                        {SCENARIOS[selected].initialState.policyRate.toFixed(2)} %
-                      </span>
-                    </div>
-
-                    <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
-                      <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Crédibilité</span>
-                      <span className="font-mono text-sm font-semibold" style={{ color: 'var(--accent-warm)' }}>
-                        {SCENARIOS[selected].initialState.centralBankCredibility} / 100
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left mt-1">
-                    <div className="flex justify-between items-center text-[8px] label-caps mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                      <span>Impact des chocs initiaux</span>
-                      <span className="font-mono font-bold" style={{ color: SCENARIOS[selected].initialShocks.length > 0 ? 'var(--data-negative)' : 'var(--data-positive)' }}>
-                        {SCENARIOS[selected].initialShocks.length > 0 ? 'ACTIF' : 'AUCUN'}
-                      </span>
-                    </div>
-                    <p className="text-[10px] leading-tight" style={{ color: 'var(--text-secondary)' }}>
-                      {SCENARIOS[selected].initialShocks.length > 0 
-                        ? SCENARIOS[selected].initialShocks[0].label + ' : ' + SCENARIOS[selected].initialShocks[0].description
-                        : 'Aucun choc majeur en cours.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 2. Analyse éditoriale & Conseils (MD: 7) */}
-                <div className="md:col-span-7 flex flex-col justify-between gap-3 text-left">
-                  <div>
-                    <span className="label-caps font-semibold text-[8px] block mb-1" style={{ color: 'var(--text-tertiary)' }}>
-                      ANALYSE DE CONJONCTURE ({difficultyLevel === 'beginner' ? 'DÉBUTANT' : difficultyLevel === 'intermediate' ? 'INTERMÉDIAIRE' : 'EXPERT'})
-                    </span>
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
-                      &ldquo;{SCENARIOS[selected].descriptionByLevel[difficultyLevel] || SCENARIOS[selected].description}&rdquo;
-                    </p>
-                  </div>
-
-                  {/* Règle de scoring & Spécificités du niveau */}
-                  <div className="p-3 rounded-lg border text-[11px] leading-relaxed" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
-                    <span className="font-semibold block mb-1" style={{ color: 'var(--text-primary)' }}>Règles du niveau {difficultyLevel === 'beginner' ? 'Débutant' : difficultyLevel === 'intermediate' ? 'Intermédiaire' : 'Expert'} :</span>
-                    <ul className="list-disc list-inside space-y-0.5 text-xs text-[var(--text-secondary)]" style={{ color: 'var(--text-secondary)' }}>
-                      {difficultyLevel === 'beginner' ? (
-                        <>
-                          <li><span style={{ color: 'var(--data-positive)', fontWeight: 600 }}>Scoring indulgent :</span> Écarts mineurs tolérés.</li>
-                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments simplifiés :</span> Taux directeur uniquement.</li>
-                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs modérés :</span> 16 trimestres de simulation.</li>
-                        </>
-                      ) : difficultyLevel === 'intermediate' ? (
-                        <>
-                          <li><span style={{ color: 'var(--accent-warm)', fontWeight: 600 }}>Scoring standard :</span> Pondération stricte de la crédibilité.</li>
-                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments avancés :</span> Forward guidance, réserves, CCyB.</li>
-                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs stochastiques :</span> 20 trimestres de simulation.</li>
-                        </>
-                      ) : (
-                        <>
-                          <li><span style={{ color: 'var(--data-negative)', fontWeight: 600 }}>Scoring institutionnel :</span> Zéro marge d'erreur, pass-through accentué.</li>
-                          <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Arsenal complet :</span> Tous les leviers de politique monétaire activés.</li>
-                          <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs sévères :</span> 25 trimestres. Pas de conseils en cours de jeu.</li>
-                        </>
-                      )}
-                    </ul>
-                  </div>
-
-                  {/* Conseils du BAM Bot */}
-                  {SCENARIOS[selected].hintsByLevel[difficultyLevel] && SCENARIOS[selected].hintsByLevel[difficultyLevel].length > 0 && (
-                    <div className="rounded-lg p-2.5 text-xs" style={{ backgroundColor: 'rgba(201, 168, 106, 0.06)', border: '1px solid rgba(201, 168, 106, 0.15)', color: 'var(--text-secondary)' }}>
-                      <span className="font-semibold block mb-1" style={{ color: 'var(--accent-warm)' }}>Recommandations stratégiques du BAM Bot :</span>
-                      <ul className="list-disc list-inside space-y-0.5 text-[11px]">
-                        {SCENARIOS[selected].hintsByLevel[difficultyLevel].map((hint, i) => (
-                          <li key={i}>{hint}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mode Libre */}
-            <div
-              className="flex items-center justify-between mb-4 px-4 py-2.5 rounded-md"
-              style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}
-            >
-              <div>
-                <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Mode Libre</p>
-                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>25 trimestres · +50 % de probabilité de chocs</p>
-              </div>
+            {/* TAB SELECTORS */}
+            <div className="flex items-center gap-6 mb-6 border-b border-[var(--border-subtle)] pb-1.5 text-left">
               <button
                 type="button"
-                onClick={() => setFreeMode(!freeMode)}
-                className="relative w-9 h-5 rounded-full transition-colors duration-200"
-                style={{ backgroundColor: freeMode ? 'var(--accent-primary)' : 'var(--bg-hover)' }}
-                role="switch"
-                aria-checked={freeMode}
+                onClick={() => { setActiveView('scenarios'); sound.playTick(); }}
+                className="label-caps pb-2.5 px-1 transition-all"
+                style={{
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderBottom: activeView === 'scenarios' ? '2.5px solid var(--accent-primary)' : '2.5px solid transparent',
+                  color: activeView === 'scenarios' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  fontWeight: activeView === 'scenarios' ? 700 : 500,
+                  background: 'none', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.12em'
+                }}
               >
-                <span
-                  className="absolute top-0.5 w-4 h-4 rounded-full transition-transform duration-200"
-                  style={{
-                    backgroundColor: '#fff', left: '2px',
-                    transform: freeMode ? 'translateX(16px)' : 'translateX(0)',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                  }}
-                />
+                🎮 Scénarios de Mandat
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveView('leaderboard'); sound.playTick(); }}
+                className="label-caps pb-2.5 px-1 transition-all"
+                style={{
+                  borderTop: 'none',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderBottom: activeView === 'leaderboard' ? '2.5px solid var(--accent-primary)' : '2.5px solid transparent',
+                  color: activeView === 'leaderboard' ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  fontWeight: activeView === 'leaderboard' ? 700 : 500,
+                  background: 'none', cursor: 'pointer', fontSize: '11px', letterSpacing: '0.12em'
+                }}
+              >
+                🏆 Classement Général
               </button>
             </div>
 
-            {/* CTA */}
-            <button
-              onClick={handleStart}
-              className="w-full py-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200"
-              style={{
-                background: 'linear-gradient(135deg, #C41923 0%, #8B131B 100%)',
-                color: '#fff', border: 'none', cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 8px 32px rgba(180,25,35,0.45)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)'
-              }}
-            >
-              Commencer la partie
-              <ChevronRight size={16} />
-            </button>
+            {activeView === 'scenarios' ? (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  {scenarios.map(sc => {
+                    const isSelected = sc.id === selected
+                    const meta = DIFFICULTY_META[sc.difficulty]
+                    return (
+                      <button
+                        key={sc.id}
+                        type="button"
+                        onClick={() => setSelected(sc.id)}
+                        className="relative text-left rounded-lg p-5 transition-all duration-200"
+                        style={{
+                          backgroundColor: isSelected ? 'var(--bg-elevated)' : 'var(--bg-panel)',
+                          border: `1px solid ${isSelected ? meta.color + '55' : 'var(--border-default)'}`,
+                          boxShadow: isSelected ? `0 0 0 1px ${meta.color}22, 0 6px 24px rgba(0,0,0,0.2)` : 'none',
+                          transform: isSelected ? 'translateY(-2px)' : 'translateY(0)',
+                          cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-elevated)' } }}
+                        onMouseLeave={e => { if (!isSelected) { (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--bg-panel)' } }}
+                      >
+                        <span
+                          className="inline-flex items-center gap-1.5 mb-3 px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: meta.bg, color: meta.color,
+                            fontSize: '9px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+                          }}
+                        >
+                          <span style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: meta.color, display: 'inline-block' }} />
+                          {meta.label}
+                        </span>
+                        <span className="block font-medium mb-1" style={{ color: 'var(--text-primary)', fontSize: '13px' }}>
+                          {sc.title}
+                        </span>
+                        <span className="block text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>
+                          {sc.subtitle}
+                        </span>
+                        {sc.keyKpi && (
+                          <span className="block font-mono text-[10px] font-semibold tabular" style={{ color: meta.color }}>
+                            {sc.keyKpi}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <span className="absolute top-3 right-3 flex items-center justify-center w-[18px] h-[18px] rounded-full" style={{ backgroundColor: meta.color }}>
+                            <svg width="8" height="6" viewBox="0 0 8 6" fill="none"><path d="M1 3L3 5L7 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Difficulty Level Selector */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
+                  <div className="flex items-center gap-2">
+                    <Target size={16} style={{ color: 'var(--accent-primary)' }} />
+                    <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                      Difficulté de la Simulation :
+                    </span>
+                  </div>
+                  <div className="flex rounded-lg overflow-hidden p-0.5" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-default)' }}>
+                    {(['beginner', 'intermediate', 'expert'] as DifficultyLevel[]).map((lvl) => (
+                      <button
+                        key={lvl}
+                        onClick={() => setDifficultyLevel(lvl)}
+                        className="px-4 py-1.5 rounded-md text-xs font-semibold transition-all"
+                        style={{
+                          backgroundColor: difficultyLevel === lvl ? 'var(--accent-primary)' : 'transparent',
+                          color: difficultyLevel === lvl ? '#fff' : 'var(--text-secondary)',
+                          border: 'none',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {lvl === 'beginner' ? '🌱 Débutant' : lvl === 'intermediate' ? '📈 Intermédiaire' : '🎯 Expert'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fiche de Conjoncture Initiale */}
+                <div
+                  className="rounded-xl p-5 mb-5 transition-all duration-300"
+                  style={{
+                    backgroundColor: 'var(--bg-panel)',
+                    border: '1px solid var(--border-default)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                  }}
+                >
+                  {/* Header de la Fiche */}
+                  <div className="flex items-center justify-between border-b pb-3 mb-4 text-left" style={{ borderColor: 'var(--border-subtle)' }}>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full animate-pulse-soft" style={{ backgroundColor: selectedMeta.color }} />
+                      <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                        FICHE DE CONJONCTURE INITIALE
+                      </span>
+                    </div>
+                    <span className="font-mono text-[9px] px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
+                      Scénario : {SCENARIOS[selected].title}
+                    </span>
+                  </div>
+
+                  {/* Contenu principal en grille */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                    {/* 1. Mètres de conjoncture (MD: 5) */}
+                    <div className="md:col-span-5 flex flex-col gap-2 justify-center border-b md:border-b-0 md:border-r pb-4 md:pb-0 md:pr-4" style={{ borderColor: 'var(--border-subtle)' }}>
+                      <span className="label-caps font-semibold text-[8px] mb-2 text-left" style={{ color: 'var(--text-tertiary)' }}>
+                        INDICATEURS MACRO DE DÉPART
+                      </span>
+                      
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                          <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
+                          <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.inflation > 4 ? 'var(--data-negative)' : SCENARIOS[selected].initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
+                            {SCENARIOS[selected].initialState.inflation.toFixed(1)} %
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                          <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Croissance PIB</span>
+                          <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
+                            {SCENARIOS[selected].initialState.gdpGrowth.toFixed(1)} %
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                          <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Taux Directeur</span>
+                          <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {SCENARIOS[selected].initialState.policyRate.toFixed(2)} %
+                          </span>
+                        </div>
+
+                        <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
+                          <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Crédibilité</span>
+                          <span className="font-mono text-sm font-semibold" style={{ color: 'var(--accent-warm)' }}>
+                            {SCENARIOS[selected].initialState.centralBankCredibility} / 100
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left mt-1">
+                        <div className="flex justify-between items-center text-[8px] label-caps mb-1" style={{ color: 'var(--text-tertiary)' }}>
+                          <span>Impact des chocs initiaux</span>
+                          <span className="font-mono font-bold" style={{ color: SCENARIOS[selected].initialShocks.length > 0 ? 'var(--data-negative)' : 'var(--data-positive)' }}>
+                            {SCENARIOS[selected].initialShocks.length > 0 ? 'ACTIF' : 'AUCUN'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] leading-tight" style={{ color: 'var(--text-secondary)' }}>
+                          {SCENARIOS[selected].initialShocks.length > 0 
+                            ? SCENARIOS[selected].initialShocks[0].label + ' : ' + SCENARIOS[selected].initialShocks[0].description
+                            : 'Aucun choc majeur en cours.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* 2. Analyse éditoriale & Conseils (MD: 7) */}
+                    <div className="md:col-span-7 flex flex-col justify-between gap-3 text-left">
+                      <div>
+                        <span className="label-caps font-semibold text-[8px] block mb-1" style={{ color: 'var(--text-tertiary)' }}>
+                          ANALYSE DE CONJONCTURE ({difficultyLevel === 'beginner' ? 'DÉBUTANT' : difficultyLevel === 'intermediate' ? 'INTERMÉDIAIRE' : 'EXPERT'})
+                        </span>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text-primary)', fontStyle: 'italic' }}>
+                          &ldquo;{SCENARIOS[selected].descriptionByLevel[difficultyLevel] || SCENARIOS[selected].description}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Règle de scoring & Spécificités du niveau */}
+                      <div className="p-3 rounded-lg border text-[11px] leading-relaxed" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
+                        <span className="font-semibold block mb-1" style={{ color: 'var(--text-primary)' }}>Règles du niveau {difficultyLevel === 'beginner' ? 'Débutant' : difficultyLevel === 'intermediate' ? 'Intermédiaire' : 'Expert'} :</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-xs text-[var(--text-secondary)]" style={{ color: 'var(--text-secondary)' }}>
+                          {difficultyLevel === 'beginner' ? (
+                            <>
+                              <li><span style={{ color: 'var(--data-positive)', fontWeight: 600 }}>Scoring indulgent :</span> Écarts mineurs tolérés.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments simplifiés :</span> Taux directeur uniquement.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs modérés :</span> 16 trimestres de simulation.</li>
+                            </>
+                          ) : difficultyLevel === 'intermediate' ? (
+                            <>
+                              <li><span style={{ color: 'var(--accent-warm)', fontWeight: 600 }}>Scoring standard :</span> Pondération stricte de la crédibilité.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments avancés :</span> Forward guidance, réserves, CCyB.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs stochastiques :</span> 20 trimestres de simulation.</li>
+                            </>
+                          ) : (
+                            <>
+                              <li><span style={{ color: 'var(--data-negative)', fontWeight: 600 }}>Scoring institutionnel :</span> Zéro marge d'erreur, pass-through accentué.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Arsenal complet :</span> Tous les leviers de politique monétaire activés.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs sévères :</span> 25 trimestres. Pas de conseils en cours de jeu.</li>
+                            </>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Conseils de l'Assistant CBS */}
+                      {SCENARIOS[selected].hintsByLevel[difficultyLevel] && SCENARIOS[selected].hintsByLevel[difficultyLevel].length > 0 && (
+                        <div className="rounded-lg p-2.5 text-xs" style={{ backgroundColor: 'rgba(201, 168, 106, 0.06)', border: '1px solid rgba(201, 168, 106, 0.15)', color: 'var(--text-secondary)' }}>
+                          <span className="font-semibold block mb-1" style={{ color: 'var(--accent-warm)' }}>Recommandations stratégiques de l'Assistant CBS :</span>
+                          <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                            {SCENARIOS[selected].hintsByLevel[difficultyLevel].map((hint, i) => (
+                              <li key={i}>{hint}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mode Libre */}
+                <div
+                  className="flex items-center justify-between mb-4 px-4 py-2.5 rounded-md"
+                  style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}
+                >
+                  <div>
+                    <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Mode Libre</p>
+                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>25 trimestres · +50 % de probabilité de chocs</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFreeMode(!freeMode)}
+                    className="relative w-9 h-5 rounded-full transition-colors duration-200"
+                    style={{ backgroundColor: freeMode ? 'var(--accent-primary)' : 'var(--bg-hover)' }}
+                    role="switch"
+                    aria-checked={freeMode}
+                  >
+                    <span
+                      className="absolute top-0.5 w-4 h-4 rounded-full transition-transform duration-200"
+                      style={{
+                        backgroundColor: '#fff', left: '2px',
+                        transform: freeMode ? 'translateX(16px)' : 'translateX(0)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  </button>
+                </div>
+
+                {/* CTA */}
+                <button
+                  onClick={handleStart}
+                  className="w-full py-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200"
+                  style={{
+                    background: 'linear-gradient(135deg, #C41923 0%, #8B131B 100%)',
+                    color: '#fff', border: 'none', cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 8px 32px rgba(180,25,35,0.45)'
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)'
+                  }}
+                >
+                  Commencer la partie
+                  <ChevronRight size={16} />
+                </button>
+              </>
+            ) : (
+              <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-default)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+                <div className="flex items-center justify-between border-b pb-3 mb-4 text-left" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex items-center gap-2">
+                    <Trophy size={14} style={{ color: 'var(--accent-warm)' }} />
+                    <span className="label-caps font-semibold tracking-wider text-[10px]" style={{ color: 'var(--text-secondary)' }}>
+                      PALMARÈS DES GOUVERNEURS CBS
+                    </span>
+                  </div>
+                  <span className="font-mono text-[9px] px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-tertiary)', border: '1px solid var(--border-subtle)' }}>
+                    Mode Compétitif Actif
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  {leaderboard.map((item, idx) => {
+                    const isUser = item.name.includes('(Vous)')
+                    const rank = idx + 1
+                    const isTop3 = rank <= 3
+                    const rankColor = rank === 1 ? '#D4AF37' : rank === 2 ? '#C0C0C0' : rank === 3 ? '#CD7F32' : 'var(--text-tertiary)'
+                    const bgGradient = isUser 
+                      ? 'linear-gradient(135deg, rgba(180, 25, 35, 0.08) 0%, rgba(201, 168, 106, 0.04) 100%)' 
+                      : 'var(--bg-elevated)'
+
+                    return (
+                      <motion.div
+                        key={item.name}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05, duration: 0.3 }}
+                        className="rounded-lg p-3.5 flex items-center justify-between transition-all"
+                        style={{
+                          background: bgGradient,
+                          border: isUser ? '1px solid var(--accent-warm)' : '1px solid var(--border-subtle)',
+                          boxShadow: isUser ? '0 4px 16px rgba(180,25,35,0.08)' : 'none'
+                        }}
+                      >
+                        <div className="flex items-center gap-3.5 text-left">
+                          {/* Rank Badge */}
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center font-editorial font-bold shadow-sm"
+                            style={{
+                              backgroundColor: isTop3 ? rankColor + '20' : 'var(--bg-base)',
+                              border: `1px solid ${isTop3 ? rankColor : 'var(--border-subtle)'}`,
+                              color: isTop3 ? rankColor : 'var(--text-secondary)',
+                              fontSize: '13px'
+                            }}
+                          >
+                            {rank}
+                          </div>
+                          {/* Avatar */}
+                          <span className="text-xl">{item.avatar}</span>
+                          <div>
+                            <p className={`text-sm font-semibold m-0 ${isUser ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>
+                              {item.name}
+                            </p>
+                            <p className="text-[10px] label-caps tracking-wider text-[var(--text-tertiary)] m-0">
+                              {item.title}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Score */}
+                        <div className="text-right">
+                          <span className="font-editorial-roman text-xl font-bold block" style={{ color: isUser ? 'var(--accent-primary)' : 'var(--text-secondary)', lineHeight: 1 }}>
+                            {item.score}
+                          </span>
+                          <span className="text-[9px] font-mono uppercase text-[var(--text-tertiary)]">points</span>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+
+                {/* Message de motivation */}
+                <div className="mt-5 p-3 rounded-lg border text-[11px] leading-relaxed text-left" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
+                  <span className="font-semibold block mb-1 text-[var(--text-primary)]">🚀 Améliorez votre classement :</span>
+                  <p className="text-[11px] text-[var(--text-secondary)] m-0">
+                    Chaque partie terminée avec un score élevé met immédiatement à jour votre classement. Battez le score de 96 points du gouverneur <strong>Abdellatif Jouahri</strong> pour inscrire votre nom tout en haut de la Légende CBS !
+                  </p>
+                </div>
+              </div>
+            )}
           </motion.div>
+
 
           {/* ══════ RIGHT: GAME HISTORY ══════ */}
           <motion.div

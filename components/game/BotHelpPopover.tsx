@@ -88,8 +88,8 @@ export function BotHelpPopover() {
     const amt = recommendedChangeBp !== 0 ? ` de ${Math.abs(recommendedChangeBp)} pb` : ''
     const query = `Pourquoi me conseilles-tu de ${direction} le taux directeur${amt} pour ce trimestre ?`
     
-    // Dispatch de l'événement pour le chatbot AssistantBot
-    window.dispatchEvent(new CustomEvent('open-bam-bot', { detail: { query } }))
+    // Dispatch de l'événement pour l'Assistant CBS
+    window.dispatchEvent(new CustomEvent('open-cbs-assistant', { detail: { query } }))
     setIsOpen(false)
   }
 
@@ -147,7 +147,7 @@ export function BotHelpPopover() {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-mono text-[9px] font-bold tracking-wider uppercase" style={{ color: 'var(--text-tertiary)' }}>
-                  Bot Help
+                  Assistant
                 </span>
                 <span 
                   className="w-1.5 h-1.5 rounded-full" 

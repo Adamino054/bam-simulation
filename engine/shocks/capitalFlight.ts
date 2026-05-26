@@ -1,6 +1,6 @@
 /**
  * Choc de fuite de capitaux — choc financier.
- * Se déclenche uniquement si la crédibilité de BAM est basse (<50)
+ * Se déclenche uniquement si la crédibilité CBS est basse (<50)
  * ou si le solde courant est très déficitaire (<-5%).
  * Provoque une hausse du coût du crédit et une détérioration
  * du solde courant.

@@ -218,17 +218,17 @@ export default function LandingPage() {
               <Landmark size={18} style={{ color: 'var(--accent-primary)' }} />
               <span className="font-editorial" style={{ color: 'var(--accent-primary)', fontSize: '1.15rem' }}>CBS</span>
               <span style={{ color: 'var(--border-default)' }}>·</span>
-              <span className="label-caps hidden sm:block" style={{ color: 'var(--text-tertiary)' }}>Central Bank Simulator</span>
+              <span className="label-caps hidden sm:block" style={{ color: 'var(--text-tertiary)' }}>Centrale Bank Simulateur</span>
             </div>
             <div className="hidden md:flex items-center gap-4 ml-4" style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '16px' }}>
               <a href="/courses" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Cours
               </a>
-              <a href="/lab" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
-                Macro Lab
+              <a href="/training" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Entraînement
               </a>
-              <a href="/campaign" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
-                Campagnes
+              <a href="/dashboard" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Simulation
               </a>
               {currentUser && (
                 <a href="/history" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
@@ -317,7 +317,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
           >
-            Incarnez le gouverneur de la Banque centrale.
+            Incarnez le gouverneur de la Centrale Bank Simulateur.
             <br />Cinq ans, six instruments, une cible :{' '}
             <strong style={{ color: 'var(--accent-primary)' }}>2&nbsp;% d&apos;inflation</strong>.
           </motion.p>
@@ -431,7 +431,7 @@ export default function LandingPage() {
             <span className="label-caps block mb-3" style={{ color: 'var(--accent-primary)' }}>Fonctionnalités</span>
             <h2 className="font-editorial-roman text-3xl sm:text-4xl mb-4" style={{ color: 'var(--text-primary)' }}>Un simulateur complet</h2>
             <p className="text-base max-w-lg mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Conçu pour reproduire fidèlement les mécanismes de transmission de la politique monétaire marocaine.
+              Conçu pour reproduire fidèlement les mécanismes de transmission de la politique monétaire.
             </p>
           </motion.div>
 
@@ -565,7 +565,7 @@ export default function LandingPage() {
         {/* ══ CTA FINAL ════════════════════════════════════════════════════ */}
         <section className="px-6 py-24 text-center" style={{ borderTop: '1px solid var(--border-subtle)', background: 'radial-gradient(ellipse at 50% 100%, rgba(180,25,35,0.08) 0%, transparent 60%)' }}>
           <motion.div className="max-w-lg mx-auto" {...fadeUp}>
-            <span className="label-caps block mb-6" style={{ color: 'var(--text-tertiary)' }}>Banque centrale · Simulateur Officiel</span>
+            <span className="label-caps block mb-6" style={{ color: 'var(--text-tertiary)' }}>Centrale Bank Simulateur · Plateforme Officielle</span>
             <h2 className="font-editorial text-4xl sm:text-5xl mb-5" style={{ color: 'var(--text-primary)', lineHeight: 0.95 }}>
               Prêt à<br />gouverner ?
             </h2>
@@ -603,12 +603,13 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Landmark size={14} style={{ color: 'var(--accent-primary)' }} />
-              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2025 · Banque centrale</span>
+              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2025 · Centrale Bank Simulateur</span>
             </div>
             <div className="flex items-center gap-6">
               {[
                 { href: '/courses', label: 'Cours' },
-                { href: currentUser ? '/history' : '/login', label: 'Historique' },
+                { href: '/training', label: 'Entraînement' },
+                { href: currentUser ? '/dashboard' : '/login', label: 'Simulation' },
                 { href: '/about', label: 'À propos' },
               ].map(link => (
                 <a key={link.href} href={link.href} className="label-caps nav-link" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '12px' }}>

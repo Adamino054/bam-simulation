@@ -66,6 +66,8 @@ export function step(
     reserveRequirementChange: action.reserveRequirementChangeBp / 100,
     marketOperations: action.marketOperationsBnMad,
     totalDeposits: TOTAL_DEPOSITS_APPROX,
+    nplRatio: current.nplRatio ?? PARAMS.nplBase,
+    scenarioId: scenarioId,
   })
 
   // Task 1: FX intervention adds to liquidity need (positive = tightens)
@@ -85,17 +87,13 @@ export function step(
   // Task 1: Emergency lending reduces lending rate
   const emergencyLendingEffect = -(action.emergencyLendingBnMad * 0.003)
 
-  const { lendingRate: baseLendingRate, creditGrowth } = computeCreditChannel({
+  const { lendingRate } = computeCreditChannel({
     lendingRatePrev: current.lendingRate,
     interbankRate,
-    outputGap: current.outputGap,
-    inflationExpected: current.inflationExpected,
     riskPremiumShock: riskPremiumShock + credibilitySpread + emergencyLendingEffect,
     ccybRate: action.ccybRate ?? 0,
     nplRatio: current.nplRatio ?? PARAMS.nplBase,
   })
-
-  const lendingRate = baseLendingRate
 
   // ── Innovation Financière (Kuttner & Mosser) ─────────────────────
   // La titrisation fragmente le bilan bancaire et affaiblit la transmission
@@ -172,8 +170,10 @@ export function step(
   const inflationExpected =
     lambda_cred * PARAMS.piTarget + (1 - lambda_cred) * adaptiveExpectation
 
-  const unemployment =
-    PARAMS.unemploymentNatural - PARAMS.okunCoef * outputGap
+  // Problème 1 — Loi d'Okun : Δu_t = −λ · Δỹ_t (calibré à λ = 0.40 pour MENA/Maroc)
+  // u_t = u_{t-1} - λ * (ỹ_t - ỹ_{t-1})
+  const deltaUnemployment = -PARAMS.okunCoef * (outputGap - current.outputGap)
+  const unemployment = current.unemployment + deltaUnemployment
 
   const POTENTIAL_GROWTH = 3.0
   const gdpGrowth = POTENTIAL_GROWTH + (outputGap - current.outputGap)
@@ -229,6 +229,27 @@ export function step(
     PARAMS.nplSensGrowth * outputGap
   const currentNpl = current.nplRatio ?? PARAMS.nplBase
   const newNplRatio = clamp(currentNpl + deltaNpl * 0.25, 2.0, 25.0) // Lissage trimestriel
+
+  // Problème 3 — Canal du crédit : surcalibration massive (Bernanke & Gertler 1995)
+  // ΔCrédit_t = −β_crédit · Δi_t − γ_npl · ΔNPL_t + δ · Δỹ_t
+  const beta_credit = 1.5
+  const gamma_npl = 0.8
+  const delta_y_coef = 0.6
+
+  const delta_i = interbankRate - current.interbankRate
+  const delta_npl_val = newNplRatio - currentNpl
+  const delta_y = outputGap - current.outputGap
+
+  let deltaCredit = -beta_credit * delta_i - gamma_npl * delta_npl_val + delta_y_coef * delta_y
+
+  // La variation maximale du crédit en un trimestre ne doit pas dépasser ±3 points
+  // sauf choc systémique explicite (crise 2008 ou éclatement de bulle)
+  const isCreditCrisis = scenarioId === 'crisis2008' || delta_npl_val > 4
+  const maxCreditChange = isCreditCrisis ? 8.0 : 3.0
+  const minCreditChange = isCreditCrisis ? -8.0 : -3.0
+
+  deltaCredit = clamp(deltaCredit, minCreditChange, maxCreditChange)
+  const creditGrowth = clamp((current.creditGrowth ?? 5.0) + deltaCredit, -10, 30)
 
   // ── Bulle Spéculative (BCE Risk-taking / Tobin's q) ─────────────
   // Des taux bas prolongés stimulent la prise de risque excessive et gonflent

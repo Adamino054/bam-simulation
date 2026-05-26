@@ -11,7 +11,7 @@ import {
   Award, Sparkles, FileText, Check
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
-import { BlockKatex } from '@/components/ui/InlineKatex'
+import { BlockKatex, LatexText } from '@/components/ui/InlineKatex'
 import {
   ScoreBreakdown, TransmissionChain, ISCurveDiagram,
   PhillipsCurveDiagram, ChannelsDiagram, TaylorRuleChart,
@@ -90,9 +90,9 @@ const MODULES: Module[] = [
     formula: {
       latex: 'i^{TMP}_t = i^*_t + \\text{pression liquidité}',
       legend: [
-        'i* = taux directeur fixé par la Banque centrale',
-        'TMP = taux du marché monétaire (interbancaire)',
-        'λ = vitesse de transmission TMP → taux débiteur (≈ 0,35 au Maroc)',
+        '$i^*_t$ = taux directeur fixé par la Banque centrale',
+        '$i^{TMP}_t$ = taux du marché monétaire (interbancaire, TMP)',
+        '$\\lambda$ = vitesse de transmission $TMP \\to$ taux débiteur ($\\approx 0{,}35$ au Maroc)',
       ],
     },
     moroccanExample:
@@ -111,22 +111,22 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: TrendingUp,
     overview:
-      "L'output gap (ỹ) mesure l'écart entre le PIB réel observé et le PIB potentiel de l'économie. Un output gap positif (surchauffe) génère des pressions inflationnistes ; un gap négatif (sous-utilisation) crée un risque de déflation et de chômage élevé. La courbe IS décrit comment le taux d'intérêt réel détermine cet output gap.",
+      "L'output gap ($ỹ_t$) mesure l'écart entre le PIB réel observé et le PIB potentiel de l'économie. Un output gap positif (surchauffe) génère des pressions inflationnistes ; un gap négatif (sous-utilisation) crée un risque de déflation et de chômage élevé. La courbe IS décrit comment le taux d'intérêt réel détermine cet output gap.",
     keyPoints: [
-      "σ = 0,12 : sensibilité au taux réel — faible au Maroc car le capital est peu mobile et les entreprises dépendent peu du financement externe.",
-      "ρ = 0,70 : persistance du cycle — l'économie ne retourne pas immédiatement à son potentiel après un choc.",
-      "δ = 0,30 : degré d'ouverture — le Maroc dépend significativement de la demande européenne (tourisme, IDE, transferts).",
-      "Le taux réel = taux nominal - inflation anticipée. Si l'inflation monte, le taux réel baisse et stimule la demande même sans baisser i*.",
+      "$\\sigma = 0{,}12$ : sensibilité au taux réel — faible au Maroc car le capital est peu mobile et les entreprises dépendent peu du financement externe.",
+      "$\\rho = 0{,}70$ : persistance du cycle — l'économie ne retourne pas immédiatement à son potentiel après un choc.",
+      "$\\delta = 0{,}30$ : degré d'ouverture — le Maroc dépend significativement de la demande européenne (tourisme, IDE, transferts).",
+      "Le taux réel $r_t = i^D_t - \\pi^e_t$. Si l'inflation monte, le taux réel baisse et stimule la demande même sans baisser $i^*_t$.",
     ],
     formula: {
       latex: '\\tilde{y}_t = \\rho\\cdot\\tilde{y}_{t-1} - \\sigma(i^D_t - \\pi^e_t) + \\delta\\cdot\\tilde{y}^*_t + u^y_t',
       legend: [
-        'ỹ = output gap (% du PIB potentiel)',
-        'ρ = persistance cyclique (0,70)',
-        'σ = sensibilité au taux réel (0,12)',
-        'δ = ouverture commerciale (0,30)',
-        'ỹ* = output gap zone euro (demande externe)',
-        'u^y = chocs de demande actifs',
+        '$ỹ_t$ = output gap (% du PIB potentiel)',
+        '$\\rho$ = persistance cyclique ($0{,}70$)',
+        '$\\sigma$ = sensibilité au taux réel ($0{,}12$)',
+        '$\\delta$ = ouverture commerciale ($0{,}30$)',
+        '$ỹ^*_t$ = output gap de la zone euro (demande externe)',
+        '$u^y_t$ = chocs de demande actifs',
       ],
     },
     moroccanExample:
@@ -145,22 +145,22 @@ const MODULES: Module[] = [
     readTime: '7 min',
     icon: Activity,
     overview:
-      "La courbe de Phillips, dans sa version néo-keynésienne, établit que l'inflation dépend des anticipations des agents économiques (β), de la pression de la demande (κ·ỹ), des mouvements du taux de change (α·Δe) et des chocs d'offre (agricoles, pétroliers). Ce modèle capture les deux grandes sources d'inflation au Maroc : la demande et l'offre.",
+      "La courbe de Phillips, dans sa version néo-keynésienne, établit que l'inflation dépend des anticipations des agents économiques ($\\beta$), de la pression de la demande ($\\kappa \\cdot ỹ_t$), des mouvements du taux de change ($\\alpha \\cdot \\Delta e_t$) et des chocs d'offre (agricoles, pétroliers). Ce modèle capture les deux grandes sources d'inflation au Maroc : la demande et l'offre.",
     keyPoints: [
-      "β ≈ 0,95 : les anticipations d'inflation sont le facteur dominant (critique de Lucas). Si les agents anticipent 4 %, l'inflation sera proche de 4 % même sans surchauffe.",
-      "κ = 0,15 : chaque point d'output gap génère +0,15 pt d'inflation. La relation est modérée au Maroc (marchés peu concurrentiels).",
-      "α = 0,08 : le pass-through taux de change → inflation est faible sous le régime de quasi-parité dirham/euro-dollar.",
-      "γ = 0,20 : les chocs agricoles ont un fort impact (l'agriculture représente >10 % du PIB marocain et une part élevée du panier IPC).",
+      "$\\beta \\approx 0{,}95$ : les anticipations d'inflation sont le facteur dominant (critique de Lucas). Si les agents anticipent $4 \\%$, l'inflation sera proche de $4 \\%$ même sans surchauffe.",
+      "$\\kappa = 0{,}15$ : chaque point d'output gap génère $+0{,}15$ pt d'inflation. La relation est modérée au Maroc (marchés peu concurrentiels).",
+      "$\\alpha = 0{,}08$ : le pass-through taux de change $\\to$ inflation est faible sous le régime de quasi-parité dirham/euro-dollar.",
+      "$\\gamma = 0{,}20$ : les chocs agricoles ont un fort impact (l'agriculture représente $>10 \\%$ du PIB marocain et une part élevée du panier IPC).",
     ],
     formula: {
       latex: '\\pi_t = \\beta\\cdot\\pi^e_t + \\kappa\\cdot\\tilde{y}_t + \\alpha\\cdot\\Delta e_t + \\gamma\\cdot u^{agri}_t + u^{offre}_t',
       legend: [
-        'π = inflation (% annuel)',
-        'π^e = anticipations d\'inflation',
-        'β = poids des anticipations (0,95)',
-        'κ = sensibilité à l\'output gap (0,15)',
-        'α = pass-through taux de change (0,08)',
-        'γ = sensibilité agricole (0,20)',
+        '$\\pi_t$ = inflation (% annuel)',
+        '$\\pi^e_t$ = anticipations d\'inflation',
+        '$\\beta$ = poids des anticipations ($0{,}95$)',
+        '$\\kappa$ = sensibilité à l\'output gap ($0{,}15$)',
+        '$\\alpha$ = pass-through taux de change ($0{,}08$)',
+        '$\\gamma$ = sensibilité agricole ($0{,}20$)',
       ],
     },
     moroccanExample:
@@ -181,10 +181,10 @@ const MODULES: Module[] = [
     overview:
       "La politique monétaire ne touche pas directement les prix — elle agit via 4 canaux de transmission distincts. Comprendre ces canaux permet d'utiliser les bons instruments au bon moment et d'anticiper les effets secondaires de chaque décision.",
     keyPoints: [
-      "Canal des taux d'intérêt : i* ↑ → TMP ↑ → i^D ↑ → Crédit plus cher → Investissement ↓ → Output gap ↓ → Inflation ↓. C'est le canal principal.",
-      "Canal du crédit : des taux élevés augmentent les NPL (créances douteuses), ce qui pousse les banques à rationner le crédit indépendamment du taux directeur. C'est le canal Mishkin.",
-      "Canal des anticipations : si la Banque centrale est crédible, une simple communication hawkish suffit à ancrer les anticipations à 2 % — sans même bouger le taux. C'est le canal de Forward Guidance.",
-      "Canal du taux de change : hausse de i* → entrées de capitaux étrangers → appréciation du dirham → importations moins chères → inflation importée ↓. Pertinent au Maroc avec sa politique de change géré.",
+      "Canal des taux d'intérêt : $i^*_t \\uparrow \\implies TMP \\uparrow \\implies i^D_t \\uparrow \\implies$ Crédit plus cher $\\implies$ Investissement $\\downarrow \\implies$ Output gap $ỹ_t \\downarrow \\implies$ Inflation $\\pi_t \\downarrow$. C'est le canal principal.",
+      "Canal du crédit : des taux élevés augmentent les $NPL$ (créances douteuses), ce qui pousse les banques à rationner le crédit indépendamment du taux directeur. C'est le canal Mishkin.",
+      "Canal des anticipations : si la Banque centrale est crédible, une simple communication hawkish suffit à ancrer les anticipations à $2 \\%$ — sans même bouger le taux. C'est le canal de Forward Guidance.",
+      "Canal du taux de change : hausse de $i^*_t \\implies$ entrées de capitaux étrangers $\\implies$ appréciation du dirham $\\implies$ importations moins chères $\\implies$ inflation importée $\\downarrow$. Pertinent au Maroc avec sa politique de change géré.",
     ],
     moroccanExample:
       "L'expérience 2022-2023 a montré les limites du canal des taux au Maroc : les banques ont tardé à répercuter les hausses de la Banque centrale sur les taux débiteurs (λ = 0,35 seulement). La Banque centrale a compensé via le canal des anticipations — en signalant clairement sa détermination à lutter contre l'inflation.",
@@ -204,18 +204,18 @@ const MODULES: Module[] = [
     overview:
       "Proposée par John Taylor en 1993, cette règle donne le taux directeur 'optimal' en fonction de l'écart d'inflation à la cible et de l'output gap. Elle sert de référence normative pour évaluer si une banque centrale est trop accommodante (taux trop bas) ou trop restrictive (taux trop haut). Dans le simulateur, votre performance est comparée à ce taux de Taylor calculé à chaque trimestre.",
     keyPoints: [
-      "r* = 1,5 % : taux réel neutre estimé pour le Maroc (ni stimulant ni restrictif).",
-      "φ_π = 1,5 : coefficient sur l'écart d'inflation. Il doit être > 1 (principe de Taylor) pour que le taux réel monte effectivement quand l'inflation augmente.",
-      "φ_y = 0,5 : réponse à l'output gap — plus faible que la réponse à l'inflation, reflétant la priorité à la stabilité des prix.",
+      "$r^* = 1{,}5 \\%$ : taux réel neutre estimé pour le Maroc (ni stimulant ni restrictif).",
+      "$\\phi_\\pi = 1{,}5$ : coefficient sur l'écart d'inflation. Il doit être $> 1$ (principe de Taylor) pour que le taux réel monte effectivement quand l'inflation augmente.",
+      "$\\phi_y = 0{,}5$ : réponse à l'output gap — plus faible que la réponse à l'inflation, reflétant la priorité à la stabilité des prix.",
       "Le 'Coin de Taylor' : si votre taux diverge trop du taux de Taylor (> 1,5 pp), vous risquez soit une surchauffe, soit une récession inutile.",
     ],
     formula: {
       latex: "i^*_{Taylor} = r^* + \\pi^* + \\phi_\\pi(\\pi_t - \\pi^*) + \\phi_y \\cdot \\tilde{y}_t",
       legend: [
-        "r* = taux réel neutre (1,5 %)",
-        "π* = cible d'inflation (2,0 %)",
-        "φ_π = réponse à l'écart d'inflation (1,5)",
-        "φ_y = réponse à l'output gap (0,5)",
+        "$r^*$ = taux réel neutre ($1{,}5 \\%$)",
+        "$\\pi^*$ = cible d'inflation ($2{,}0 \\%$)",
+        "$\\phi_\\pi$ = réponse à l'écart d'inflation ($1{,}5$)",
+        "$\\phi_y$ = réponse à l'output gap ($0{,}5$)",
       ],
     },
     moroccanExample:
@@ -236,9 +236,9 @@ const MODULES: Module[] = [
     overview:
       "L'économie marocaine est particulièrement exposée aux chocs exogènes en raison de sa dépendance aux importations d'énergie, à l'agriculture pluviale et à la demande européenne. Ces chocs perturbent simultanément l'offre, la demande et l'inflation — créant des dilemmes complexes pour le banquier central qui ne peut généralement agir que sur un côté à la fois.",
     keyPoints: [
-      "Choc d'offre négatif (pétrole, sécheresse) : inflation ↑ ET croissance ↓ — le pire des cas. Faut-il resserrer (inflation) ou assouplir (croissance) ? Réponse : mesure, pas sur-réaction.",
-      "Choc de demande négatif (récession zone euro, COVID) : inflation ↓ ET croissance ↓ — réponse dovish claire. Baissez les taux et activez l'emergency lending.",
-      "Choc financier (fuite des capitaux, prime de risque) : hausse des taux débiteurs indépendamment de i* — utilisez les réserves de change et l'intervention FX.",
+      "Choc d'offre négatif (pétrole, sécheresse) : inflation $\\pi_t \\uparrow$ ET croissance $g_t \\downarrow$ — le pire des cas. Faut-il resserrer (inflation) ou assouplir (croissance) ? Réponse : mesure, pas sur-réaction.",
+      "Choc de demande négatif (récession zone euro, COVID) : inflation $\\pi_t \\downarrow$ ET croissance $g_t \\downarrow$ — réponse dovish claire. Baissez les taux et activez l'emergency lending.",
+      "Choc financier (fuite des capitaux, prime de risque) : hausse des taux débiteurs indépendamment de $i^*_t$ — utilisez les réserves de change et l'intervention FX.",
       "Les chocs durent 2 à 6 trimestres dans le simulateur. L'inflation core (hors volatile) est votre meilleur indicateur de la tendance fondamentale.",
     ],
     moroccanExample:
@@ -257,12 +257,12 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: Shield,
     overview:
-      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. La Banque centrale surveille les créances en souffrance (NPL), la croissance du crédit, et peut activer le coussin contracyclique (CCyB) pour préparer le système bancaire aux crises futures.",
+      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. La Banque centrale surveille les créances en souffrance ($NPL$), la croissance du crédit, et peut activer le coussin contracyclique ($CCyB$) pour préparer le système bancaire aux crises futures.",
     keyPoints: [
-      "NPL (Non-Performing Loans) : au-delà de 10-12 %, les banques commencent à rationner le crédit même si le taux directeur est bas — le canal du crédit est bloqué.",
-      "CCyB (Coussin Contracyclique) : constituer des réserves en période de boom (quand le crédit croît trop vite) pour les libérer en période de crise.",
-      "Piège de la Dette-Déflation (Irving Fisher, 1933) : déflation (π < 0) + NPL élevés → dette réelle s'alourdit → crédit se contracte → récession → plus de déflation. Spirale mortelle.",
-      "La Borne Zéro (ZLB) : quand le taux est à 0,5 % et l'inflation est négative, le taux réel monte automatiquement — paradoxe déflationniste. Seul l'Emergency Lending permet de briser la spirale.",
+      "$NPL$ (Non-Performing Loans) : au-delà de $10\\% - 12\\%$, les banques commencent à rationner le crédit même si le taux directeur est bas — le canal du crédit est bloqué.",
+      "$CCyB$ (Coussin Contracyclique) : constituer des réserves en période de boom (quand le crédit croît trop vite) pour les libérer en période de crise.",
+      "Piège de la Dette-Déflation (Irving Fisher, 1933) : déflation ($\\pi_t < 0$) + $NPL$ élevés $\\implies$ dette réelle s'alourdit $\\implies$ crédit se contracte $\\implies$ récession $\\implies$ déflation.",
+      "La Borne Zéro (ZLB) : quand le taux est à $0{,}5 \\%$ et l'inflation est négative, le taux réel monte automatiquement — paradoxe déflationniste. Seul l'Emergency Lending permet de briser la spirale.",
     ],
     moroccanExample:
       "Le ratio NPL marocain a atteint 8,9 % en 2023 (vs 7,5 % en 2019), principalement dans le segment PME post-COVID. La Banque centrale a activé des moratoires et des garanties de l'État pour éviter que les NPL ne dépassent le seuil critique de 12 % qui aurait déclenché un credit crunch.",
@@ -384,7 +384,7 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredL
                   {mod.keyPoints.map((pt, i) => (
                     <li key={i} className="flex gap-3 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                       <span className="font-mono flex-shrink-0 mt-0.5" style={{ color: mod.categoryColor, fontSize: '10px' }}>→</span>
-                      {pt}
+                      <LatexText text={pt} />
                     </li>
                   ))}
                 </ul>
@@ -393,7 +393,7 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredL
               {/* Formula */}
               {mod.formula && (
                 <div className="mb-5 rounded-md p-4" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderLeft: `3px solid ${mod.categoryColor}` }}>
-                  <div className="flex items-center gap-2 mb-3">
+                   <div className="flex items-center gap-2 mb-3">
                     <FlaskConical size={11} style={{ color: mod.categoryColor }} />
                     <span className="label-caps" style={{ color: mod.categoryColor, fontSize: '11px' }}>Formule mathématique</span>
                   </div>
@@ -402,7 +402,7 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredL
                     {mod.formula.legend.map((leg, i) => (
                       <li key={i} className="flex gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                         <span style={{ color: mod.categoryColor, fontFamily: 'monospace', flexShrink: 0 }}>·</span>
-                        {leg}
+                        <LatexText text={leg} />
                       </li>
                     ))}
                   </ul>

@@ -100,25 +100,32 @@ function ZonedBar({
   )
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="relative h-3 flex gap-px" style={{ borderRadius: '3px', overflow: 'hidden' }}>
+    <div className="flex flex-col gap-1.5">
+      {/* Visual Indicator Zones */}
+      <div className="relative flex gap-1.5" style={{ height: '14px', overflow: 'visible' }}>
         {zones.map((zone, i) => {
           const span = zone.max - zone.min
-          const fill = Math.max(0, Math.min(clamped - zone.min, span))
-          const fillPct = (fill / span) * 100
           const isActive = i === activeZoneIdx
+
           return (
             <div
               key={i}
-              className="relative overflow-hidden"
-              style={{ flex: span, backgroundColor: `${zone.color}1A`, borderRadius: '2px' }}
+              className="relative rounded-[3px] overflow-hidden transition-all duration-500"
+              style={{
+                flex: span,
+                backgroundColor: isActive ? `${zone.color}20` : 'var(--bg-elevated)',
+                border: `1px solid ${isActive ? zone.color : 'var(--border-subtle)'}`,
+                boxShadow: isActive ? `0 0 10px ${zone.color}66` : 'none',
+                height: '12px',
+              }}
             >
+              {/* Colored active fill layer */}
               <div
-                className={`absolute inset-y-0 left-0 transition-all duration-700${pulse && isActive ? ' animate-pulse' : ''}`}
+                className={`absolute inset-0 transition-all duration-700${pulse && isActive ? ' animate-pulse' : ''}`}
                 style={{
-                  width: `${fillPct}%`,
+                  width: isActive ? '100%' : '0%',
                   backgroundColor: zone.color,
-                  boxShadow: pulse && isActive && fillPct > 0 ? `0 0 8px ${zone.color}99` : 'none',
+                  opacity: isActive ? 0.85 : 0,
                 }}
               />
             </div>
@@ -126,6 +133,7 @@ function ZonedBar({
         })}
       </div>
 
+      {/* Zone labels */}
       <div className="flex">
         {zones.map((zone, i) => {
           const isActive = i === activeZoneIdx
@@ -137,7 +145,10 @@ function ZonedBar({
                   fontFamily: 'monospace',
                   color: isActive ? zone.color : 'var(--text-tertiary)',
                   fontWeight: isActive ? 700 : 400,
-                  letterSpacing: '0.03em',
+                  letterSpacing: '0.05em',
+                  opacity: isActive ? 1.0 : 0.45,
+                  textShadow: isActive ? `0 0 8px ${zone.color}44` : 'none',
+                  transition: 'all 0.3s ease',
                 }}
               >
                 {zone.label}

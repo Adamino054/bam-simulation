@@ -18,6 +18,7 @@ import { FREE_MODE_QUARTERS, INFLATION_TARGET } from '@/lib/constants'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 import { getSimulationTips } from '@/engine/botMessages'
 import type { ScenarioId } from '@/engine/state'
+import { OnboardingTour } from '@/components/game/OnboardingTour'
 
 function computeYearDots(history: Array<{ inflation: number; quarter: number }>, currentQuarter: number, maxQuarters: number) {
   const dots: Array<{ year: number; status: 'pending' | 'green' | 'amber' | 'red' }> = []
@@ -52,6 +53,7 @@ const dotColors: Record<string, string> = {
 export default function PlayPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [isTourOpen, setIsTourOpen] = useState(false)
 
   const status   = useGameStore(s => s.status)
   const scenario = useGameStore(s => s.scenario)
@@ -63,6 +65,10 @@ export default function PlayPage() {
 
   useEffect(() => {
     setMounted(true)
+    const completed = localStorage.getItem('bam_onboarding_completed')
+    if (completed !== 'true') {
+      setIsTourOpen(true)
+    }
   }, [])
 
   useEffect(() => {
@@ -190,8 +196,8 @@ export default function PlayPage() {
           ))}
         </div>
 
-        {/* RIGHT: Credibility badge */}
-        <div className="flex items-center gap-1.5">
+        {/* RIGHT: Credibility badge + Tutoriel button */}
+        <div className="flex items-center gap-2">
           <span
             className="font-mono text-[10px] font-semibold"
             style={{
@@ -205,6 +211,15 @@ export default function PlayPage() {
           {currentState.centralBankCredibility < 40 && (
             <Flame size={10} style={{ color: 'var(--data-negative)' }} />
           )}
+
+          <div className="h-4 w-[1px] bg-[var(--border-subtle)] mx-1" />
+
+          <button
+            onClick={() => setIsTourOpen(true)}
+            className="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-[var(--bg-panel)] border border-[var(--border-default)] hover:border-[var(--accent-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all flex items-center gap-1 cursor-pointer"
+          >
+            💡 Tutoriel
+          </button>
         </div>
       </div>
 
@@ -221,18 +236,18 @@ export default function PlayPage() {
         <div className="grid grid-cols-12 gap-3 items-start">
 
           {/* Sidebar gauche — contexte + chocs (3 col) */}
-          <aside className="col-span-3 hidden lg:flex flex-col gap-3">
+          <aside id="play-left-panel" className="col-span-3 hidden lg:flex flex-col gap-3 scroll-mt-20">
             <LeftPanel />
           </aside>
 
           {/* Zone centrale — dashboard + graphes (6 col) */}
-          <section className="col-span-12 lg:col-span-6 flex flex-col gap-3">
+          <section id="play-center-panel" className="col-span-12 lg:col-span-6 flex flex-col gap-3 scroll-mt-20">
             <Dashboard />
             <BloombergTicker />
           </section>
 
           {/* Sidebar droite — décision (3 col) */}
-          <aside className="col-span-12 lg:col-span-3">
+          <aside id="play-right-panel" className="col-span-12 lg:col-span-3 scroll-mt-20">
             <DecisionPanel />
           </aside>
 
@@ -245,7 +260,12 @@ export default function PlayPage() {
       </main>
 
       {/* Mascot Bot */}
-      <AssistantBot messages={getSimulationTips(currentState, difficultyLevel)} context="simulation" />
+      <div id="play-assistant-bot">
+        <AssistantBot messages={getSimulationTips(currentState, difficultyLevel)} context="simulation" />
+      </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
     </div>
   )
 }

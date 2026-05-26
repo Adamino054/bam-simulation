@@ -25,7 +25,7 @@ export interface EconomicState {
   unemployment: number                 // taux de chômage, %
 
   // --- Bloc taux ---
-  policyRate: number                   // i*, taux directeur BAM, %
+  policyRate: number                   // i*, taux directeur CBS, %
   interbankRate: number                // i^TMP, taux interbancaire, %
   lendingRate: number                  // i^D, taux débiteur moyen, %
 
@@ -40,7 +40,7 @@ export interface EconomicState {
   externalDemand: number               // ỹ*, output gap zone euro, %
 
   // --- Crédibilité (Task 2a) ---
-  centralBankCredibility: number       // 0–100, crédibilité de BAM
+  centralBankCredibility: number       // 0–100, crédibilité CBS
 
   // --- Balance extérieure (Task 2b) ---
   currentAccountBalance: number        // solde courant, % du PIB

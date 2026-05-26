@@ -1,151 +1,131 @@
-# Central Bank Simulator
+# CBS — Centrale Bank Simulateur
 
-Jeu web éducatif dans lequel le joueur incarne le gouverneur de **Bank Al-Maghrib** et pilote l'économie marocaine sur 5 ans (20 trimestres) en prenant des décisions de politique monétaire.
+Jeu sérieux web éducatif dans lequel le joueur incarne le gouverneur de la banque centrale **Centrale Bank Simulateur (CBS)** et pilote l'économie marocaine fictive sur 5 ans (20 trimestres) en prenant des décisions stratégiques de politique monétaire.
 
-**Serious game développé dans le cadre d'un Projet de Fin d'Année commandité par BAM.**
+**Serious game développé dans le cadre d'un Projet de Fin d'Année commandité académiquement pour modéliser la politique monétaire.**
 
 ---
 
-## Contexte
+## 🏛️ Contexte Académique & Moteur
 
-Ce projet est la composante web jouable d'un moteur de simulation macroéconomique plus large (Sujet 1 du PFA). Le dossier `engine/` contient la logique de simulation en TypeScript pur, conçue pour être portée en Python.
+Ce projet est la composante web interactive d'un moteur de simulation macroéconomique dynamique. Le dossier `engine/` contient la logique de simulation en TypeScript strict pur, conçue pour être portable (sans adhérence à un framework) :
+*   **Loi d'Okun dynamique** : Δu_t = −λ · Δỹ_t (calibrée à λ = 0,40 pour les économies MENA).
+*   **TMP (Taux interbancaire)** : spread calibré basé sur le risque NPL et les réserves obligatoires.
+*   **Canal du crédit (Bernanke & Gertler)** : contraction bancaire incrémentale liée aux taux directeurs et NPL.
+*   **Courbe IS & Phillips** : transmission monétaire complète avec anticipations ancrées.
 
-## Stack
+---
+
+## 💻 Technologies & Dépendances
 
 | Couche       | Technologie                    |
 |--------------|-------------------------------|
-| Framework    | Next.js 14 (App Router)       |
+| Framework    | **Next.js 15 (App Router)** & Turbopack |
 | Langage      | TypeScript strict              |
-| Styling      | Tailwind CSS v3                |
+| Styling      | Tailwind CSS / Vanilla CSS     |
 | State        | Zustand v5 (+ localStorage)   |
 | Animations   | Framer Motion                  |
 | Charts       | Recharts                       |
 | Math         | KaTeX via react-katex          |
-| Icons        | Lucide React                   |
-| Fonts        | Fraunces · Inter · JetBrains Mono |
+| Icônes       | Lucide React                   |
 
-## Installation
+---
+
+## 🚀 Guide d'Installation et Lancement (Pour l'Encadrant)
+
+Voici la procédure pas-à-pas pour lancer le simulateur en local depuis l'archive ZIP sur votre machine.
+
+### Étape 1 : Décompression
+1. Décompressez le fichier **ZIP** dans le dossier de votre choix.
+2. Ouvrez votre éditeur de code préféré (ex: **VS Code**).
+3. Cliquez sur `Fichier > Ouvrir le dossier...` et sélectionnez le dossier décompressé.
+
+### Étape 2 : Manipulation du Terminal
+1. Ouvrez le terminal intégré de votre éditeur (Sur VS Code : `Ctrl + ~` ou `Terminal > Nouveau Terminal`).
+2. Saisissez la commande suivante pour installer automatiquement l'intégralité des dépendances du projet :
+   ```bash
+   npm install
+   ```
+3. Une fois l'installation terminée, lancez le serveur de développement local avec le moteur de rendu rapide Turbopack :
+   ```bash
+   npm run dev
+   ```
+4. Ouvrez votre navigateur internet et naviguez sur : **[http://localhost:3000](http://localhost:3000)**.
+
+---
+
+## 🛠️ Commandes Disponibles dans le Terminal
+
+Dans le terminal de votre projet, vous pouvez exécuter les scripts suivants :
+*   `npm run dev` : Démarre le serveur de développement rapide Next.js (port 3000).
+*   `npm run build` : Compile et optimise l'application pour la production (vérifie les types TS strict).
+*   `npm run start` : Démarre le serveur en mode production (après un `npm run build`).
+*   `npm run lint` : Lance l'analyseur de code ESLint pour vérifier la propreté du code.
+*   `npm run typecheck` : Exécute le compilateur TypeScript sans build pour valider la conformité des types.
+
+---
+
+## 🔌 Extensions VS Code Recommandées
+
+Pour explorer le code source et le modifier dans les meilleures conditions, nous recommandons fortement d'installer les extensions suivantes dans **VS Code** (recherchables dans l'onglet Extensions `Ctrl + Shift + X`) :
+
+1.  **Tailwind CSS IntelliSense** : Indispensable pour l'autocomplétion des classes utilitaires modernes de styling.
+2.  **ESLint** : Pour afficher en temps réel les avertissements ou recommandations sur la qualité du code TypeScript/React.
+3.  **Prettier - Code Formatter** : Permet de formater automatiquement le code lors de la sauvegarde (`Ctrl + S`) pour une lecture parfaite.
+4.  **KaTeX / Markdown Preview** : Pour visualiser et éditer les formules mathématiques en LaTeX rédigées dans le guide et les cours.
+
+---
+
+## 📁 Architecture du Projet
+
+```
+├── engine/            # Moteur macroéconomique — TypeScript strict pur (isolé)
+│   ├── state.ts       # Types de données : EconomicState, PolicyAction, Shock
+│   ├── parameters.ts  # Paramètres calibrés (Okun, Phillips, Taylor, CCyB...)
+│   ├── simulator.ts   # Fonction step() — boucle de transition principale
+│   ├── scoring.ts     # Calcul des scores académiques finaux
+│   ├── scenarios.ts   # Configuration des scénarios de mandat
+│   └── models/        # Équations et blocs macroéconomiques individuels
+├── store/             # Zustand — Gestion de l'état global du jeu (localStorage)
+├── components/        # Composants d'interface React réutilisables
+│   ├── game/          # Composants spécifiques (panneau de décision, left HUD...)
+│   ├── ui/            # Éléments atomiques (AssistantBot, metric cards...)
+│   └── shell/         # Enveloppe système (headers, toggle thème...)
+├── app/               # Pages de l'application Next.js (App Router)
+│   ├── page.tsx       # Landing page interactive
+│   ├── login/         # Connexion locale
+│   ├── dashboard/     # Simulation principale
+│   ├── training/      # Espace d'entraînement (Laboratoire Sandbox / Crises)
+│   ├── players/       # Palmarès public des gouverneurs
+│   └── about/         # À propos (persistance de thèmes intégrée)
+```
+
+---
+
+## 🧪 Test d'Isolation du Moteur de Simulation
+
+Le moteur macroéconomique est **strictement découplé** de l'interface graphique (0% d'adhérence à React ou Next.js). Vous pouvez le tester et l'exécuter directement en ligne de commande Node.js depuis le dossier racine :
 
 ```bash
-# Cloner le dépôt
-git clone <url>
-cd central-bank-simulator
-
-# Installer les dépendances
-npm install
-
-# Lancer le serveur de développement
-npm run dev
-```
-
-Ouvrir [http://localhost:3000](http://localhost:3000).
-
-## Commandes
-
-```bash
-npm run dev       # Serveur de développement (port 3000)
-npm run build     # Build de production
-npm run start     # Serveur de production
-npm run lint      # ESLint
-npm run typecheck # Vérification TypeScript
-```
-
-## Architecture
-
-```
-engine/            # Moteur macroéconomique — TypeScript pur, sans React
-  state.ts         # Types EconomicState, PolicyAction, Shock
-  parameters.ts    # Paramètres calibrés (Phillips, IS, Taylor, etc.)
-  simulator.ts     # Fonction step() — boucle principale
-  scoring.ts       # Score de fin de partie
-  scenarios.ts     # Scénarios prédéfinis
-  models/          # Équations individuelles
-  shocks/          # Catalogue de chocs macroéconomiques
-
-store/             # Zustand — état global du jeu
-components/        # Composants React
-  game/            # Composants spécifiques au jeu
-  ui/              # Composants atomiques (MetricCard, Slider, etc.)
-  shell/           # Header, ThemeToggle
-app/               # Pages Next.js (App Router)
-  page.tsx         # Accueil / sélecteur de scénario
-  play/            # Écran de jeu principal
-  debrief/         # Écran de fin de partie
-lib/               # Helpers (format, typography, constants)
-```
-
-## Moteur de simulation (`engine/`)
-
-Le moteur est **strictement isolé** : aucune dépendance vers React, Zustand ou Next.js. Il peut être importé et exécuté dans n'importe quel environnement JavaScript/Node, et sert de référence pour le portage Python.
-
-### Modèles implémentés
-
-- **Courbe de Phillips** augmentée des anticipations et des chocs agricoles/d'offre
-- **Courbe IS dynamique** avec canal du taux réel et demande extérieure
-- **Canal du crédit** : ajustement partiel du taux débiteur (~3 trimestres)
-- **Marché monétaire** : formation du taux interbancaire (TMP)
-- **Règle de Taylor** : benchmark affiché au joueur (non contraignant)
-- **Loi d'Okun** : PIB → chômage
-- **Catalogue de chocs** : pétrolier, agricole, demande externe, prime de risque
-
-### Test d'isolation
-
-```bash
-# Tester le moteur seul (Node.js)
 node -e "
 const { step } = require('./engine/simulator');
 const { INITIAL_STATE } = require('./engine/parameters');
 const state = INITIAL_STATE;
 const action = { policyRateChangeBp: 0, reserveRequirementChangeBp: 0, marketOperationsBnMad: 0 };
 const result = step(state, action, [], 42);
-console.log('Inflation T1 :', result.newState.inflation.toFixed(2));
+console.log('Simulation Q1 réussie. Inflation T1 :', result.newState.inflation.toFixed(2), '%');
 "
 ```
 
-## Scénarios de jeu
+---
 
-| Scénario               | Difficulté | Contexte                              |
-|------------------------|------------|---------------------------------------|
-| Standard               | Normal     | Économie en équilibre, chocs aléatoires |
-| Choc inflationniste 2022 | Difficile | Inflation à 6 %, chocs énergétiques   |
-| Choc COVID-2020        | Crise      | Output gap à −4 %, récession globale  |
+## 🎓 Évaluation Académique & Score
 
-## Déploiement Vercel
+Le joueur est évalué à la fin de son mandat de 20 trimestres sur 3 grands axes institutionnels via un score sur **100 points** :
+1.  **Stabilité des prix** (Cible stricte d'inflation de 2,0 %).
+2.  **Stabilité de l'économie** (Volatilité de l'écart de production / Output gap).
+3.  **Crédibilité de la Banque Centrale** (Confiance des marchés et du public).
 
-```bash
-# Depuis le projet
-vercel deploy
+---
 
-# Ou via l'interface Vercel :
-# 1. Importer le dépôt GitHub
-# 2. Framework : Next.js (détecté automatiquement)
-# 3. Build command : npm run build
-# 4. Output directory : .next
-# 5. Déployer
-```
-
-Variables d'environnement requises : aucune (application 100 % client-side).
-
-## Notes techniques
-
-### Sélecteurs Zustand
-Pour éviter les boucles de rendu infinies, utilisez toujours des sélecteurs individuels :
-
-```typescript
-// ✅ Correct
-const status = useGameStore(s => s.status)
-const scenario = useGameStore(s => s.scenario)
-
-// ❌ Incorrect (cause des re-rendus infinis)
-const { status, scenario } = useGameStore(s => ({
-  status: s.status,
-  scenario: s.scenario,
-}))
-```
-
-### Hydratation
-Les pages ont un fallback de 2 secondes pour forcer l'hydratation si localStorage échoue.
-
-## Licence
-
-Projet académique — Projet de Fin d'Année · Bank Al-Maghrib · 2024-2025.
+Projet de Fin d'Année · Centrale Bank Simulateur (CBS) · 2024-2025.

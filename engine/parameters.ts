@@ -24,7 +24,7 @@ export const PARAMS = {
 
   // ── Règle de Taylor (benchmark affiché au joueur, non contraignante) ──
   rStar:   1.5,  // taux réel neutre estimé pour le Maroc, %
-  piTarget: 2.0, // cible d'inflation BAM, %
+  piTarget: 2.0, // cible d'inflation CBS, %
   phiPi:   1.50, // coefficient sur l'écart d'inflation (> 1 : principe de Taylor)
   phiY:    0.50, // coefficient sur l'output gap
 

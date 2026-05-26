@@ -240,7 +240,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
       if (prev.length === 0) {
         const welcome: ChatMessage = {
           sender: 'bot',
-          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis **BAM Bot**, votre assistant. Posez-moi des questions sur les mécanismes ou tapez un concept clé (ex. **Taux directeur**, **NPL**) pour analyser l'économie marocaine.`,
+          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller. Posez-moi des questions sur les mécanismes ou tapez un concept clé (ex. **Taux directeur**, **NPL**) pour analyser l'économie marocaine.`,
           timestamp: now
         }
         return [welcome, ...newEntries]
@@ -258,7 +258,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
       setChatLog([
         {
           sender: 'bot',
-          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis **BAM Bot**, votre conseiller économique. Demandez-moi n'importe quelle explication ou tapez un concept (ex. **Inflation**, **Taylor**, **CCyB**) pour l'analyser.`,
+          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller économique. Demandez-moi n'importe quelle explication ou tapez un concept (ex. **Inflation**, **Taylor**, **CCyB**) pour l'analyser.`,
           timestamp: now
         }
       ])
@@ -299,7 +299,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
     }, 600)
   }, [currentState, pseudo])
 
-  // 4. Écoute de l'événement système d'ouverture depuis "Bot Help"
+  // 4. Écoute de l'événement système d'ouverture depuis "Assistant"
   useEffect(() => {
     const handleOpenSystem = (e: Event) => {
       const ev = e as CustomEvent
@@ -312,8 +312,8 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
       }
     }
 
-    window.addEventListener('open-bam-bot', handleOpenSystem)
-    return () => window.removeEventListener('open-bam-bot', handleOpenSystem)
+    window.addEventListener('open-cbs-assistant', handleOpenSystem)
+    return () => window.removeEventListener('open-cbs-assistant', handleOpenSystem)
   }, [handleSend])
 
   if (dismissed) return null
@@ -378,7 +378,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div className="w-2.5 h-2.5 rounded-full animate-pulse-soft" style={{ backgroundColor: botMood.ringColor }} />
                   <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                    BAM Bot · Conseiller
+                    Assistant CBS · Conseiller
                   </span>
                 </div>
                 <button onClick={() => { setIsOpen(false); setSelectedTerm(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)' }}><X size={15} /></button>
@@ -402,7 +402,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                 ))}
                 {isTyping && (
                   <div className="chat-bubble-bot" style={{ fontStyle: 'italic', color: 'var(--text-tertiary)', opacity: 0.8 }}>
-                    BAM Bot analyse les indicateurs...
+                    L'Assistant CBS analyse les indicateurs...
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -426,7 +426,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent-warm)] uppercase tracking-wider">
                         <Info size={13} />
-                        Fiche Glossaire BAM
+                        Fiche Glossaire CBS
                       </div>
                       <button 
                         onClick={() => setSelectedTerm(null)} 

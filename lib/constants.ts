@@ -2,7 +2,7 @@ export const TOTAL_QUARTERS = 20
 export const FREE_MODE_QUARTERS = 25
 export const YEARS = 5
 export const POTENTIAL_GROWTH = 3.0 // % annuel, croissance potentielle marocaine
-export const INFLATION_TARGET = 2.0 // % cible BAM
+export const INFLATION_TARGET = 2.0 // % cible CBS
 
 export const SCORE_THRESHOLDS = {
   A: 85,

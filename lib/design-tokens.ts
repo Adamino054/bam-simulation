@@ -1,7 +1,7 @@
 /**
  * DESIGN TOKENS — Central Bank Simulator
  * ======================================
- * Système de design institutionnel BAM / CNCB-inspired
+ * Système de design institutionnel CBS-inspired
  * Tokens centralisés pour le thème dark/light + palette institutionnelle
  */
 
@@ -33,7 +33,7 @@ export interface DesignTokens {
 
 // ── Palette CNCB / Maroc-inspired ────────────────────────────────
 export const MAROC_PALETTE = {
-  // Rouge institutionnel BAM
+  // Rouge institutionnel CBS
   primary: {
     DEFAULT: '#B41923',
     light: '#D6454F',

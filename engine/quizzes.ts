@@ -26,13 +26,13 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'intro-b1', question: "Quel est l'objectif principal de la Banque centrale ?", options: ['Maximiser la croissance', 'Stabiliser les prix', 'Réduire le chômage', 'Augmenter les exportations'], correctIndex: 1, explanation: "La stabilité des prix (inflation proche de 2%) est le mandat principal de la Banque centrale." },
         { id: 'intro-b2', question: "Que signifie une inflation de 2% ?", options: ['Les prix baissent de 2%', 'Les prix augmentent de 2% par an', 'Le PIB croît de 2%', 'Le chômage est de 2%'], correctIndex: 1, explanation: "L'inflation mesure la hausse générale des prix. 2% signifie que les prix montent de 2% par an en moyenne." },
         { id: 'intro-b3', question: "Pourquoi la crédibilité est-elle importante ?", options: ["Elle n'a aucune importance", 'Elle permet de contrôler les anticipations', 'Elle augmente le PIB directement', 'Elle réduit la dette'], correctIndex: 1, explanation: "Si les agents font confiance à la Banque centrale, ils n'augmentent pas leurs prix par anticipation." },
-        { id: 'intro-b4', question: "À qui appartient la Banque centrale (BAM) ?", options: ["À l'État marocain", "Aux banques privées", "Au FMI", "À des actionnaires étrangers"], correctIndex: 0, explanation: "Bank Al-Maghrib est un établissement public de l'État marocain disposant de sa propre personnalité morale." },
-        { id: 'intro-b5', question: "Quel est le surnom officiel du dirigeant de Bank Al-Maghrib ?", options: ['Le Wali', 'Le Directeur', 'Le Président', 'Le Ministre'], correctIndex: 0, explanation: "Le gouverneur de Bank Al-Maghrib porte le titre officiel de Wali." }
+        { id: 'intro-b4', question: "À qui appartient la banque centrale ?", options: ["À l'État marocain", "Aux banques privées", "Au FMI", "À des actionnaires étrangers"], correctIndex: 0, explanation: "La banque centrale est un établissement public de l'État marocain disposant de sa propre personnalité morale." },
+        { id: 'intro-b5', question: "Quel est le surnom officiel du dirigeant de la banque centrale ?", options: ['Le Wali', 'Le Directeur', 'Le Président', 'Le Ministre'], correctIndex: 0, explanation: "Le gouverneur de la banque centrale porte le titre officiel de Wali." }
       ],
       intermediate: [
         { id: 'intro-i1', question: "Quel est le poids de l'inflation dans le scoring ?", options: ['20%', '25%', '35%', '50%'], correctIndex: 2, explanation: "Le score inflation représente 35 points sur 100 — c'est le critère le plus important." },
         { id: 'intro-i2', question: "Pourquoi la Banque centrale est-elle indépendante du gouvernement ?", options: ['Pour augmenter les impôts', 'Pour éviter les biais inflationnistes politiques', 'Pour gérer le budget', "Ce n'est pas le cas"], correctIndex: 1, explanation: "L'indépendance évite que les politiciens baissent les taux avant les élections pour stimuler artificiellement l'économie." },
-        { id: 'intro-i3', question: "Qu'est-ce que le double mandat implicite de BAM ?", options: ['Croissance + Emploi', 'Stabilité des prix + Soutien à la croissance', 'Réduction de la dette + Inflation', 'Exportations + Importations'], correctIndex: 1, explanation: "BAM doit prioritairement stabiliser les prix, mais soutient aussi la croissance comme objectif secondaire." },
+        { id: 'intro-i3', question: "Qu'est-ce que le double mandat implicite de CBS ?", options: ['Croissance + Emploi', 'Stabilité des prix + Soutien à la croissance', 'Réduction de la dette + Inflation', 'Exportations + Importations'], correctIndex: 1, explanation: "CBS doit prioritairement stabiliser les prix, mais soutient aussi la croissance comme objectif secondaire." },
         { id: 'intro-i4', question: "Quel organe interne prend les décisions de taux d'intérêt ?", options: ['Le Conseil de la Banque', 'Le Ministère des Finances', 'La Commission du Crédit', 'La Direction du Trésor'], correctIndex: 0, explanation: "Le Conseil de la Banque prend les décisions souveraines de politique monétaire." }
       ],
       expert: [
@@ -40,7 +40,7 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'intro-e2', question: "Quel mécanisme lie crédibilité et désinflation ?", options: ['Courbe IS', 'Canal des anticipations', 'Loi d\'Okun', 'Balance des paiements'], correctIndex: 1, explanation: "Une Banque centrale crédible ancre les anticipations, réduisant le coût en PIB de la désinflation." },
         { id: 'intro-e3', question: "Quel est le coût de la désinflation quand la crédibilité est faible ?", options: ['Aucun', 'Faible récession', 'Forte récession nécessaire', 'Déflation automatique'], correctIndex: 2, explanation: "Sans crédibilité, la désinflation nécessite un output gap négatif prolongé — un sacrifice de croissance." },
         { id: 'intro-e4', question: "Que mesurent les 4 composantes du scoring ?", options: ['PIB, Emploi, Exports, Investissement', 'Inflation, Croissance, Stabilité, Crédibilité', 'Taux, Réserves, Liquidité, NPL', 'Prix, Change, Balance, Dette'], correctIndex: 1, explanation: "Le score évalue l'inflation (35pts), la croissance (25pts), la stabilité (20pts) et la crédibilité (20pts)." },
-        { id: 'intro-e5', question: "Qui préside le Conseil de la Banque de Bank Al-Maghrib ?", options: ['Le Wali', 'Le Ministre de l\'Économie', 'Le Chef du Gouvernement', 'Un commissaire nommé par le parlement'], correctIndex: 0, explanation: "Le Conseil de la Banque est légalement présidé par le Wali de Bank Al-Maghrib." }
+        { id: 'intro-e5', question: "Qui préside le Conseil de la Banque centrale ?", options: ['Le Wali', 'Le Ministre de l\'Économie', 'Le Chef du Gouvernement', 'Un commissaire nommé par le parlement'], correctIndex: 0, explanation: "Le Conseil de la Banque est légalement présidé par le Wali de la banque centrale." }
       ],
     },
   },
@@ -61,7 +61,7 @@ export const QUIZZES: ModuleQuiz[] = [
       ],
       expert: [
         { id: 'pr-e1', question: "Pourquoi des changements contradictoires nuisent-ils à la crédibilité ?", options: ['Ils coûtent cher', 'Ils signalent une confusion stratégique', 'Ils violent la loi', 'Ils augmentent les NPL'], correctIndex: 1, explanation: "Des revirements fréquents suggèrent que la Banque centrale n'a pas de vision claire, désancrant les anticipations." },
-        { id: 'pr-e2', question: "En juin 2020, à quel niveau BAM a-t-elle baissé son taux ?", options: ['2,00%', '1,50%', '1,00%', '0,50%'], correctIndex: 1, explanation: "BAM a baissé à 1,50% — son plus bas historique — pour soutenir l'économie face au COVID." },
+        { id: 'pr-e2', question: "En juin 2020, à quel niveau la banque centrale a-t-elle baissé son taux ?", options: ['2,00%', '1,50%', '1,00%', '0,50%'], correctIndex: 1, explanation: "La banque centrale a baissé à 1,50% — son plus bas historique — pour soutenir l'économie face au COVID." },
         { id: 'pr-e3', question: "Quelle est la borne basse effective estimée pour le Maroc ?", options: ['0,0%', '0,25%', '0,50%', '1,00%'], correctIndex: 2, explanation: "La borne basse effective au Maroc est estimée à 0,5% en raison de la structure du marché monétaire." }
       ],
     },
@@ -125,14 +125,14 @@ export const QUIZZES: ModuleQuiz[] = [
     questions: {
       beginner: [
         { id: 'ty-b1', question: "Qui a proposé la règle de Taylor ?", options: ['Keynes', 'Taylor', 'Friedman', 'Phillips'], correctIndex: 1, explanation: "John Taylor a proposé cette règle en 1993 pour guider les décisions de taux directeur." },
-        { id: 'ty-b2', question: "Quelle est la cible d'inflation de BAM ?", options: ['0%', '1%', '2%', '4%'], correctIndex: 2, explanation: "La Banque centrale vise 2% d'inflation annuelle — assez pour que l'économie avance sans éroder le pouvoir d'achat." }
+        { id: 'ty-b2', question: "Quelle est la cible d'inflation de CBS ?", options: ['0%', '1%', '2%', '4%'], correctIndex: 2, explanation: "La banque centrale vise 2% d'inflation annuelle — assez pour que l'économie avance sans éroder le pouvoir d'achat." }
       ],
       intermediate: [
         { id: 'ty-i1', question: "Que dit le principe de Taylor ?", options: ['φ_π doit être < 1', 'φ_π doit être > 1', 'φ_y doit être = 0', 'r* doit être négatif'], correctIndex: 1, explanation: "φ_π > 1 assure que le taux réel augmente quand l'inflation monte, stabilisant effectivement les prix." },
         { id: 'ty-i2', question: "Quel est le taux réel neutre estimé pour le Maroc ?", options: ['0,5%', '1,0%', '1,5%', '2,5%'], correctIndex: 2, explanation: "r* = 1,5% est le taux réel estimé qui ni stimule ni freine l'économie marocaine." }
       ],
       expert: [
-        { id: 'ty-e1', question: "En 2022, que prescrivait la règle de Taylor ?", options: ['2,0%', '5,0%', '≈ 9,9%', '12,0%'], correctIndex: 2, explanation: "i* = 1,5 + 2,0 + 1,5×(6,1−2,0) + 0,5×0,5 ≈ 9,9%. BAM n'est montée qu'à 3% — un écart justifié par la structure de l'économie." },
+        { id: 'ty-e1', question: "En 2022, que prescrivait la règle de Taylor ?", options: ['2,0%', '5,0%', '≈ 9,9%', '12,0%'], correctIndex: 2, explanation: "i* = 1,5 + 2,0 + 1,5×(6,1−2,0) + 0,5×0,5 ≈ 9,9%. La banque centrale n'est montée qu'à 3% — un écart justifié par la structure de l'économie." },
         { id: 'ty-e2', question: "Qu'est-ce que le 'Coin de Taylor' ?", options: ['Un outil fiscal', 'Un écart > 1,5 pp entre taux réel et taux Taylor', 'Un indicateur de change', 'Le ratio dette/PIB'], correctIndex: 1, explanation: "Si votre taux diverge de plus de 1,5 pp du taux de Taylor, vous risquez une surchauffe ou une récession inutile." }
       ],
     },

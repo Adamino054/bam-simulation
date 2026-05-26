@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AlertTriangle, Zap, TrendingDown, Globe } from 'lucide-react'
 import type { Shock } from '@/engine/state'
+import { sound } from '@/lib/audio'
 
 const TYPE_CONFIG: Record<
   Shock['type'],
@@ -23,6 +24,12 @@ export function ShockBanner({ shock, isNew = false }: ShockBannerProps) {
   const [expanded, setExpanded] = useState(false)
   const config = TYPE_CONFIG[shock.type]
   const Icon   = config.icon
+
+  useEffect(() => {
+    if (isNew) {
+      sound.playAlert()
+    }
+  }, [isNew])
 
   return (
     <div
@@ -78,3 +85,4 @@ export function ShockBanner({ shock, isNew = false }: ShockBannerProps) {
     </div>
   )
 }
+

@@ -36,7 +36,7 @@ Votre nomination s'accompagne d'une directive d'une fermeté historique : briser
     startingKpi: [
       { label: 'Inflation observée', value: '15,00 %', hint: 'Très au-dessus de la cible de 2%' },
       { label: 'Anticipations d\'inflation', value: '12,00 %', hint: 'Désancrées' },
-      { label: 'Crédibilité BAM', value: '35 / 100', hint: 'Zone de danger critique' },
+      { label: 'Crédibilité CBS', value: '35 / 100', hint: 'Zone de danger critique' },
       { label: 'Taux directeur (i)', value: '7,00 %', hint: 'Doit être relevé vigoureusement' },
     ],
     goals: [

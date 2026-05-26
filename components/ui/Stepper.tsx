@@ -1,5 +1,7 @@
 'use client'
 
+import { sound } from '@/lib/audio'
+
 interface StepperOption {
   value: number
   label: string
@@ -39,7 +41,10 @@ export function Stepper({
             key={opt.value}
             type="button"
             aria-pressed={isActive}
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              onChange(opt.value)
+              sound.playTick()
+            }}
             className="flex-1 rounded transition-all duration-100"
             style={{
               padding: compact ? '3px 2px' : '4px 3px',
@@ -69,3 +74,4 @@ export function Stepper({
     </div>
   )
 }
+

@@ -17,6 +17,8 @@ import type { ScenarioId, EconomicState, PolicyAction, Shock, DifficultyLevel } 
 import { getLevelConfig } from '@/engine/difficulty'
 import { getDebriefMessage } from '@/engine/botMessages'
 import { AssistantBot } from '@/components/ui/AssistantBot'
+import { GovernorCertificate } from '@/components/ui/GovernorCertificate'
+import { sound } from '@/lib/audio'
 
 const DebriefChart = dynamic(
   () => import('@/components/game/DebriefChart').then(m => ({ default: m.DebriefChart })),
@@ -57,7 +59,9 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLeve
 export default function DebriefPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
+  const [isCertificateOpen, setIsCertificateOpen] = useState(false)
   const savedRef = useRef(false)
+
 
   const { history, currentState, scenario, status, seed, reset, startGame, difficultyLevel } = useGameStore(
     useShallow(s => ({
@@ -191,6 +195,90 @@ export default function DebriefPage() {
           )}
         </div>
 
+        {/* ── Bandeau de diplôme premium (Grade A/B) ── */}
+        {['A', 'B'].includes(score.grade) && (
+          <div
+            className="rounded-lg p-5 mb-10 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#C9A86A]/40 relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(135deg, rgba(201, 168, 106, 0.08) 0%, rgba(180, 25, 35, 0.04) 100%)',
+              cursor: 'pointer',
+              boxShadow: '0 8px 30px rgba(201, 168, 106, 0.08)',
+              transition: 'transform 0.2s ease, border-color 0.2s ease'
+            }}
+            onClick={() => {
+              setIsCertificateOpen(true)
+              sound.playSuccess()
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.borderColor = 'var(--accent-warm)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = ''
+              e.currentTarget.style.borderColor = 'rgba(201, 168, 106, 0.4)'
+            }}
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#C9A86A]/10 to-transparent blur-xl pointer-events-none rounded-full" />
+            
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🎓</span>
+              <div className="text-left">
+                <p className="font-editorial text-lg text-[var(--text-primary)] m-0">Félicitations, vous êtes diplômé !</p>
+                <p className="text-xs text-[var(--text-secondary)] m-0">Votre excellent score de {score.total} pts vous qualifie pour recevoir votre Certificat d&apos;Honneur CBS.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="px-4 py-2 rounded text-xs font-semibold uppercase tracking-wider transition-all"
+              style={{
+                backgroundColor: 'var(--accent-primary)',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(180, 25, 35, 0.3)'
+              }}
+            >
+              📜 Réclamer mon Diplôme
+            </button>
+          </div>
+        )}
+
+        {/* ── Modale d&apos;affichage du Certificat ── */}
+        {isCertificateOpen && (
+          <div
+            className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 animate-fade-in no-print"
+            onClick={() => setIsCertificateOpen(false)}
+          >
+            <div
+              className="bg-zinc-950 border border-[#C9A86A]/40 rounded-xl p-6 flex flex-col items-center gap-4 relative max-h-[95vh] overflow-y-auto"
+              onClick={e => e.stopPropagation()}
+              style={{
+                boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsCertificateOpen(false)}
+                className="absolute top-4 right-4 text-zinc-400 hover:text-white text-lg font-bold border border-zinc-800 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                style={{ cursor: 'pointer', backgroundColor: 'transparent' }}
+              >
+                ✕
+              </button>
+              <h3 className="font-editorial text-xl text-center text-white m-0 tracking-wider">Votre Certificat d&apos;Honneur</h3>
+              <GovernorCertificate
+                playerName={currentUser || 'Gouverneur'}
+                score={score.total}
+                grade={score.grade}
+                scenarioName={SCENARIOS[scenario as ScenarioId]?.title || ''}
+                difficulty={levelConfig.labelFr}
+                avgInflation={allStates.reduce((a, s) => a + s.inflation, 0) / allStates.length}
+                avgGrowth={allStates.reduce((a, s) => a + s.gdpGrowth, 0) / allStates.length}
+              />
+            </div>
+          </div>
+        )}
+
+
         {/* ── Score détaillé ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {[
@@ -219,7 +307,67 @@ export default function DebriefPage() {
           {/* ── Rapport de Gouverneur ── */}
           <div className="rounded p-6" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--accent-primary)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
-              <p className="label-caps mb-4">Rapport de Gouverneur</p>
+              <div className="flex items-center justify-between mb-4">
+                <p className="label-caps" style={{ margin: 0 }}>Rapport de Gouverneur</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (typeof window === 'undefined') return
+                    const synth = window.speechSynthesis
+                    if (!synth) return
+
+                    if (synth.speaking) {
+                      synth.cancel()
+                      // Update DOM state by dispatching a custom event or letting play state toggle
+                      window.dispatchEvent(new CustomEvent('bam-speech-stop'))
+                      return
+                    }
+
+                    const text = `Rapport de Gouverneur. Plus grande erreur : ${report.biggestMistake}. Meilleure décision : ${report.bestDecision}. Trajectoire finale : ${report.finalTrajectory}. Débriefing de l'Assistant CBS : ${getDebriefMessage(score.grade, score.total, difficultyLevel)}`
+                    const utterance = new SpeechSynthesisUtterance(text)
+                    utterance.lang = 'fr-FR'
+                    
+                    const voices = synth.getVoices()
+                    const frVoice = voices.find(v => v.lang.includes('fr'))
+                    if (frVoice) utterance.voice = frVoice
+
+                    utterance.onstart = () => window.dispatchEvent(new CustomEvent('bam-speech-start'))
+                    utterance.onend = () => window.dispatchEvent(new CustomEvent('bam-speech-stop'))
+                    utterance.onerror = () => window.dispatchEvent(new CustomEvent('bam-speech-stop'))
+
+                    synth.speak(utterance)
+                  }}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-all font-semibold uppercase tracking-wider speech-btn"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-default)',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <span id="speech-btn-text">🔊 Écouter</span>
+                </button>
+              </div>
+              <script dangerouslySetInnerHTML={{ __html: `
+                window.addEventListener('bam-speech-start', () => {
+                  const btn = document.querySelector('.speech-btn');
+                  const txt = document.getElementById('speech-btn-text');
+                  if (btn && txt) {
+                    btn.style.backgroundColor = 'rgba(180,25,35,0.12)';
+                    btn.style.color = 'var(--accent-primary)';
+                    txt.textContent = '⏸ Arrêter';
+                  }
+                });
+                window.addEventListener('bam-speech-stop', () => {
+                  const btn = document.querySelector('.speech-btn');
+                  const txt = document.getElementById('speech-btn-text');
+                  if (btn && txt) {
+                    btn.style.backgroundColor = 'var(--bg-elevated)';
+                    btn.style.color = 'var(--text-secondary)';
+                    txt.textContent = '🔊 Écouter';
+                  }
+                });
+              ` }} />
               <div className="space-y-3">
                 {[
                   { icon: '⚠', color: 'var(--data-negative)', text: report.biggestMistake },
@@ -235,7 +383,7 @@ export default function DebriefPage() {
             </div>
           </div>
 
-          {/* ── BAM Bot Débriefing (Glassmorphism) ── */}
+          {/* ── Assistant CBS Débriefing (Glassmorphism) ── */}
           <div className="rounded p-6 relative overflow-hidden" style={{
             backgroundColor: 'rgba(var(--bg-panel-rgb, 30, 32, 38), 0.65)',
             backdropFilter: 'blur(20px)',
@@ -250,7 +398,7 @@ export default function DebriefPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">🤖</span>
-                <p className="label-caps" style={{ color: 'var(--accent-warm)', margin: 0 }}>Debriefing de BAM Bot</p>
+                <p className="label-caps" style={{ color: 'var(--accent-warm)', margin: 0 }}>Debriefing de l'Assistant CBS</p>
               </div>
               <p className="text-sm leading-relaxed font-sans" style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
                 "{getDebriefMessage(score.grade, score.total, difficultyLevel)}"
@@ -268,10 +416,10 @@ export default function DebriefPage() {
           </div>
         </div>
 
-        {/* ── Comparaison Taylor ── */}
+        {/* ── Comparaison Taylor & Fiche Historique ── */}
         <div className="rounded p-6 mb-12" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
           <p className="label-caps mb-6">Comparaison — Règle de Taylor optimale</p>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-6 mb-6">
             <div className="text-center">
               <p className="label-caps mb-2">Votre score</p>
               <p className="font-editorial-roman" style={{ fontSize: '2.5rem', color: GRADE_COLOR[score.grade] ?? 'var(--text-primary)' }}>
@@ -283,14 +431,41 @@ export default function DebriefPage() {
               <p className="font-editorial-roman" style={{ fontSize: '2.5rem', color: 'var(--text-secondary)' }}>{taylorScore}</p>
             </div>
           </div>
-          <div className="mt-4 text-center">
+          <div className="text-center mb-6">
             {score.total >= taylorScore ? (
-              <p className="text-sm" style={{ color: 'var(--data-positive)' }}>Vous avez fait mieux que la règle de Taylor ! 🎉</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--data-positive)', margin: 0 }}>Vous avez fait mieux que la règle de Taylor ! 🎉</p>
             ) : (
-              <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
+              <p className="text-sm" style={{ color: 'var(--text-tertiary)', margin: 0 }}>
                 La règle de Taylor aurait obtenu {taylorScore - score.total} points de plus.
               </p>
             )}
+          </div>
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '1.5rem 0' }} />
+
+          {/* Fiche Pédagogique Historique */}
+          <div>
+            <p className="label-caps mb-3" style={{ color: 'var(--accent-primary)', fontSize: '11px' }}>
+              📚 Que s&apos;est-il réellement passé historiquement ?
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)', margin: 0 }}>
+              {(() => {
+                const sId = scenario as string
+                if (sId === 'inflation2022') {
+                  return "En 2022, face à un choc inflationniste d'offre lié aux prix énergétiques et alimentaires importés, Bank Al-Maghrib a relevé son taux directeur à trois reprises (passant de 1,50 % à 2,00 %, puis 2,50 % et enfin 3,00 % en mars 2023). Le gouverneur M. Abdellatif Jouahri a privilégié un resserrement progressif et mesuré afin de juguler l'inflation tout en préservant le financement bancaire de l'économie marocaine."
+                } else if (sId === 'covid2020') {
+                  return "Au cours de la crise de la COVID-19 en 2020, Bank Al-Maghrib a réagi de manière vigoureuse en baissant son taux directeur par deux fois de suite, le ramenant à 1,50 %, son niveau le plus bas historique. Parallèlement, elle a triplé son refinancement en injectant massivement de la liquidité aux banques commerciales et a libéré intégralement le compte de réserve obligatoire afin de parer tout risque systémique."
+                } else if (sId === 'flexibilite') {
+                  return "Le processus de transition vers le change flexible au Maroc a débuté en janvier 2018 avec l'élargissement de la bande de fluctuation du dirham à ±2,5 %, puis à ±5,0 % en mars 2020. Bank Al-Maghrib a géré cette transition de manière ordonnée et progressive, maintenant la stabilité de l'ancrage nominal grâce à des interventions régulées et un ancrage efficace des anticipations des agents financiers."
+                } else if (sId === 'volcker1979') {
+                  return "En 1979, le président de la Réserve Fédérale américaine, Paul Volcker, a brisé la spirale de l'hyperinflation (qui culminait à plus de 14 %) par un resserrement monétaire d'une brutalité historique, propulsant le taux interbancaire à un pic de 20 % en 1980. Cette thérapie de choc, bien qu'ayant plongé les États-Unis dans une récession sévère, a permis de restaurer de façon définitive la crédibilité de la banque centrale."
+                } else if (sId === 'crisis2008') {
+                  return "En 2008, suite à la faillite de Lehman Brothers, la panique systémique mondiale a provoqué un gel du crédit. Les banques centrales du monde entier ont réduit leurs taux à près de 0 % et ont lancé l'Assouplissement Quantitatif (QE). Au Maroc, Bank Al-Maghrib a agi de manière contracyclique en baissant son taux directeur et en injectant des liquidités pour parer au risque d'une hausse brutale des créances en souffrance (NPL)."
+                } else {
+                  return "Dans un contexte de croissance standard et d'inflation maîtrisée proche de 2 %, Bank Al-Maghrib calibre son taux directeur autour d'un taux d'intérêt neutre réel estimé à environ 1,5 %, tout en ajustant ses réserves pour s'aligner sur les besoins quotidiens de liquidité bancaire."
+                }
+              })()}
+            </p>
           </div>
         </div>
 

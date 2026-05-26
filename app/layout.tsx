@@ -24,13 +24,13 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://central-bank-simulator.vercel.app'),
-  title: 'Central Bank Simulator — Banque centrale',
+  title: 'CBS — Centrale Bank Simulateur',
   description:
-    "Incarnez le gouverneur de la Banque centrale et pilotez l'économie marocaine sur 5 ans. Un serious game de politique monétaire.",
-  keywords: ['banque centrale', 'politique monétaire', 'Maroc', 'simulation', 'macroéconomie'],
-  authors: [{ name: "Projet de Fin d'Année — Banque centrale" }],
+    "Incarnez le gouverneur de la banque centrale et pilotez l'économie marocaine sur 5 ans. Un serious game de politique monétaire.",
+  keywords: ['banque centrale', 'politique monétaire', 'Maroc', 'simulation', 'macroéconomie', 'CBS'],
+  authors: [{ name: "Projet de Fin d'Année — Centrale Bank Simulateur" }],
   openGraph: {
-    title: 'Central Bank Simulator',
+    title: 'CBS — Centrale Bank Simulateur',
     description: "Pilotez l'économie marocaine. Cinq ans. Une cible : 2 % d'inflation.",
     type: 'website',
   },

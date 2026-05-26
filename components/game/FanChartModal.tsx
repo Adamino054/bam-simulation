@@ -202,7 +202,7 @@ export function FanChartModal({ isOpen, onClose, data }: FanChartModalProps) {
                 Analyse Prédictive de Monte-Carlo
               </h3>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                Modèle de prévision dynamique BAM v3.0
+                Modèle de prévision dynamique CBS v3.0
               </p>
             </div>
 

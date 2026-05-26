@@ -12,7 +12,7 @@ export function BloombergTicker() {
     const list: string[] = []
 
     // 1. Nouvelles génériques / institutionnelles
-    list.push(`BANK AL-MAGHRIB : Le Wali maintient le cap de la stabilité monétaire pour le T${currentState.quarter + 1}.`)
+    list.push(`CBS : Le Wali maintient le cap de la stabilité monétaire pour le T${currentState.quarter + 1}.`)
     list.push(`MAROC : Tanger Med enregistre un trafic record de conteneurs au trimestre précédent.`)
     list.push(`BOURSE : Le MASI de Casablanca s'ajuste dans des volumes modérés dans l'attente du prochain Conseil.`)
     list.push(`MONEY WEEK : Les transferts de fonds des MRE résistent et soutiennent la balance des paiements.`)
@@ -23,10 +23,10 @@ export function BloombergTicker() {
       list.push(`ANALYSE : La hausse des prix des produits de première nécessité inquiète les ménages à Rabat.`)
       list.push(`DEBATS : Les syndicats appellent à des mesures d'aide d'urgence face à une inflation de ${currentState.inflation.toFixed(1)}%.`)
     } else if (currentState.inflation > 2.5) {
-      list.push(`📈 INFLATION HORS CIBLE : Les pressions sur les prix persistent à ${currentState.inflation.toFixed(1)}%, BAM reste vigilante.`)
+      list.push(`📈 INFLATION HORS CIBLE : Les pressions sur les prix persistent à ${currentState.inflation.toFixed(1)}%, CBS reste vigilante.`)
     } else if (currentState.inflation < 0.5) {
       list.push(`⚠️ RISQUE DE DÉFLATION : L'inflation stagne à ${currentState.inflation.toFixed(1)}%, l'ombre d'une récession à la japonaise plane.`)
-      list.push(`OPINION : Bank Al-Maghrib doit-elle baisser ses taux pour ranimer l'activité ?`)
+      list.push(`OPINION : La Centrale Bank Simulateur doit-elle baisser ses taux pour ranimer l'activité ?`)
     } else if (currentState.inflation < 1.5) {
       list.push(`📉 BASSE INFLATION : L'indice s'établit à ${currentState.inflation.toFixed(1)}%, offrant une marge de manœuvre monétaire.`)
     } else {
@@ -49,7 +49,7 @@ export function BloombergTicker() {
       list.push(`💰 SERRAGE DE VIS : Le taux directeur à ${currentState.policyRate.toFixed(2)}% renchérit le coût des crédits immobiliers.`)
       list.push(`BANQUES : Resserrement des conditions de crédit, les promoteurs immobiliers tirent la sonnette d'alarme.`)
     } else if (currentState.policyRate < 2.0) {
-      list.push(`💸 TAUX BAS : Le refinancement attractif de BAM à ${currentState.policyRate.toFixed(2)}% soutient la demande de prêts.`)
+      list.push(`💸 TAUX BAS : Le refinancement attractif de CBS à ${currentState.policyRate.toFixed(2)}% soutient la demande de prêts.`)
       list.push(`IMMOBILIER : Relance de la demande de logements stimulée par des taux bancaires attractifs.`)
     }
 
@@ -94,7 +94,7 @@ export function BloombergTicker() {
         }}
       >
         <Radio size={10} className="animate-pulse" />
-        <span>BLOOMBERG BAM FEED</span>
+        <span>BLOOMBERG CBS FEED</span>
       </div>
 
       {/* Marquee Ticker */}

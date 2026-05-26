@@ -1,5 +1,5 @@
 /**
- * Messages contextuels du robot assistant BAM Bot.
+ * Messages contextuels de l'Assistant CBS.
  * Organisés par page et par contexte de simulation.
  */
 import type { DifficultyLevel } from './difficulty'
@@ -18,7 +18,7 @@ export interface BotMessage {
 
 // ── Landing page messages ───────────────────────────────────────────────────
 export const LANDING_MESSAGES: BotMessage[] = [
-  { id: 'landing-1', text: "Bienvenue ! Je suis votre assistant BAM Bot. Cliquez sur mon icône pour obtenir des conseils tout au long de votre parcours d'apprentissage !" },
+  { id: 'landing-1', text: "Bienvenue ! Je suis votre Assistant CBS. Cliquez sur mon icône pour obtenir des conseils tout au long de votre parcours d'apprentissage !" },
   { id: 'landing-2', text: "Commencez par les cours pour appréhender les fondamentaux économiques, puis lancez votre première simulation !" },
   { id: 'landing-3', text: "Conseil de gestion : pour débuter sereinement, privilégiez le scénario 'Standard' en mode Débutant." },
 ]
@@ -163,14 +163,14 @@ export const ECONOMIC_GLOSSARY: GlossaryTerm[] = [
   {
     name: "Taux directeur",
     keywords: ["taux directeur", "taux d'interet", "taux", "interet", "politique monetaire"],
-    definition: "Le taux directeur (Taux de Référence Interbancaire ou TMP) est le principal instrument de politique monétaire de Bank Al-Maghrib. Il influence le taux interbancaire puis le taux débiteur appliqué aux agents économiques par le canal de transmission monétaire.",
+    definition: "Le taux directeur (Taux de Référence Interbancaire ou TMP) est le principal instrument de politique monétaire de la Centrale Bank Simulateur. Il influence le taux interbancaire puis le taux débiteur appliqué aux agents économiques par le canal de transmission monétaire.",
     formula: "i^D_t = (1 - \\lambda) i^D_{t-1} + \\lambda (i^{TMP}_t + \\text{marge}) + \\text{RiskPremium}",
     gameTip: "Augmentez le taux si l'inflation dépasse 2% pour refroidir la demande, et baissez-le en cas de récession. Les effets mettent 2 à 3 trimestres à se propager pleinement à l'économie."
   },
   {
     name: "Inflation",
     keywords: ["inflation", "prix", "vie chere", "pouvoir d'achat", "stabilite des prix"],
-    definition: "L'inflation mesure le taux de hausse générale et durable des prix à la consommation. Le mandat de Bank Al-Maghrib est d'assurer la stabilité des prix, définie par une cible d'inflation stable autour de 2.0 %.",
+    definition: "L'inflation mesure le taux de hausse générale et durable des prix à la consommation. Le mandat de la Centrale Bank Simulateur est d'assurer la stabilité des prix, définie par une cible d'inflation stable autour de 2.0 %.",
     formula: "\\pi_t = \\beta_{eff} \\cdot \\pi^e_t + \\kappa \\tilde{y}_t + \\alpha \\Delta p^{imp}_t + \\gamma s^{agri}_t + u^{\\pi}_t",
     gameTip: "L'inflation représente 35% de votre score global. Distinguez l'inflation globale (headline) de l'inflation sous-jacente (core). Si la hausse est due à un choc d'offre passager (ex. pétrole), évitez de sur-réagir."
   },
@@ -199,11 +199,11 @@ export const ECONOMIC_GLOSSARY: GlossaryTerm[] = [
     name: "Opérations de Marché",
     keywords: ["operations de marche", "liquidite bancaire", "refinancement", "marche interbancaire"],
     definition: "Les opérations d'open market permettent à la banque centrale d'ajuster le volume global de liquidités en circulation dans le secteur bancaire en injectant ou ponctionnant des fonds, maintenant ainsi le taux interbancaire proche du taux directeur.",
-    formula: "\\text{Besoin Net} = L_t - Ops_{BAM}",
+    formula: "\\text{Besoin Net} = L_t - Ops_{CBS}",
     gameTip: "Si le besoin de liquidité des banques augmente fortement, injectez des liquidités pour stabiliser le taux interbancaire et éviter un rationnement des crédits."
   },
   {
-    name: "Crédibilité de BAM",
+    name: "Crédibilité CBS",
     keywords: ["credibilite", "confiance", "communication", "guidance"],
     definition: "La crédibilité mesure le degré de confiance des marchés et des agents économiques dans la capacité de la banque centrale à tenir ses engagements (notamment la cible de 2% d'inflation).",
     formula: "Cred_t = Cred_{t-1} - \\beta |\\pi_t - 2.0|",
@@ -212,7 +212,7 @@ export const ECONOMIC_GLOSSARY: GlossaryTerm[] = [
   {
     name: "Réserves de Change",
     keywords: ["change", "reserves de change", "devises", "dirham", "importations"],
-    definition: "Les réserves de change représentent les avoirs extérieurs en devises détenus par Bank Al-Maghrib, assurant la stabilité extérieure du Dirham et garantissant la capacité à financer les importations du Royaume.",
+    definition: "Les réserves de change représentent les avoirs extérieurs en devises détenus par la Centrale Bank Simulateur, assurant la stabilité extérieure du Dirham et garantissant la capacité à financer les importations du Royaume.",
     formula: "\\Delta FX = CurrentAccount_t + CapitalFlows_t",
     gameTip: "Si le dirham subit des pressions à la baisse, vous pouvez intervenir sur le marché des devises (FX Intervention), mais attention à ne pas épuiser vos réserves (idéalement au-dessus de 5 à 6 mois d'importations)."
   },
@@ -261,7 +261,7 @@ export const ECONOMIC_GLOSSARY: GlossaryTerm[] = [
   {
     name: "Canal des anticipations",
     keywords: ["anticipations", "canal des anticipations", "forward guidance", "communication"],
-    definition: "Le canal des anticipations (ou Forward Guidance) permet à la Banque centrale d'influencer la trajectoire future attendue des taux directeurs à court terme, agissant directement sur les taux d'intérêt à long terme et l'inflation anticipée.",
+    definition: "Le canal des anticipations (ou Forward Guidance) permet à la Centrale Bank Simulateur d'influencer la trajectoire future attendue des taux directeurs à court terme, agissant directement sur les taux d'intérêt à long terme et l'inflation anticipée.",
     formula: "i^{long}_t = \\frac{1}{N} \\sum_{k=0}^{N-1} E_t[i_{t+k}] + \\text{TermPremium}_t",
     gameTip: "Dans le simulateur, si votre crédibilité est supérieure à 80%, vous pouvez réduire l'output gap en adoptant une communication Hawkish ou Dovish sans avoir à modifier physiquement votre taux directeur !"
   }
@@ -285,7 +285,7 @@ export function answerCustomQuestion(query: string, state?: EconomicState, pseud
 
   // A. Question sur comment réduire l'inflation
   if ((q.includes("reduire") && q.includes("inflation")) || q.includes("lutter contre l'inflation") || q.includes("stabiliser les prix") || q.includes("baisser l'inflation")) {
-    return `Gouverneur ${name}, pour **réduire l'inflation** et la ramener vers sa cible de **2.0%**, la Banque centrale utilise son taux directeur $i^*_t$ pour contracter la demande globale. La chaîne de transmission mathématique s'établit comme suit :
+    return `Gouverneur ${name}, pour **réduire l'inflation** et la ramener vers sa cible de **2.0%**, la Centrale Bank Simulateur utilise son taux directeur $i^*_t$ pour contracter la demande globale. La chaîne de transmission mathématique s'établit comme suit :
 
 1. **Resserrement monétaire** : Relever le taux directeur de $i^*_t \\uparrow$ augmente le taux interbancaire ($i^{TMP}_t$), ce qui pousse les banques à relever le taux débiteur ($i^D_t$) appliqué aux entreprises et ménages :
 $$i^D_t = (1 - \\lambda) i^D_{t-1} + \\lambda (i^{TMP}_t + \\text{marge}) + \\text{RiskPremium}$$
@@ -301,7 +301,7 @@ $$\\pi_t = \\beta_{eff} \\cdot \\pi^e_t + \\kappa \\tilde{y}_t + \\alpha \\Delta
 
   // B. Question sur comment relancer la croissance / récession
   if (q.includes("croissance") || q.includes("recession") || q.includes("chomage") || q.includes("relancer l'economie") || q.includes("creer des emplois")) {
-    return `Gouverneur ${name}, pour **stimuler l'activité économique** et **réduire le chômage** en période de récession, la Banque centrale adopte une politique monétaire accommodante :
+    return `Gouverneur ${name}, pour **stimuler l'activité économique** et **réduire le chômage** en période de récession, la Centrale Bank Simulateur adopte une politique monétaire accommodante :
 
 1. **Baisse des taux** : Réduire le taux directeur de $i^*_t \\downarrow$ abaisse les taux d'intérêt nominaux et réels ($i^D_t - \\pi^e_t$).
 
@@ -360,12 +360,12 @@ $$i^{long}_t = \\frac{1}{N} \\sum_{k=0}^{N-1} E_t[i_{t+k}] + \\text{TermPremium}
 
 En adoptant une posture **Hawkish** (ton ferme laissant présager des hausses futures pour calmer l'inflation) ou **Dovish** (ton accommodant suggérant des baisses de taux futures pour soutenir l'activité), vous modifiez $E_t[i_{t+k}]$ et donc les taux d'intérêt de marché actuels.
 
-🏛️ *Conseil de simulation :* Cet outil est d'autant plus efficace que la **crédibilité de BAM** est élevée (> 80%). Si elle est trop basse (< 40%), vos annonces n'auront presque aucun impact sur les comportements des agents économiques.`
+🏛️ *Conseil de simulation :* Cet outil est d'autant plus efficace que la **crédibilité CBS** est élevée (> 80%). Si elle est trop basse (< 40%), vos annonces n'auront presque aucun impact sur les comportements des agents économiques.`
   }
 
   // G. Question sur les réserves obligatoires
   if (q.includes("reserve obligatoire") || q.includes("taux de reserve") || q.includes("reserves obligatoires")) {
-    return `Gouverneur ${name}, le **taux de réserve obligatoire** est un instrument macroprudentiel classique de régulation directe de la liquidité bancaire. Il oblige les banques commerciales à conserver une fraction de leurs dépôts sous forme de dépôts non rémunérés auprès de Bank Al-Maghrib.
+    return `Gouverneur ${name}, le **taux de réserve obligatoire** est un instrument macroprudentiel classique de régulation directe de la liquidité bancaire. Il oblige les banques commerciales à conserver une fraction de leurs dépôts sous forme de dépôts non rémunérés auprès de la Centrale Bank Simulateur.
 
 La croissance de l'offre de crédits bancaires $\\Delta L_t$ réagit négativement à la hausse du taux de réserve obligatoire :
 
@@ -376,7 +376,7 @@ $$\\Delta L_t = \\theta_0 + \\theta_1 \\tilde{y}_t - \\theta_2 i^D_t - \\theta_3
 
   // H. Question sur l'Emergency Lending
   if (q.includes("emergency lending") || q.includes("lending") || q.includes("liquidite d'urgence") || q.includes("sauver les banques") || q.includes("faillite") || q.includes("bailout")) {
-    return `Gouverneur ${name}, le dispositif de **Liquidité d'urgence** (Emergency Lending) permet à Bank Al-Maghrib d'agir en tant que *Prêteur en Dernier Ressort* en fournissant des liquidités immédiates aux banques solvables mais confrontées à une panique de liquidité.
+    return `Gouverneur ${name}, le dispositif de **Liquidité d'urgence** (Emergency Lending) permet à la Centrale Bank Simulateur d'agir en tant que *Prêteur en Dernier Ressort* en fournissant des liquidités immédiates aux banques solvables mais confrontées à une panique de liquidité.
 
 Si le ratio de créances en souffrance dépasse $12\\%$, le canal du crédit subit une pénalité sévère bloquant le financement de l'économie réelle :
 
@@ -398,9 +398,9 @@ L'activation de l'**Emergency Lending** permet d'injecter des fonds pour allége
 🏛️ *Conseil de simulation :* Adaptez vos instruments au scénario : la communication (Forward Guidance) est cruciale lors du choc d'offre, tandis que le coussin contracyclique (CCyB) et les interventions de change sont indispensables dans le cadre de la flexibilisation du Dirham.`
   }
 
-  // J. Question sur Bank Al-Maghrib (BAM)
-  if (q.includes("qui est bam") || q.includes("bank al-maghrib") || q.includes("bam") || q.includes("banque centrale") || q.includes("role de la banque")) {
-    return `Gouverneur ${name}, **Bank Al-Maghrib** (BAM) est la Banque centrale du Royaume du Maroc, instituée en 1959. Notre mission fondamentale, ancrée dans la loi statutaire, est de veiller à la **stabilité des prix** pour soutenir le développement économique harmonieux du Royaume.
+  // J. Question sur la Centrale Bank Simulateur (CBS)
+  if (q.includes("qui est cbs") || q.includes("centrale bank") || q.includes("cbs") || q.includes("banque centrale") || q.includes("role de la banque")) {
+    return `Gouverneur ${name}, la **Centrale Bank Simulateur** (CBS) est la simulation de la Banque centrale du Royaume du Maroc, inspirée de Bank Al-Maghrib, instituée en 1959. Notre mission fondamentale, ancrée dans la loi statutaire, est de veiller à la **stabilité des prix** pour soutenir le développement économique harmonieux du Royaume.
 
 Nos attributions majeures intègrent :
 - La formulation et la mise en œuvre de la politique monétaire (taux directeur, réserves obligatoires).
@@ -453,7 +453,7 @@ ${scoreFormula}
 Indicateurs actuels :
 - **Inflation (35%)** : ${state.inflation.toFixed(2)}% (cible: 2.0%) — pèse pour 35% sur le barème.
 - **Écart de production (25%)** : ${state.outputGap.toFixed(2)}% (cible: 0.0%) — représente 25%.
-- **Crédibilité de BAM (20%)** : ${state.centralBankCredibility.toFixed(1)}/100 — représente 20%.
+- **Crédibilité CBS (20%)** : ${state.centralBankCredibility.toFixed(1)}/100 — représente 20%.
 - **Créances bancaires (NPL) (20%)** : ${state.nplRatio.toFixed(2)}% — influe directement sur la stabilité financière (20%).
 
 Veillez à préserver l'équilibre général de ces indicateurs pour maintenir une note globale optimale (Grade A).`
@@ -466,7 +466,7 @@ Où les objectifs sont :
 1. Stabiliser l'inflation ($S_{inflation}$) au plus près de $2.0\\%$.
 2. Maximiser la croissance durable ($S_{croissance}$) en limitant les écarts de production.
 3. Garantir la stabilité financière ($S_{stabilite}$) en maintenant les NPL sous $8.0\\%$.
-4. Renforcer la réputation de BAM ($S_{credibilite}$) au-dessus de $80\\%$.`
+4. Renforcer la réputation CBS ($S_{credibilite}$) au-dessus de $80\\%$.`
   }
 
   if (q.includes("comment va l'economie") || q.includes("etat des lieux") || q.includes("analyse") || q.includes("rapport") || q.includes("situation")) {
@@ -576,22 +576,22 @@ Avec un choc d'offre $u^{\\pi}_t > 0$ ou un choc agricole $s^{agri}_t > 0$, l'in
 
   // K. Question sur le fonctionnement et la présentation du site
   if (q.includes("parle moi du site") || q.includes("fonctionnement du site") || q.includes("a quoi sert") || q.includes("but du site") || q.includes("c'est quoi ce site") || q.includes("comment jouer") || q.includes("que faire") || q.includes("guide") || q.includes("tutoriel") || q.includes("tuto") || q.includes("presentation")) {
-    return `Gouverneur ${name}, le **BAM Central Bank Simulator** est une plateforme éducative et immersive premium conçue pour vous mettre dans la peau du Wali (Gouverneur) de Bank Al-Maghrib.
+    return `Gouverneur ${name}, la **Centrale Bank Simulateur** (CBS) est une plateforme éducative et immersive premium conçue pour vous mettre dans la peau du Wali (Gouverneur) de la banque centrale.
 
 Le site s'articule autour de 3 grands espaces interactifs :
 
 1. 📚 **Les Cours** : 8 chapitres didactiques pour maîtriser la macroéconomie moderne (Règle de Taylor, Courbe de Phillips, Courbe IS, Canaux de transmission, Stabilité financière).
-2. 🏛️ **L'Espace de Simulation** : Un simulateur dynamique où vous prenez des décisions trimestrielles réelles (Taux directeur, Forward Guidance, Réserves obligatoires, CCyB, Emergency Lending) face à des chocs économiques (sécheresses, chocs mondiaux, flexibilisation du change).
-3. 📊 **L'Historique & Performance** : Un tableau de bord d'analyse pour évaluer vos mandats passés (score global, notes par indicateurs de A à D, graphiques historiques).
+2. 🏛️ **L'Entraînement** : Un laboratoire macro et des campagnes historiques pour pratiquer et tester vos connaissances dans des contextes variés.
+3. 🎮 **La Simulation** : Un simulateur dynamique où vous prenez des décisions trimestrielles réelles face à des chocs économiques.
 
-🏛️ *Astuce de navigation :* Si vous débutez, je vous conseille de parcourir les premiers chapitres de cours, puis de lancer le scénario *Standard* en mode Débutant. Notre bouton **Bot Help (Pop-it)** au sommet du panneau de décision est là à tout moment pour vous suggérer le taux directeur optimal issu de la règle de Taylor !`
+🏛️ *Astuce de navigation :* Si vous débutez, je vous conseille de parcourir les premiers chapitres de cours, puis de lancer le scénario *Standard* en mode Débutant. Le bouton **Assistant** au sommet du panneau de décision est là à tout moment pour vous suggérer le taux directeur optimal issu de la règle de Taylor !`
   }
 
   // L. Question sur les cours, leçons et chapitres théoriques
   if (q.includes("cours") || q.includes("lecon") || q.includes("chapitre") || q.includes("module") || q.includes("apprendre") || q.includes("enseigner") || q.includes("theorie") || q.includes("syllabus") || q.includes("etudier")) {
     return `Gouverneur ${name}, notre programme de formation macroéconomique comporte **8 modules fondamentaux** pour appréhender le fonctionnement de la politique monétaire au Maroc. Voici le syllabus complet :
 
-1. 📔 **Introduction au Mandat** : Comprendre le rôle constitutionnel de Bank Al-Maghrib et notre cible d'inflation stabilisée à $2.0\%$.
+1. 📔 **Introduction au Mandat** : Comprendre le rôle constitutionnel de la Centrale Bank Simulateur et notre cible d'inflation stabilisée à $2.0\%$.
 2. 🔑 **Le Taux Directeur** : Analyser le principal outil opérationnel et ses délais de transmission à l'économie réelle (2 à 3 trimestres).
 3. 📈 **La Courbe IS (Demande globale)** : Étudier la sensibilité de la demande globale au taux d'intérêt réel :
    $$\\tilde{y}_t = \\rho \\tilde{y}_{t-1} - \\sigma (i^D_{t-1} - \\pi^e_{t-1}) + \\delta \\tilde{y}^*_t + u^y_t$$
