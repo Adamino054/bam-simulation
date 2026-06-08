@@ -313,25 +313,33 @@ export function DecisionPanel() {
           {/* Taylor benchmark */}
           {showTaylorHint && (
             <div
-              className="flex items-center justify-between px-2.5 py-1.5 rounded"
+              className="flex items-center justify-between px-3 py-2 rounded border"
               style={{
                 backgroundColor: 'var(--bg-elevated)',
-                borderLeft: `2px solid ${
+                borderImage: `linear-gradient(to right, ${
+                  Math.abs(taylorDiff) > 1 ? 'rgba(201, 168, 106, 0.4)'
+                  : Math.abs(taylorDiff) >= 0.1 ? 'var(--border-strong)'
+                  : 'rgba(74, 157, 124, 0.4)'
+                }, transparent) 1`,
+                borderLeft: `3px solid ${
                   Math.abs(taylorDiff) > 1 ? 'var(--data-warning)'
                   : Math.abs(taylorDiff) >= 0.1 ? 'var(--border-strong)'
                   : 'var(--data-positive)'
                 }`,
               }}
             >
-              <span className="label-caps">Règle de Taylor</span>
+              <span className="label-caps" style={{ letterSpacing: '0.05em' }}>Cible Règle de Taylor</span>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs tabular" style={{ color: 'var(--text-secondary)' }}>
+                <span className="font-mono text-xs font-bold tabular" style={{ color: 'var(--text-primary)' }}>
                   {fmtPct(taylor, 2)}
                 </span>
                 {Math.abs(taylorDiff) >= 0.1 && (
                   <span
-                    className="label-caps"
-                    style={{ color: Math.abs(taylorDiff) > 1 ? 'var(--data-warning)' : 'var(--text-tertiary)' }}
+                    className="label-caps px-1 rounded text-[8px]"
+                    style={{
+                      backgroundColor: Math.abs(taylorDiff) > 1 ? 'rgba(201, 168, 106, 0.12)' : 'rgba(240, 240, 234, 0.05)',
+                      color: Math.abs(taylorDiff) > 1 ? 'var(--data-warning)' : 'var(--text-tertiary)'
+                    }}
                   >
                     {taylorDiff > 0 ? '+' : ''}{(taylorDiff * 100).toFixed(0)} bp
                   </span>
@@ -540,21 +548,23 @@ export function DecisionPanel() {
         {/* Confiance Taylor meter */}
         {showTaylorHint && (
           <>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="label-caps">Confiance Taylor</span>
-                <span className="font-mono text-xs tabular" style={{
+                <span className="label-caps" style={{ letterSpacing: '0.05em' }}>Alignement Taylor</span>
+                <span className="font-mono text-xs font-bold tabular px-1.5 py-0.5 rounded" style={{
+                  backgroundColor: taylorAlignment > 70 ? 'rgba(74, 157, 124, 0.12)' : taylorAlignment > 40 ? 'rgba(201, 168, 106, 0.12)' : 'rgba(194, 84, 80, 0.12)',
                   color: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
                 }}>
                   {Math.round(taylorAlignment)} %
                 </span>
               </div>
-              <div className="h-1 rounded-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
+              <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-hover)', border: '1px solid var(--border-subtle)' }}>
                 <div
-                  className="h-1 rounded-full transition-all duration-300"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
                     width: `${taylorAlignment}%`,
-                    backgroundColor: taylorAlignment > 70 ? 'var(--data-positive)' : taylorAlignment > 40 ? 'var(--data-warning)' : 'var(--data-negative)',
+                    background: 'linear-gradient(90deg, var(--data-negative) 0%, var(--data-warning) 50%, var(--data-positive) 100%)',
+                    boxShadow: '0 0 8px rgba(74, 157, 124, 0.4)',
                   }}
                 />
               </div>
@@ -583,7 +593,16 @@ export function DecisionPanel() {
             {projectionItems.map(row => (
               <div key={row.label} className="flex items-center justify-between">
                 <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{row.label}</span>
-                <span className="text-xs font-mono tabular" style={{ color: row.color }}>{row.value}</span>
+                <motion.span
+                  key={row.value}
+                  initial={{ scale: 1.15, filter: 'brightness(1.5)', opacity: 0.8 }}
+                  animate={{ scale: 1, filter: 'brightness(1)', opacity: 1 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="text-xs font-mono tabular"
+                  style={{ color: row.color, display: 'inline-block', transformOrigin: 'right center' }}
+                >
+                  {row.value}
+                </motion.span>
               </div>
             ))}
           </div>

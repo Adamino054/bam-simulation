@@ -19,6 +19,7 @@ import { AssistantBot } from '@/components/ui/AssistantBot'
 import { getSimulationTips } from '@/engine/botMessages'
 import type { ScenarioId } from '@/engine/state'
 import { OnboardingTour } from '@/components/game/OnboardingTour'
+import { PressConferenceModal } from '@/components/game/PressConferenceModal'
 
 function computeYearDots(history: Array<{ inflation: number; quarter: number }>, currentQuarter: number, maxQuarters: number) {
   const dots: Array<{ year: number; status: 'pending' | 'green' | 'amber' | 'red' }> = []
@@ -62,6 +63,7 @@ export default function PlayPage() {
   const freeMode = useGameStore(s => s.freeMode)
   const difficultyLevel = useGameStore(s => s.difficultyLevel)
   const currentUser = useAuthStore(s => s.currentUser)
+  const pendingPressConference = useGameStore(s => s.pendingPressConference)
 
   useEffect(() => {
     setMounted(true)
@@ -266,6 +268,11 @@ export default function PlayPage() {
 
       {/* Onboarding Tour */}
       <OnboardingTour isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
+
+      {/* Press Conference Modal */}
+      {pendingPressConference && (
+        <PressConferenceModal pendingPressConference={pendingPressConference} />
+      )}
     </div>
   )
 }

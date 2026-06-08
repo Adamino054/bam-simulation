@@ -2,6 +2,7 @@
 
 import { useShallow } from 'zustand/react/shallow'
 import { Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
 import { TOTAL_QUARTERS, FREE_MODE_QUARTERS } from '@/lib/constants'
 
@@ -32,16 +33,25 @@ export function TurnButton() {
     } finally {
       setTransitioning(false)
     }
-    // La redirection vers /debrief est gérée par le useEffect de play/page.tsx
   }
 
+  // Animation breathing glow class
+  const glowClass = isDisabled
+    ? ''
+    : isLast
+      ? 'animate-turn-btn-glow-last premium-shimmer-sweep'
+      : 'animate-turn-btn-glow premium-shimmer-sweep'
+
   return (
-    <button
+    <motion.button
       id="turn-button-container"
       type="button"
       onClick={handleClick}
       disabled={isDisabled}
-      className="w-full py-3 rounded-md font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2"
+      whileHover={isDisabled ? {} : { scale: 1.025, y: -1.5 }}
+      whileTap={isDisabled ? {} : { scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+      className={`w-full py-3 rounded-md font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 ${glowClass}`}
       style={{
         background: isDisabled
           ? 'var(--bg-elevated)'
@@ -52,28 +62,7 @@ export function TurnButton() {
         border: 'none',
         cursor: isDisabled ? 'not-allowed' : 'pointer',
         letterSpacing: '0.04em',
-        boxShadow: isDisabled
-          ? 'none'
-          : isLast
-            ? '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(201,168,106,0.3)'
-            : '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(180,25,35,0.3)',
         opacity: isDisabled ? 0.6 : 1,
-      }}
-      onMouseEnter={e => {
-        if (!isDisabled) {
-          (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-          (e.currentTarget as HTMLElement).style.boxShadow = isLast
-            ? '0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(201,168,106,0.4)'
-            : '0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(180,25,35,0.4)'
-        }
-      }}
-      onMouseLeave={e => {
-        if (!isDisabled) {
-          (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-          (e.currentTarget as HTMLElement).style.boxShadow = isLast
-            ? '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(201,168,106,0.3)'
-            : '0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(180,25,35,0.3)'
-        }
       }}
       aria-busy={isTransitioning}
       aria-live="polite"
@@ -88,6 +77,7 @@ export function TurnButton() {
       ) : (
         'Trimestre suivant →'
       )}
-    </button>
+    </motion.button>
   )
 }
+

@@ -87,38 +87,38 @@ export function Timeline() {
                 onMouseEnter={() => setHoveredIdx(i)}
                 onMouseLeave={() => setHoveredIdx(null)}
               >
-                <motion.div
-                  animate={{
-                    scale: isCurrent ? 1.6 : isHovered ? 1.3 : 1,
-                    backgroundColor: isCurrent
-                      ? '#B41923'
-                      : isPast
-                        ? 'var(--text-tertiary)'
-                        : 'var(--border-default)',
-                  }}
-                  className="rounded-full cursor-pointer"
-                  style={{
-                    width:     isCurrent ? 9  : 5,
-                    height:    isCurrent ? 9  : 5,
-                    boxShadow: isCurrent ? '0 0 10px rgba(180,25,35,0.7)' : 'none',
-                  }}
-                />
+                <div className={isCurrent ? 'pulse-dual-ring' : ''}>
+                  <motion.div
+                    animate={{
+                      scale: isCurrent ? 1.6 : isHovered ? 1.3 : 1,
+                      backgroundColor: isCurrent
+                        ? '#B41923'
+                        : isPast
+                          ? 'var(--text-tertiary)'
+                          : 'var(--border-default)',
+                    }}
+                    className="rounded-full cursor-pointer"
+                    style={{
+                      width:     isCurrent ? 9  : 5,
+                      height:    isCurrent ? 9  : 5,
+                      boxShadow: isCurrent ? '0 0 10px rgba(180,25,35,0.7)' : 'none',
+                    }}
+                  />
+                </div>
 
                 {isHovered && (
                   <div
-                    className="absolute bottom-full mb-2 z-50 w-36 p-2 rounded-md text-xs"
+                    className="absolute bottom-full mb-3.5 z-50 w-40 p-2.5 rounded-md text-xs glass-premium"
                     style={{
-                      backgroundColor: 'var(--bg-elevated)',
-                      border: '1px solid var(--border-default)',
-                      color: 'var(--text-secondary)',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                      boxShadow: `0 10px 30px rgba(0,0,0,0.45), 0 0 10px ${season.color}33`,
+                      borderLeft: `3px solid ${season.color}`,
                     }}
                   >
                     <div className="flex items-center gap-1.5 mb-0.5" style={{ color: season.color }}>
-                      <season.icon size={11} />
-                      <span className="font-semibold" style={{ fontSize: '10px' }}>{season.label}</span>
+                      <season.icon size={12} className="animate-pulse-soft" />
+                      <span className="font-bold uppercase tracking-wider" style={{ fontSize: '10px' }}>{season.label}</span>
                     </div>
-                    <span style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '9px' }}>
                       Trimestre {i + 1} / {TOTAL_QUARTERS}
                     </span>
                   </div>

@@ -6,6 +6,7 @@ import type { DifficultyLevel } from './difficulty'
 import type { EconomicState } from './state'
 import { PARAMS } from './parameters'
 import { computeTaylorRate } from './models/taylorRule'
+import { step } from './simulator'
 
 export interface BotMessage {
   id: string
@@ -281,6 +282,99 @@ export function answerCustomQuestion(query: string, state?: EconomicState, pseud
 
   if (!q) {
     return `Bonjour ${name}. Posez-moi vos questions économiques. Par exemple : "Comment réduire l'inflation ?" ou "Quel est l'impact des NPL ?" pour obtenir mon analyse.`
+  }
+
+  // ── A. MOTEUR DE PRÉVISION INTERACTIF (Ceteris Paribus) ──
+  // Détecte : "si je monte de 50 pb", "si je baisse le taux de 0.25%", "que se passe-t-il si j'augmente de 100 pb"
+  const rateValueRegex = /([+-]?\d+(?:[\.,]\d+)?)\s*(pb|bp|%)/gi
+  const rateMatch = rateValueRegex.exec(q)
+  if (q.includes("si je") && (q.includes("taux") || q.includes("ro") || q.includes("reserve") || q.includes("pb") || q.includes("bp") || q.includes("%"))) {
+    if (rateMatch) {
+      const val = parseFloat(rateMatch[1].replace(',', '.'))
+      const unit = rateMatch[2].toLowerCase()
+      
+      let isIncrease = true
+      if (q.includes("baisse") || q.includes("redui") || q.includes("diminu") || q.includes("descen") || q.includes("decroi")) {
+        isIncrease = false
+      }
+      
+      let changeBp = 0
+      if (unit === '%') {
+        changeBp = val * 100
+      } else {
+        changeBp = val
+      }
+      
+      if (!isIncrease) {
+        changeBp = -Math.abs(changeBp)
+      } else {
+        changeBp = Math.abs(changeBp)
+      }
+
+      const isReserve = q.includes("reserve") || q.includes("ro")
+
+      if (state) {
+        const action = {
+          policyRateChangeBp: isReserve ? 0 : changeBp,
+          reserveRequirementChangeBp: isReserve ? changeBp : 0,
+          marketOperationsBnMad: 0,
+          communicationStance: 'neutral' as const,
+          fxInterventionBnMad: 0,
+          emergencyLendingBnMad: 0,
+          ccybRate: 0,
+        }
+
+        // Exécution de la simulation trimestrielle ceteris paribus (hors chocs)
+        const simResult = step(state, action, [], 42)
+        const next = simResult.newState
+
+        if (isReserve) {
+          const reserveDiff = next.reserveRequirement - state.reserveRequirement
+          const creditDiff = next.creditGrowth - state.creditGrowth
+          const lendingDiff = next.lendingRate - state.lendingRate
+          const infDiff = next.inflation - state.inflation
+
+          return `🔮 **Simulation Prévisionnelle — Réserve Obligatoire (Ceteris Paribus)**
+
+Gouverneur **${name}**, si vous modifiez le taux de réserve obligatoire de **${changeBp > 0 ? '+' : ''}${changeBp} pb** (portant le taux RO à **${next.reserveRequirement.toFixed(2)} %**), voici l'impact attendu au trimestre prochain :
+
+*   **Taux débiteur moyen** : **${next.lendingRate.toFixed(2)} %** (${lendingDiff > 0 ? '+' : ''}${lendingDiff.toFixed(2)} pp)
+*   **Croissance du crédit** : **${next.creditGrowth.toFixed(2)} %** (${creditDiff > 0 ? '+' : ''}${creditDiff.toFixed(2)} pp)
+*   **Inflation (π)** : **${next.inflation.toFixed(2)} %** (${infDiff > 0 ? '+' : ''}${infDiff.toFixed(2)} pp)
+*   **Besoin de liquidité bancaire** : **${next.liquidityNeed.toFixed(1)} mds MAD** (${(next.liquidityNeed - state.liquidityNeed) > 0 ? '+' : ''}${(next.liquidityNeed - state.liquidityNeed).toFixed(1)} mds)
+
+📊 *Analyse de votre conseiller :* ${
+            changeBp > 0 
+              ? "Relever les réserves obligatoires ponctionne la liquidité bancaire, ce qui augmente le taux débiteur et freine la distribution des crédits. C'est idéal pour calmer une surchauffe financière."
+              : "Abaisser les réserves obligatoires injecte de la liquidité gratuite dans les banques, réduisant le coût du crédit pour stimuler l'économie réelle."
+          } (Simulation ceteris paribus, hors chocs ou chocs de change)`
+        } else {
+          const rateDiff = next.policyRate - state.policyRate
+          const lendingDiff = next.lendingRate - state.lendingRate
+          const infDiff = next.inflation - state.inflation
+          const growthDiff = next.gdpGrowth - state.gdpGrowth
+          const nplDiff = next.nplRatio - state.nplRatio
+
+          return `🔮 **Simulation Prévisionnelle — Taux Directeur (Ceteris Paribus)**
+
+Gouverneur **${name}**, si vous appliquez une variation de **${changeBp > 0 ? '+' : ''}${changeBp} pb** à votre taux directeur au prochain trimestre (portant le taux directeur à **${next.policyRate.toFixed(2)} %**), voici la projection de notre département d'études économiques :
+
+*   **Taux directeur** : **${next.policyRate.toFixed(2)} %** (${rateDiff > 0 ? '+' : ''}${rateDiff.toFixed(2)} pp)
+*   **Taux débiteur moyen (i^D)** : **${next.lendingRate.toFixed(2)} %** (${lendingDiff > 0 ? '+' : ''}${lendingDiff.toFixed(2)} pp)
+*   **Inflation (π)** : **${next.inflation.toFixed(2)} %** (${infDiff > 0 ? '+' : ''}${infDiff.toFixed(2)} pp par rapport au niveau actuel)
+*   **Croissance du PIB** : **${next.gdpGrowth.toFixed(2)} %** (${growthDiff > 0 ? '+' : ''}${growthDiff.toFixed(2)} pp)
+*   **Créances bancaires (NPL)** : **${next.nplRatio.toFixed(2)} %** (${nplDiff > 0 ? '+' : ''}${nplDiff.toFixed(2)} pp)
+
+📊 *Analyse de votre conseiller :* ${
+            changeBp > 0 
+              ? "Ce resserrement monétaire va refroidir la demande, réduisant l'inflation future au prix d'un léger ralentissement de la croissance et d'une hausse mécanique des créances douteuses."
+              : "Cet assouplissement va stimuler l'offre de crédit et soutenir la croissance, au risque de créer des pressions inflationnistes supplémentaires à moyen terme."
+          } (Simulation ceteris paribus, hors chocs ou chocs de change)`
+        }
+      } else {
+        return `Gouverneur **${name}**, pour lancer une simulation prévisionnelle en direct, veuillez démarrer une partie depuis votre **[Dashboard](/dashboard)**. Je serai alors capable d'exécuter des projections en temps réel sur la base de votre état économique exact !`
+      }
+    }
   }
 
   // A. Question sur comment réduire l'inflation

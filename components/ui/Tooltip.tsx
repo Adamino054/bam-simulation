@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 
 interface TooltipProps {
@@ -12,8 +13,13 @@ interface TooltipProps {
 export function Tooltip({ children, content, className = '' }: TooltipProps) {
   const [visible, setVisible] = useState(false)
   const [pos, setPos]         = useState({ top: 0, left: 0 })
+  const [mounted, setMounted] = useState(false)
   const triggerRef            = useRef<HTMLSpanElement>(null)
   const tooltipRef            = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!visible || !triggerRef.current || !tooltipRef.current) return
@@ -50,12 +56,12 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
       >
         {children}
       </span>
-      {visible && (
+      {visible && mounted && createPortal(
         <div
           ref={tooltipRef}
           id="tooltip-content"
           role="tooltip"
-          className="fixed z-50 max-w-xs rounded p-3 text-sm leading-relaxed shadow-xl animate-fade-in"
+          className="absolute z-[9999] max-w-xs rounded p-3 text-sm leading-relaxed shadow-xl animate-fade-in"
           style={{
             top: pos.top,
             left: pos.left,
@@ -66,8 +72,10 @@ export function Tooltip({ children, content, className = '' }: TooltipProps) {
           }}
         >
           {content}
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
 }
+

@@ -468,3 +468,156 @@
   border-color: var(--border-strong);
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
+
+/* =====================================================
+   ELITE COCKPIT & PREMIUM ANIMATIONS — CBS v2.5
+   ===================================================== */
+
+/* Dual Ring Pulsating Marker for current quarter */
+.pulse-dual-ring {
+  position: relative;
+}
+.pulse-dual-ring::before,
+.pulse-dual-ring::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid var(--accent-primary);
+  pointer-events: none;
+  opacity: 0;
+}
+.pulse-dual-ring::before {
+  width: 18px;
+  height: 18px;
+  animation: pulse-ring-expand 2s cubic-bezier(0.21, 0.6, 0.35, 1) infinite;
+}
+.pulse-dual-ring::after {
+  width: 28px;
+  height: 28px;
+  animation: pulse-ring-expand 2s cubic-bezier(0.21, 0.6, 0.35, 1) infinite;
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse-ring-expand {
+  0% {
+    width: 8px;
+    height: 8px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 28px;
+    height: 28px;
+    opacity: 0;
+  }
+}
+
+/* Shimmer Light sweep effect for buttons & cards */
+.premium-shimmer-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.premium-shimmer-sweep::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 30%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 30%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  animation: shimmer-sweep-anim 8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes shimmer-sweep-anim {
+  0% { left: -60%; }
+  15%, 100% { left: 150%; }
+}
+
+/* Glassmorphism styling for high-end popups & cards */
+.glass-premium {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(20, 22, 26, 0.78) !important;
+  border: 1px solid rgba(240, 240, 234, 0.08) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45) !important;
+}
+
+.light .glass-premium {
+  background-color: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(20, 20, 24, 0.08) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Metric Change Flash Animations */
+.metric-flash-positive {
+  animation: metric-flash-green-anim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.metric-flash-negative {
+  animation: metric-flash-red-anim 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes metric-flash-green-anim {
+  0% {
+    color: #8be0b7;
+    text-shadow: 0 0 16px rgba(74, 157, 124, 0.8);
+    transform: scale(1.03);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+    transform: scale(1);
+  }
+}
+
+@keyframes metric-flash-red-anim {
+  0% {
+    color: #f7a3a0;
+    text-shadow: 0 0 16px rgba(194, 84, 80, 0.8);
+    transform: scale(1.03);
+  }
+  100% {
+    color: inherit;
+    text-shadow: none;
+    transform: scale(1);
+  }
+}
+
+/* Glow-pulse for primary CTA button */
+@keyframes turn-button-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(180,25,35,0.3);
+  }
+  50% {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 6px 28px rgba(180,25,35,0.55), 0 0 12px rgba(180,25,35,0.25);
+  }
+}
+
+.animate-turn-btn-glow {
+  animation: turn-button-glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes turn-button-glow-pulse-last {
+  0%, 100% {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 4px 16px rgba(201,168,106,0.3);
+  }
+  50% {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2), 0 6px 28px rgba(201,168,106,0.55), 0 0 12px rgba(201,168,106,0.25);
+  }
+}
+
+.animate-turn-btn-glow-last {
+  animation: turn-button-glow-pulse-last 2s ease-in-out infinite;
+}
+

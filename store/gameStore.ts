@@ -7,6 +7,7 @@ import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
 import { getLevelConfig } from '@/engine/difficulty'
 import { FREE_MODE_QUARTERS } from '@/lib/constants'
+import { PRESS_CONFERENCES } from '@/engine/pressConferences'
 
 interface GameStore {
   scenario: ScenarioId | null
@@ -24,11 +25,13 @@ interface GameStore {
   /** Track FX intervention history for credibility boost */
   fxInterventionHistory: number[]
   campaignStatus: 'won' | 'lost' | null
+  pendingPressConference: { questionId: string; year: number } | null
 
   startGame: (scenario: ScenarioId, level?: DifficultyLevel) => void
   setDifficultyLevel: (level: DifficultyLevel) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
+  answerPressConference: (optionIndex: number) => void
   reset: () => void
   setTransitioning: (v: boolean) => void
   setFreeMode: (v: boolean) => void
@@ -54,6 +57,7 @@ export const useGameStore = create<GameStore>()(
       previousPolicyRateChangeBp: 0,
       fxInterventionHistory: [],
       campaignStatus: null,
+      pendingPressConference: null,
 
       startGame(scenarioId, level) {
         const scenario = SCENARIOS[scenarioId]
@@ -146,6 +150,12 @@ export const useGameStore = create<GameStore>()(
           }
         }
 
+        const nextQuarter = result.newState.quarter
+        const justFinishedYear = nextQuarter > 0 && nextQuarter % 4 === 0
+        const completedYear = Math.floor(nextQuarter / 4)
+        const hasConf = PRESS_CONFERENCES[completedYear] !== undefined
+        const pendingConf = justFinishedYear && hasConf ? { questionId: PRESS_CONFERENCES[completedYear].id, year: completedYear } : null
+
         set({
           history: [...history, currentState],
           currentState: result.newState,
@@ -155,7 +165,23 @@ export const useGameStore = create<GameStore>()(
           previousPolicyRateChangeBp: pendingAction.policyRateChangeBp,
           fxInterventionHistory: newFxHistory,
           campaignStatus: nextCampaignStatus,
+          pendingPressConference: pendingConf,
         })
+      },
+
+      answerPressConference(optionIndex) {
+        const { pendingPressConference, currentState } = get()
+        if (!pendingPressConference) return
+        const question = PRESS_CONFERENCES[pendingPressConference.year]
+        if (!question) return
+        const option = question.options[optionIndex]
+        if (!option) return
+
+        const partialNewState = option.apply(currentState)
+        set(state => ({
+          currentState: { ...state.currentState, ...partialNewState },
+          pendingPressConference: null
+        }))
       },
 
       reset() {
@@ -197,6 +223,7 @@ export const useGameStore = create<GameStore>()(
         previousPolicyRateChangeBp: state.previousPolicyRateChangeBp,
         fxInterventionHistory: state.fxInterventionHistory,
         campaignStatus: state.campaignStatus,
+        pendingPressConference: state.pendingPressConference,
       }),
     },
   ),

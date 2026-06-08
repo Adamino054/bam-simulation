@@ -65,6 +65,35 @@ export function MetricCard({
   invertDelta = false,
 }: MetricCardProps) {
   const animatedValue = useCountUp(value)
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [coords, setCoords] = useState({ x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+  const [flashClass, setFlashClass] = useState('')
+  const prevValueRef = useRef(value)
+
+  useEffect(() => {
+    const prev = prevValueRef.current
+    if (prev !== value) {
+      // Delta logic: invert it for negative indicators (e.g. unemployment, NPL)
+      const isPositiveChange = invertDelta ? value < prev : value > prev
+      setFlashClass(isPositiveChange ? 'metric-flash-positive' : 'metric-flash-negative')
+      prevValueRef.current = value
+
+      const timer = setTimeout(() => {
+        setFlashClass('')
+      }, 600)
+      return () => clearTimeout(timer)
+    }
+  }, [value, invertDelta])
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return
+    const rect = cardRef.current.getBoundingClientRect()
+    setCoords({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    })
+  }
 
   const isGood = delta !== undefined ? (invertDelta ? delta < 0 : delta > 0) : null
   const isBad  = delta !== undefined ? (invertDelta ? delta > 0 : delta < 0) : null
@@ -78,11 +107,20 @@ export function MetricCard({
 
   return (
     <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`rounded-md overflow-hidden relative ${className}`}
       style={{
         backgroundColor: 'var(--bg-panel)',
         border: '1px solid var(--border-default)',
         borderLeft: `3px solid ${leftBorder}`,
+        position: 'relative',
+        transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s, box-shadow 0.22s',
+        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+        boxShadow: isHovered ? '0 10px 24px rgba(0, 0, 0, 0.25)' : 'none',
+        borderColor: isHovered ? 'var(--border-strong)' : 'var(--border-default)',
       }}
     >
       {/* Subtle top gradient wash */}
@@ -97,6 +135,21 @@ export function MetricCard({
             height: '56px',
             background: `linear-gradient(180deg, ${accentColor}0E 0%, transparent 100%)`,
             pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
+
+      {/* Dynamic Cursor Aura Glow */}
+      {isHovered && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `radial-gradient(100px circle at ${coords.x}px ${coords.y}px, ${accentColor ? `${accentColor}18` : 'rgba(255, 255, 255, 0.04)'}, transparent 80%)`,
+            pointerEvents: 'none',
+            zIndex: 0,
           }}
         />
       )}
@@ -125,11 +178,12 @@ export function MetricCard({
         {/* Value */}
         <div className="flex items-end gap-1.5">
           <span
-            className="font-editorial leading-none tabular"
+            className={`font-editorial leading-none tabular ${flashClass}`}
             style={{
               fontSize: 'clamp(1.6rem, 2.5vw, 2rem)',
               color: accentColor ?? 'var(--text-primary)',
               fontVariantNumeric: 'tabular-nums',
+              display: 'inline-block',
             }}
           >
             {animatedValue.toFixed(precision).replace('.', ',')}
