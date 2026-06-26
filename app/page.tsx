@@ -7,7 +7,7 @@ import {
   TrendingUp, Shield, Zap, BarChart3, Target, Users,
   ChevronRight, Landmark, ArrowRight, BookOpen,
   GraduationCap, History, Percent, Activity, Calculator,
-  Network, LineChart as LineChartIcon, Sliders, ShieldAlert,
+  Network, LineChart as LineChartIcon, Sliders, ShieldAlert, Swords,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { useAuthStore } from '@/store/authStore'
@@ -28,7 +28,7 @@ const FEATURES = [
   { icon: Zap,        title: '6 instruments',         color: '#C9A86A', description: 'Taux directeur, réserves, opérations de marché, forward guidance, intervention de change et emergency lending.' },
   { icon: BarChart3,  title: 'Simulation réaliste',   color: '#4A9D7C', description: "Moteur calibré sur les données de la Banque centrale : courbe IS, courbe de Phillips, canal du crédit, loi d'Okun, règle de Taylor." },
   { icon: Target,     title: '2 % d\'inflation',       color: '#C25450', description: "Maintenez l'inflation proche de la cible tout en soutenant la croissance. Un équilibre délicat à maîtriser." },
-  { icon: Users,      title: 'Suivi de performance',  color: '#C9A86A', description: 'Historique complet de vos parties, scores, grades et statistiques. Comparez-vous à la règle de Taylor.' },
+  { icon: Swords,     title: 'Mode Multijoueur',     color: '#C25450', description: 'Affrontez un autre gouverneur en duel compétitif ou pilotez la même banque centrale en co-gouvernance coopérative.' },
 ]
 
 const STEPS = [
@@ -229,6 +229,9 @@ export default function LandingPage() {
               </a>
               <a href="/dashboard" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Simulation
+              </a>
+              <a href="/multiplayer" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Multijoueur
               </a>
               {currentUser && (
                 <a href="/history" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
