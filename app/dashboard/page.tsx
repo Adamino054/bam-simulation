@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
   Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
-  Sliders, ShieldAlert, LayoutDashboard,
+  Sliders, ShieldAlert, LayoutDashboard, Swords,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -141,6 +141,10 @@ export default function DashboardPage() {
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <a href="/players" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
             <Users size={12} /> Joueurs
+          </a>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/multiplayer" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
+            <Swords size={12} style={{ color: '#C25450' }} /> Multijoueur
           </a>
         </div>
         <div className="flex items-center gap-4">
