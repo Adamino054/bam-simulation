@@ -3,17 +3,58 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
 import { useGameStore } from '@/store/gameStore'
-import { fmtPct, fmtQuarter } from '@/lib/format'
+import { fmtBnMad, fmtBp, fmtPct, fmtQuarter } from '@/lib/format'
+import type { PolicyAction } from '@/engine/state'
 
 interface HistoryDrawerProps {
   open: boolean
   onClose: () => void
 }
 
+const GUIDANCE_LABELS: Record<PolicyAction['communicationStance'], string> = {
+  dovish: 'Accommodant',
+  neutral: 'Neutre',
+  hawkish: 'Restrictif',
+}
+
+function formatChoice(value: number, neutral: string, formatter: (v: number) => string) {
+  return value === 0 ? neutral : formatter(value)
+}
+
+function Choice({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div
+      className="rounded px-2 py-1.5"
+      style={{
+        backgroundColor: highlight ? 'rgba(180, 25, 35, 0.08)' : 'var(--bg-panel)',
+        border: `1px solid ${highlight ? 'rgba(180, 25, 35, 0.22)' : 'var(--border-subtle)'}`,
+      }}
+    >
+      <span className="label-caps block mb-0.5" style={{ color: 'var(--text-tertiary)', fontSize: '8px' }}>
+        {label}
+      </span>
+      <span
+        className="font-mono tabular"
+        style={{
+          color: highlight ? 'var(--accent-primary)' : 'var(--text-secondary)',
+          fontSize: '11px',
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
 export function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
   const history = useGameStore(s => s.history)
+  const actionHistory = useGameStore(s => s.actionHistory ?? [])
 
-  // Fermer sur Escape
+  const rows = history.map((state, index) => ({
+    state,
+    action: actionHistory[index],
+  }))
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -24,7 +65,6 @@ export function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
 
   return (
     <>
-      {/* Overlay */}
       {open && (
         <div
           className="fixed inset-0 z-30 bg-black/40"
@@ -33,27 +73,30 @@ export function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
         />
       )}
 
-      {/* Drawer */}
       <div
         className="fixed top-0 left-0 bottom-0 z-40 flex flex-col overflow-hidden transition-transform duration-300"
         style={{
-          width: '360px',
+          width: '380px',
           backgroundColor: 'var(--bg-panel)',
           borderRight: '1px solid var(--border-default)',
           transform: open ? 'translateX(0)' : 'translateX(-100%)',
         }}
         role="dialog"
-        aria-label="Historique des trimestres"
+        aria-label="Historique des choix"
         aria-modal={open}
       >
-        {/* En-tête */}
         <div
           className="flex items-center justify-between p-4"
           style={{ borderBottom: '1px solid var(--border-subtle)' }}
         >
-          <span className="label-caps" style={{ color: 'var(--text-secondary)' }}>
-            Historique
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="label-caps" style={{ color: 'var(--text-secondary)' }}>
+              Historique
+            </span>
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              Decisions prises par le joueur
+            </span>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -65,59 +108,78 @@ export function HistoryDrawer({ open, onClose }: HistoryDrawerProps) {
           </button>
         </div>
 
-        {/* Table */}
         <div className="flex-1 overflow-y-auto p-3">
           {history.length === 0 ? (
             <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-              Aucun trimestre passé.
+              Aucun trimestre passe.
             </p>
           ) : (
-            <table className="w-full text-xs" style={{ borderCollapse: 'collapse' }}>
-              <thead>
-                <tr>
-                  {['Trimestre', 'Inflation', 'PIB', 'Chômage', 'Taux dir.'].map(h => (
-                    <th
-                      key={h}
-                      className="text-left pb-2 label-caps"
-                      style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[...history].reverse().map((s, i) => (
-                  <tr
-                    key={s.quarter}
-                    style={{
-                      borderBottom: '1px solid var(--border-subtle)',
-                      opacity: i === 0 ? 1 : 0.75 - i * 0.02,
-                    }}
-                  >
-                    <td className="py-2" style={{ color: 'var(--text-tertiary)' }}>
-                      {fmtQuarter(s.date.year, s.date.q)}
-                    </td>
-                    <td className="py-2 tabular" style={{
-                      color: Math.abs(s.inflation - 2) < 0.5 ? 'var(--data-positive)' : 'var(--data-warning)',
-                    }}>
-                      {fmtPct(s.inflation)}
-                    </td>
-                    <td className="py-2 tabular" style={{
-                      color: s.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)',
-                    }}>
-                      {fmtPct(s.gdpGrowth)}
-                    </td>
-                    <td className="py-2 tabular" style={{ color: 'var(--text-secondary)' }}>
-                      {fmtPct(s.unemployment)}
-                    </td>
-                    <td className="py-2 tabular" style={{ color: 'var(--text-secondary)' }}>
-                      {fmtPct(s.policyRate)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex flex-col gap-3">
+              {[...rows].reverse().map(({ state, action }, i) => (
+                <div
+                  key={state.quarter}
+                  className="rounded-md p-3"
+                  style={{
+                    backgroundColor: 'var(--bg-elevated)',
+                    border: '1px solid var(--border-subtle)',
+                    opacity: i === 0 ? 1 : Math.max(0.55, 0.82 - i * 0.03),
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {fmtQuarter(state.date.year, state.date.q)}
+                    </span>
+                    <span className="label-caps" style={{ color: 'var(--text-tertiary)', fontSize: '9px' }}>
+                      Choix du joueur
+                    </span>
+                  </div>
+
+                  {action ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Choice
+                        label="Taux directeur"
+                        value={fmtBp(action.policyRateChangeBp)}
+                        highlight={action.policyRateChangeBp !== 0}
+                      />
+                      <Choice
+                        label="Reserve oblig."
+                        value={fmtBp(action.reserveRequirementChangeBp)}
+                        highlight={action.reserveRequirementChangeBp !== 0}
+                      />
+                      <Choice
+                        label="Operations marche"
+                        value={formatChoice(action.marketOperationsBnMad, 'Neutre', fmtBnMad)}
+                        highlight={action.marketOperationsBnMad !== 0}
+                      />
+                      <Choice
+                        label="Guidance"
+                        value={GUIDANCE_LABELS[action.communicationStance]}
+                        highlight={action.communicationStance !== 'neutral'}
+                      />
+                      <Choice
+                        label="Intervention FX"
+                        value={formatChoice(action.fxInterventionBnMad, 'Neutre', fmtBnMad)}
+                        highlight={action.fxInterventionBnMad !== 0}
+                      />
+                      <Choice
+                        label="Emergency lending"
+                        value={formatChoice(action.emergencyLendingBnMad, 'Inactif', fmtBnMad)}
+                        highlight={action.emergencyLendingBnMad !== 0}
+                      />
+                      <Choice
+                        label="CCyB"
+                        value={fmtPct(action.ccybRate, 1)}
+                        highlight={action.ccybRate !== 0}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      Decision non disponible pour cet ancien trimestre sauvegarde.
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

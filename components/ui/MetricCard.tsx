@@ -114,13 +114,22 @@ export function MetricCard({
       className={`rounded-md overflow-hidden relative ${className}`}
       style={{
         backgroundColor: 'var(--bg-panel)',
-        border: '1px solid var(--border-default)',
-        borderLeft: `3px solid ${leftBorder}`,
+        borderTopWidth: '1px',
+        borderRightWidth: '1px',
+        borderBottomWidth: '1px',
+        borderLeftWidth: '3px',
+        borderTopStyle: 'solid',
+        borderRightStyle: 'solid',
+        borderBottomStyle: 'solid',
+        borderLeftStyle: 'solid',
+        borderTopColor: isHovered ? 'var(--border-strong)' : 'var(--border-default)',
+        borderRightColor: isHovered ? 'var(--border-strong)' : 'var(--border-default)',
+        borderBottomColor: isHovered ? 'var(--border-strong)' : 'var(--border-default)',
+        borderLeftColor: leftBorder,
         position: 'relative',
         transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s, box-shadow 0.22s',
         transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: isHovered ? '0 10px 24px rgba(0, 0, 0, 0.25)' : 'none',
-        borderColor: isHovered ? 'var(--border-strong)' : 'var(--border-default)',
       }}
     >
       {/* Subtle top gradient wash */}

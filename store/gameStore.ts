@@ -14,6 +14,7 @@ interface GameStore {
   difficultyLevel: DifficultyLevel
   currentState: EconomicState
   history: EconomicState[]
+  actionHistory: PolicyAction[]
   activeShocks: Shock[]
   pendingAction: PolicyAction
   status: 'menu' | 'playing' | 'finished'
@@ -48,6 +49,7 @@ export const useGameStore = create<GameStore>()(
       difficultyLevel: 'intermediate' as DifficultyLevel,
       currentState: INITIAL_STATE,
       history: [],
+      actionHistory: [],
       activeShocks: [],
       pendingAction: { ...DEFAULT_POLICY_ACTION },
       status: 'menu',
@@ -67,6 +69,7 @@ export const useGameStore = create<GameStore>()(
           difficultyLevel: chosenLevel,
           currentState: { ...scenario.initialState },
           history: [],
+          actionHistory: [],
           activeShocks: [...scenario.initialShocks],
           pendingAction: { ...DEFAULT_POLICY_ACTION },
           status: 'playing',
@@ -89,7 +92,7 @@ export const useGameStore = create<GameStore>()(
       advanceTurn() {
         const {
           currentState, pendingAction, activeShocks, seed, history,
-          scenario, previousPolicyRateChangeBp, fxInterventionHistory, freeMode,
+          actionHistory, scenario, previousPolicyRateChangeBp, fxInterventionHistory, freeMode,
         } = get()
         const { difficultyLevel } = get()
         const levelConfig = getLevelConfig(difficultyLevel)
@@ -158,6 +161,7 @@ export const useGameStore = create<GameStore>()(
 
         set({
           history: [...history, currentState],
+          actionHistory: [...actionHistory, { ...pendingAction }],
           currentState: result.newState,
           activeShocks: newActiveShocks,
           pendingAction: { ...DEFAULT_POLICY_ACTION },
@@ -189,6 +193,7 @@ export const useGameStore = create<GameStore>()(
           scenario: null,
           currentState: INITIAL_STATE,
           history: [],
+          actionHistory: [],
           activeShocks: [],
           pendingAction: { ...DEFAULT_POLICY_ACTION },
           status: 'menu',
@@ -215,6 +220,7 @@ export const useGameStore = create<GameStore>()(
         difficultyLevel: state.difficultyLevel,
         currentState: state.currentState,
         history: state.history,
+        actionHistory: state.actionHistory,
         activeShocks: state.activeShocks,
         pendingAction: state.pendingAction,
         status: state.status,
