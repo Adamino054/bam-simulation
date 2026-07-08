@@ -24,7 +24,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (mounted && currentUser) {
-      router.push('/dashboard')
+      router.push('/choix')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, currentUser])
@@ -46,7 +46,7 @@ export default function LoginPage() {
       : register(pseudo, password)
 
     if (result.success) {
-      router.push('/dashboard')
+      router.push('/choix')
     } else {
       setError(result.error ?? 'Erreur inconnue')
       setShaking(true)

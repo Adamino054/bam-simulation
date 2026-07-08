@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
   Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
-  Sliders, ShieldAlert, LayoutDashboard, Swords,
+  Sliders, ShieldAlert, LayoutDashboard, Swords, Compass,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -126,6 +126,10 @@ export default function DashboardPage() {
       >
         <div className="flex items-center gap-3">
           <a href="/" className="font-editorial text-sm" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>CBS</a>
+          <span style={{ color: 'var(--border-default)' }}>·</span>
+          <a href="/decouverte" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
+            <Compass size={12} style={{ color: 'var(--accent-warm)' }} /> Découverte
+          </a>
           <span style={{ color: 'var(--border-default)' }}>·</span>
           <a href="/courses" className="label-caps flex items-center gap-1" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '11px' }}>
             <GraduationCap size={12} /> Cours
