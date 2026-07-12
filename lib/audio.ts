@@ -166,6 +166,139 @@ class SoundSynthesizer {
     osc.start()
     osc.stop(now + duration)
   }
+
+  /**
+   * Ambiance originale de lancement pour le jeu du million.
+   * Inspiree des codes TV quiz sans reprendre un jingle existant.
+   */
+  async playMillionIntro() {
+    const ctx = this.getContext()
+    if (!ctx) return
+    await this.resumeContext(ctx)
+
+    const now = ctx.currentTime
+    const notes = [130.81, 196, 261.63, 392, 523.25]
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      const filter = ctx.createBiquadFilter()
+
+      osc.type = index % 2 === 0 ? 'triangle' : 'sine'
+      osc.frequency.setValueAtTime(freq, now + index * 0.16)
+      filter.type = 'lowpass'
+      filter.frequency.setValueAtTime(1100, now)
+      gain.gain.setValueAtTime(0, now + index * 0.16)
+      gain.gain.linearRampToValueAtTime(0.055, now + index * 0.16 + 0.04)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.16 + 0.48)
+
+      osc.connect(filter)
+      filter.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + index * 0.16)
+      osc.stop(now + index * 0.16 + 0.55)
+    })
+  }
+
+  /** Suspense court au moment ou une nouvelle question arrive. */
+  async playQuestionReveal() {
+    const ctx = this.getContext()
+    if (!ctx) return
+    await this.resumeContext(ctx)
+
+    const now = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    const filter = ctx.createBiquadFilter()
+
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(110, now)
+    osc.frequency.exponentialRampToValueAtTime(220, now + 0.55)
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(480, now)
+    filter.frequency.linearRampToValueAtTime(1500, now + 0.55)
+    gain.gain.setValueAtTime(0.001, now)
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.08)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7)
+
+    osc.connect(filter)
+    filter.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start(now)
+    osc.stop(now + 0.72)
+  }
+
+  /** Petit son de spot pour chaque choix qui apparait. */
+  async playOptionReveal(step = 0) {
+    const ctx = this.getContext()
+    if (!ctx) return
+    await this.resumeContext(ctx)
+
+    const now = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(520 + step * 80, now)
+    osc.frequency.exponentialRampToValueAtTime(780 + step * 90, now + 0.08)
+    gain.gain.setValueAtTime(0.001, now)
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.015)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start(now)
+    osc.stop(now + 0.14)
+  }
+
+  /** Validation plus solennelle pour une bonne reponse du jeu du million. */
+  async playMillionCorrect() {
+    const ctx = this.getContext()
+    if (!ctx) return
+    await this.resumeContext(ctx)
+
+    const now = ctx.currentTime
+    const notes = [392, 493.88, 587.33, 783.99]
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + index * 0.09)
+      gain.gain.setValueAtTime(0.001, now + index * 0.09)
+      gain.gain.linearRampToValueAtTime(0.07, now + index * 0.09 + 0.025)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.09 + 0.28)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + index * 0.09)
+      osc.stop(now + index * 0.09 + 0.32)
+    })
+  }
+
+  /** Fanfare originale de victoire finale. */
+  async playMillionWin() {
+    const ctx = this.getContext()
+    if (!ctx) return
+    await this.resumeContext(ctx)
+
+    const now = ctx.currentTime
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]
+    notes.forEach((freq, index) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+
+      osc.type = index >= 3 ? 'triangle' : 'sine'
+      osc.frequency.setValueAtTime(freq, now + index * 0.11)
+      gain.gain.setValueAtTime(0.001, now + index * 0.11)
+      gain.gain.linearRampToValueAtTime(0.075, now + index * 0.11 + 0.025)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.11 + 0.45)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now + index * 0.11)
+      osc.stop(now + index * 0.11 + 0.5)
+    })
+  }
 }
 
 export const sound = new SoundSynthesizer()

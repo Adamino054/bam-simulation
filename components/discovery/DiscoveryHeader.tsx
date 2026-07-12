@@ -1,8 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Landmark, LogOut } from 'lucide-react'
+import { ArrowLeft, BookOpen, Gamepad2, Landmark, LogOut, Trophy, Sailboat } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useDiscoveryProfile } from '@/store/discoveryStore'
 import { getLevelProgress } from '@/engine/discovery'
@@ -20,9 +21,16 @@ interface DiscoveryHeaderProps {
  */
 export function DiscoveryHeader({ backHref = '/decouverte', backLabel = 'Retour' }: DiscoveryHeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const logout = useAuthStore(s => s.logout)
   const profile = useDiscoveryProfile()
   const progress = getLevelProgress(profile.xp)
+  const navItems = [
+    { href: '/decouverte/histoire', label: 'Histoires', icon: BookOpen },
+    { href: '/decouverte/millionaire', label: 'Million', icon: Trophy },
+    { href: '/decouverte/jeux', label: 'Jeux', icon: Gamepad2 },
+    { href: '/decouverte/mission', label: 'Mission', icon: Sailboat },
+  ]
 
   return (
     <nav
@@ -57,7 +65,31 @@ export function DiscoveryHeader({ backHref = '/decouverte', backLabel = 'Retour'
         </div>
       </div>
 
-      {/* Centre : niveau + XP */}
+      {/* Centre : raccourcis + niveau XP */}
+      <div className="hidden lg:flex items-center gap-1.5 shrink-0">
+        {navItems.map(item => {
+          const Icon = item.icon
+          const active = pathname === item.href
+          return (
+            <button
+              key={item.href}
+              onClick={() => router.push(item.href)}
+              className="label-caps flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-colors"
+              style={{
+                color: active ? 'var(--accent-primary)' : 'var(--text-tertiary)',
+                backgroundColor: active ? 'rgba(180,25,35,0.08)' : 'transparent',
+                border: `1px solid ${active ? 'rgba(180,25,35,0.25)' : 'transparent'}`,
+                cursor: 'pointer',
+                fontSize: '9px',
+              }}
+            >
+              <Icon size={12} />
+              {item.label}
+            </button>
+          )
+        })}
+      </div>
+
       <div className="flex items-center gap-2.5 flex-1 max-w-[300px]">
         <span className="text-lg shrink-0" title={`Niveau ${progress.current.level}`}>
           {progress.current.emoji}

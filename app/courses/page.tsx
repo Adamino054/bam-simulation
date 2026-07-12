@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -297,11 +297,11 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredL
   onQuizComplete: (score: number, total: number) => void
 }) {
   const Icon = mod.icon
-  const [retryCount, setRetryCount] = useState(0)
+  const [quizQuestions, setQuizQuestions] = useState(() => getQuiz(mod.id, preferredLevel))
 
-  const quizQuestions = useMemo(() => {
-    return getQuiz(mod.id, preferredLevel)
-  }, [mod.id, preferredLevel, retryCount])
+  useEffect(() => {
+    setQuizQuestions(getQuiz(mod.id, preferredLevel))
+  }, [mod.id, preferredLevel])
 
   return (
     <motion.div
@@ -437,7 +437,7 @@ function ModuleCard({ mod, isOpen, onToggle, isCompleted, onComplete, preferredL
                   questions={quizQuestions}
                   moduleColor={mod.categoryColor}
                   onComplete={onQuizComplete}
-                  onRetry={() => setRetryCount(prev => prev + 1)}
+                  onRetry={() => setQuizQuestions(getQuiz(mod.id, preferredLevel))}
                 />
               </div>
 

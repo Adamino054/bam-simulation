@@ -255,7 +255,7 @@ export default function HistoryPage() {
 
   const player = useMemo(() => mounted ? getCurrentPlayer() : null, [mounted, getCurrentPlayer])
   const stats = useMemo(() => mounted ? getPlayerStats() : null, [mounted, getPlayerStats])
-  const allGames = player?.gameHistory ?? []
+  const allGames = useMemo(() => player?.gameHistory ?? [], [player])
 
   const filteredGames = useMemo(() => {
     let games = [...allGames]
