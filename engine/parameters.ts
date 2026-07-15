@@ -9,6 +9,7 @@
  */
 
 import type { EconomicState } from './state'
+import { HISTORICAL_OUTPUT_GAPS } from './historicalMacro'
 
 export const PARAMS = {
   // ── Courbe de Phillips ──────────────────────────────────────────
@@ -64,29 +65,29 @@ export const INITIAL_STATE: EconomicState = {
   quarter: 0,
   date: { year: 2025, q: 1 },
 
-  inflation: 2.2,
+  inflation: 0.701902154839545,
   inflationCore: 2.0,
   inflationExpected: 2.0,
 
-  gdpGrowth: 3.2,
-  outputGap: 0.0,
-  unemployment: 11.0,
+  gdpGrowth: 4.59524349182247,
+  outputGap: HISTORICAL_OUTPUT_GAPS.morocco2025,
+  unemployment: 9.0,
 
-  policyRate: 2.75,
-  interbankRate: 2.75,
-  lendingRate: 5.20,
+  policyRate: 2.25,
+  interbankRate: 2.25,
+  lendingRate: 4.70,
 
-  reserveRequirement: 4.0,
+  reserveRequirement: 0.0,
   creditGrowth: 5.0,
   liquidityNeed: 80.0,
-  nplRatio: 7.5,
+  nplRatio: 8.18776433111185,
 
   exchangeRate: 100.0,
   externalDemand: 0.0,
 
   // New fields (Task 2)
   centralBankCredibility: 70,
-  currentAccountBalance: -2.5,
+  currentAccountBalance: -2.49808221535456,
   fiscalStance: 'neutral',
 
   // New fields (Gameplay v2)

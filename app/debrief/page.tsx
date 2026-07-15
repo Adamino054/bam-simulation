@@ -60,6 +60,7 @@ export default function DebriefPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [isCertificateOpen, setIsCertificateOpen] = useState(false)
+  const [isReplaying, setIsReplaying] = useState(false)
   const savedRef = useRef(false)
 
 
@@ -138,7 +139,12 @@ export default function DebriefPage() {
 
   if (!scenario) return null
 
-  const handleReplay = () => { if (scenario) startGame(scenario as ScenarioId); router.push('/play') }
+  const handleReplay = async () => {
+    if (!scenario || isReplaying) return
+    setIsReplaying(true)
+    await startGame(scenario as ScenarioId)
+    router.push('/play')
+  }
   const handleNewGame = () => { reset(); router.push('/dashboard') }
 
   return (
@@ -480,8 +486,9 @@ export default function DebriefPage() {
           <button
             type="button"
             onClick={handleReplay}
+            disabled={isReplaying}
             className="px-8 py-3 rounded font-medium text-sm transition-all duration-200"
-            style={{ backgroundColor: 'var(--accent-primary)', color: '#fff', border: 'none', cursor: 'pointer' }}
+            style={{ backgroundColor: 'var(--accent-primary)', color: '#fff', border: 'none', cursor: isReplaying ? 'wait' : 'pointer', opacity: isReplaying ? 0.8 : 1 }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.9' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
           >

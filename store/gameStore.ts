@@ -5,6 +5,7 @@ import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
+import { fetchBkamPolicySettings } from '@/engine/bkamPolicy'
 import { getLevelConfig } from '@/engine/difficulty'
 import { FREE_MODE_QUARTERS } from '@/lib/constants'
 import { PRESS_CONFERENCES } from '@/engine/pressConferences'
@@ -28,7 +29,8 @@ interface GameStore {
   campaignStatus: 'won' | 'lost' | null
   pendingPressConference: { questionId: string; year: number } | null
 
-  startGame: (scenario: ScenarioId, level?: DifficultyLevel) => void
+  startGame: (scenario: ScenarioId, level?: DifficultyLevel) => Promise<void>
+  syncInitialBkamPolicy: () => Promise<void>
   setDifficultyLevel: (level: DifficultyLevel) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
@@ -40,6 +42,28 @@ interface GameStore {
 
 function generateSeed(): number {
   return Math.floor(Math.random() * 1_000_000)
+}
+
+function applyBkamInitialPolicy(state: EconomicState, policyRate: number, reserveRequirement: number): EconomicState {
+  const policyRateDelta = policyRate - state.policyRate
+
+  return {
+    ...state,
+    policyRate,
+    interbankRate: policyRate,
+    reserveRequirement,
+    lendingRate: Math.max(0, Number((state.lendingRate + policyRateDelta).toFixed(2))),
+  }
+}
+
+function scenarioPolicyDate(state: EconomicState): string {
+  const quarterEndMonth = state.date.q * 3
+  const day = state.date.q === 1 || state.date.q === 4 ? 31 : 30
+  return `${state.date.year}-${String(quarterEndMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function shouldUseBkamPolicy(scenarioId: ScenarioId, state: EconomicState): boolean {
+  return scenarioId !== 'volcker1979' && state.date.year >= 2008
 }
 
 export const useGameStore = create<GameStore>()(
@@ -61,13 +85,24 @@ export const useGameStore = create<GameStore>()(
       campaignStatus: null,
       pendingPressConference: null,
 
-      startGame(scenarioId, level) {
+      async startGame(scenarioId, level) {
         const scenario = SCENARIOS[scenarioId]
         const chosenLevel = level ?? get().difficultyLevel
+        let initialState = { ...scenario.initialState }
+
+        if (shouldUseBkamPolicy(scenarioId, scenario.initialState)) {
+          const bkamPolicy = await fetchBkamPolicySettings(scenarioPolicyDate(scenario.initialState))
+          initialState = applyBkamInitialPolicy(
+            scenario.initialState,
+            bkamPolicy.policyRate,
+            bkamPolicy.reserveRequirement,
+          )
+        }
+
         set({
           scenario: scenarioId,
           difficultyLevel: chosenLevel,
-          currentState: { ...scenario.initialState },
+          currentState: initialState,
           history: [],
           actionHistory: [],
           activeShocks: [...scenario.initialShocks],
@@ -78,6 +113,22 @@ export const useGameStore = create<GameStore>()(
           previousPolicyRateChangeBp: 0,
           fxInterventionHistory: [],
           campaignStatus: null,
+        })
+      },
+
+      async syncInitialBkamPolicy() {
+        const { currentState, history, status, scenario } = get()
+        if (status !== 'playing' || currentState.quarter !== 0 || history.length > 0) return
+        if (!scenario || !shouldUseBkamPolicy(scenario, currentState)) return
+
+        const scenarioInitialState = SCENARIOS[scenario].initialState
+        const bkamPolicy = await fetchBkamPolicySettings(scenarioPolicyDate(scenarioInitialState))
+        set({
+          currentState: applyBkamInitialPolicy(
+            scenarioInitialState,
+            bkamPolicy.policyRate,
+            bkamPolicy.reserveRequirement,
+          ),
         })
       },
 

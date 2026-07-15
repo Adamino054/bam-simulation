@@ -46,6 +46,7 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false)
   const [selected, setSelected] = useState<ScenarioId>('standard')
   const [activeView, setActiveView] = useState<'scenarios' | 'leaderboard'>('scenarios')
+  const [isStarting, setIsStarting] = useState(false)
 
   const currentUser = useAuthStore(s => s.currentUser)
   const getCurrentPlayer = useAuthStore(s => s.getCurrentPlayer)
@@ -107,8 +108,10 @@ export default function DashboardPage() {
     )
   }
 
-  const handleStart = () => {
-    startGame(selected, difficultyLevel)
+  const handleStart = async () => {
+    if (isStarting) return
+    setIsStarting(true)
+    await startGame(selected, difficultyLevel)
     router.push('/play')
   }
 
@@ -502,11 +505,13 @@ export default function DashboardPage() {
                 {/* CTA */}
                 <button
                   onClick={handleStart}
+                  disabled={isStarting}
                   className="w-full py-4 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200"
                   style={{
                     background: 'linear-gradient(135deg, #C41923 0%, #8B131B 100%)',
-                    color: '#fff', border: 'none', cursor: 'pointer',
+                    color: '#fff', border: 'none', cursor: isStarting ? 'wait' : 'pointer',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)',
+                    opacity: isStarting ? 0.8 : 1,
                   }}
                   onMouseEnter={e => {
                     (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
@@ -517,7 +522,7 @@ export default function DashboardPage() {
                     (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)'
                   }}
                 >
-                  Commencer la partie
+                  {isStarting ? 'Synchronisation BKAM...' : 'Commencer la partie'}
                   <ChevronRight size={16} />
                 </button>
               </>

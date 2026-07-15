@@ -840,11 +840,14 @@ function CampaignView() {
   const router = useRouter()
   const startGame = useGameStore(s => s.startGame)
   const [selectedId, setSelectedId] = useState<string>('volcker1979')
+  const [isStarting, setIsStarting] = useState(false)
 
   const activeCampaign = CAMPAIGNS[selectedId]
 
-  const handleStartMission = (id: string) => {
-    startGame(id as any)
+  const handleStartMission = async (id: string) => {
+    if (isStarting) return
+    setIsStarting(true)
+    await startGame(id as any)
     router.push('/play')
   }
 
@@ -1012,11 +1015,12 @@ function CampaignView() {
 
               <button
                 onClick={() => handleStartMission(activeCampaign.id)}
+                disabled={isStarting}
                 className="px-6 py-3 rounded text-xs font-semibold uppercase tracking-wider bg-[var(--accent-primary)] hover:bg-[#901319] text-white transition-all duration-150 flex items-center gap-1.5"
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: isStarting ? 'wait' : 'pointer', opacity: isStarting ? 0.8 : 1 }}
               >
                 <Play size={12} fill="white" />
-                Accepter la Mission & Commencer
+                {isStarting ? 'Synchronisation BKAM...' : 'Accepter la Mission & Commencer'}
               </button>
             </div>
 

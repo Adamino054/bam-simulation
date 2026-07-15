@@ -55,6 +55,7 @@ export default function PlayPage() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [isTourOpen, setIsTourOpen] = useState(false)
+  const [initialPolicySynced, setInitialPolicySynced] = useState(false)
 
   const status   = useGameStore(s => s.status)
   const scenario = useGameStore(s => s.scenario)
@@ -62,6 +63,7 @@ export default function PlayPage() {
   const history = useGameStore(s => s.history)
   const freeMode = useGameStore(s => s.freeMode)
   const difficultyLevel = useGameStore(s => s.difficultyLevel)
+  const syncInitialBkamPolicy = useGameStore(s => s.syncInitialBkamPolicy)
   const currentUser = useAuthStore(s => s.currentUser)
   const pendingPressConference = useGameStore(s => s.pendingPressConference)
 
@@ -87,6 +89,23 @@ export default function PlayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, status, scenario])
 
+  useEffect(() => {
+    if (!mounted || status !== 'playing' || !scenario) {
+      setInitialPolicySynced(true)
+      return
+    }
+
+    let cancelled = false
+    setInitialPolicySynced(false)
+    syncInitialBkamPolicy().finally(() => {
+      if (!cancelled) setInitialPolicySynced(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [mounted, status, scenario, syncInitialBkamPolicy])
+
   const maxQuarters = freeMode ? FREE_MODE_QUARTERS : (difficultyLevel === 'beginner' ? 16 : difficultyLevel === 'intermediate' ? 20 : 25)
 
   const allStates = useMemo(
@@ -101,7 +120,7 @@ export default function PlayPage() {
 
   const scenarioMeta = scenario ? SCENARIOS[scenario as ScenarioId] : null
 
-  if (!mounted) {
+  if (!mounted || !initialPolicySynced) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
