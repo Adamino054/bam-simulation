@@ -6,7 +6,6 @@
 import type { EconomicState, ScenarioId, Shock } from './state'
 import type { DifficultyLevel } from './difficulty'
 import { INITIAL_STATE } from './parameters'
-import { HISTORICAL_OUTPUT_GAPS } from './historicalMacro'
 
 export interface Scenario {
   id: ScenarioId
@@ -30,8 +29,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     description:
       'L\'économie marocaine démarre avec les derniers indicateurs observés : inflation basse, croissance soutenue et output gap positif. Des chocs aléatoires surviendront au fil des trimestres.',
     descriptionByLevel: {
-      beginner: "L'économie va bien ! L'inflation est à 0,7% et la croissance à 4,6%. Votre mission : garder l'inflation stable malgré les chocs qui surviendront. Conseil : ne changez les taux que par petits pas de 0,25%.",
-      intermediate: "Situation de départ 2025 — inflation à 0,7%, croissance à 4,6%. Des chocs aléatoires testeront votre capacité d'anticipation. Surveillez l'output gap et l'inflation core.",
+      beginner: "L'économie va bien ! L'inflation est à 2,10% et la croissance à 4,80%. Votre mission : garder l'inflation stable malgré les chocs qui surviendront. Conseil : ne changez les taux que par petits pas de 0,25%.",
+      intermediate: "Situation de départ 2025 T1 — inflation à 2,10%, croissance à 4,80%. Des chocs aléatoires testeront votre capacité d'anticipation. Surveillez l'output gap et l'inflation core.",
       expert: "État d'équilibre initial. Anticipez les chocs stochastiques via les indicateurs avancés. Gérez proactivement le trade-off inflation/croissance sans assistance.",
     },
     hintsByLevel: {
@@ -42,18 +41,18 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 'normal',
     initialState: { ...INITIAL_STATE },
     initialShocks: [],
-    keyKpi: 'Inflation 0,7 %',
+    keyKpi: 'Inflation 2,10 %',
   },
 
   inflation2022: {
     id: 'inflation2022',
     title: 'Choc inflationniste 2022',
-    subtitle: 'Inflation à 6 %, chocs énergétiques',
+    subtitle: 'Inflation à 4,00 %, chocs énergétiques',
     description:
-      'Contexte inspiré de 2022 : l\'inflation a bondi à 6 % sous l\'effet des prix énergétiques mondiaux et des tensions sur les chaînes d\'approvisionnement. Votre mandat prioritaire est de ramener l\'inflation vers 2 % sans casser la croissance.',
+      'Contexte inspiré du T1 2022 : l\'inflation atteint 4,00 % sous l\'effet des prix énergétiques mondiaux et des tensions sur les chaînes d\'approvisionnement. Votre mandat prioritaire est de ramener l\'inflation vers 2 % sans casser la croissance.',
     descriptionByLevel: {
-      beginner: "L'inflation est très élevée (6%) ! Les prix du pétrole ont explosé. Votre mission : baisser l'inflation vers 2% en augmentant progressivement le taux directeur. Conseil : montez de 0,25% à 0,50% chaque trimestre et soyez patient.",
-      intermediate: "Inflation à 6,7% causée par le choc pétrolier et les tensions d'approvisionnement. Utilisez le taux directeur ET le forward guidance pour ancrer les anticipations. Le délai de transmission est de 2-3 trimestres — anticipez !",
+      beginner: "L'inflation est élevée (4,00%) ! Les prix du pétrole ont explosé. Votre mission : baisser l'inflation vers 2% en augmentant progressivement le taux directeur. Conseil : montez de 0,25% à 0,50% chaque trimestre et soyez patient.",
+      intermediate: "Inflation à 4,00% en 2022 T1, causée par le choc pétrolier et les tensions d'approvisionnement. Utilisez le taux directeur ET le forward guidance pour ancrer les anticipations. Le délai de transmission est de 2-3 trimestres — anticipez !",
       expert: "Choc inflationniste 2022 avec pass-through pétrolier et désancrage potentiel des anticipations. Gérez le trilemme inflation/croissance/stabilité financière sans indications. Le choc d'offre complique la réponse optimale.",
     },
     hintsByLevel: {
@@ -64,20 +63,20 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 'hard',
     initialState: {
       ...INITIAL_STATE,
-      date: { year: 2022, q: 4 },
-      inflation: 6.65704202759067,
+      date: { year: 2022, q: 1 },
+      inflation: 4.002603319232034,
       inflationCore: 4.8,
       inflationExpected: 4.5,
-      gdpGrowth: 1.81269242194809,
-      outputGap: HISTORICAL_OUTPUT_GAPS.morocco2022,
-      unemployment: 9.413,
+      gdpGrowth: 0.6610387654219618,
+      outputGap: -1.028136396344137,
+      unemployment: 12.1,
       policyRate: 2.50,
       interbankRate: 2.50,
       lendingRate: 5.25,
       reserveRequirement: 0.0,
       nplRatio: 8.68360679573923,
       centralBankCredibility: 70,
-      currentAccountBalance: -3.6574911910038,
+      currentAccountBalance: -4.534755608974359,
       fiscalStance: 'neutral',
     },
     initialShocks: [
@@ -94,18 +93,18 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
         externalDemandImpact: 0,
       },
     ],
-    keyKpi: 'Inflation 6,7 % ⚠',
+    keyKpi: 'Inflation 4,00 % ⚠',
   },
 
   covid2020: {
     id: 'covid2020',
     title: 'Choc COVID-2020',
-    subtitle: 'Choc de demande sévère, output gap −4 %',
+    subtitle: 'Début du choc de demande COVID',
     description:
-      'Contexte inspiré du T2 2020 : l\'économie mondiale a subi un choc de demande sans précédent. L\'output gap marocain estimé s\'est effondré à −6,8 %. Votre mission est de soutenir la reprise tout en évitant une spirale déflationniste et une fragilisation du système financier.',
+      'Contexte inspiré du T1 2020 : l\'économie mondiale a subi un choc de demande sans précédent. Votre mission est de soutenir la reprise tout en évitant une spirale déflationniste et une fragilisation du système financier.',
     descriptionByLevel: {
-      beginner: "C'est la crise ! Le PIB s'est effondré de -7,2% à cause du COVID. Les gens ne dépensent plus. Votre mission : baisser les taux pour relancer l'économie, sans que l'inflation ne tombe à 0%.",
-      intermediate: "Choc de demande COVID — output gap à -6,8%, risque déflationniste. Assouplissez la politique monétaire (taux + opérations de marché). Surveillez les NPL qui risquent de monter avec les défauts de paiement.",
+      beginner: "C'est la crise ! Le PIB ralentit à -0,84% au début du choc COVID. Les gens dépensent moins. Votre mission : baisser les taux pour relancer l'économie, sans que l'inflation ne tombe à 0%.",
+      intermediate: "Choc de demande COVID en 2020 T1 — output gap proche de 0%, mais risque de décrochage. Assouplissez la politique monétaire (taux + opérations de marché). Surveillez les NPL qui risquent de monter avec les défauts de paiement.",
       expert: "Choc de demande sans précédent avec effondrement de l'output gap et risque de piège de dette-déflation. Gérez simultanément la relance, la stabilité financière (NPL) et le risque de spirale déflationniste à la ZLB.",
     },
     hintsByLevel: {
@@ -116,13 +115,13 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 'crisis',
     initialState: {
       ...INITIAL_STATE,
-      date: { year: 2020, q: 2 },
-      inflation: 0.705968661338261,
+      date: { year: 2020, q: 1 },
+      inflation: 1.3,
       inflationCore: 0.5,
       inflationExpected: 0.8,
-      gdpGrowth: -7.17820744246774,
-      outputGap: HISTORICAL_OUTPUT_GAPS.morocco2020,
-      unemployment: 11.189,
+      gdpGrowth: -0.8364815689324678,
+      outputGap: 0.02114695929305022,
+      unemployment: 10.5,
       policyRate: 1.50,
       interbankRate: 1.50,
       lendingRate: 4.20,
@@ -131,7 +130,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       liquidityNeed: 110.0,
       nplRatio: 8.79376526247322,
       centralBankCredibility: 70,
-      currentAccountBalance: -1.1275993199651,
+      currentAccountBalance: -2.965226930295261,
       fiscalStance: 'expansionary',
     },
     initialShocks: [
@@ -148,7 +147,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
         externalDemandImpact: -1.8,
       },
     ],
-    keyKpi: 'PIB −7,2 % ⚠',
+    keyKpi: 'PIB −0,84 % ⚠',
   },
 
   flexibilite: {
@@ -171,19 +170,19 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     initialState: {
       ...INITIAL_STATE,
       date: { year: 2018, q: 1 },
-      inflation: 1.80391671141896,
+      inflation: 2.103467879476972,
       inflationCore: 2.8,
       inflationExpected: 3.0,
-      gdpGrowth: 3.06564133025955,
-      outputGap: HISTORICAL_OUTPUT_GAPS.morocco2018,
-      unemployment: 9.272,
+      gdpGrowth: 3.115669172047597,
+      outputGap: 1.333108343374434,
+      unemployment: 10.5,
       policyRate: 2.25,
       interbankRate: 2.25,
       lendingRate: 4.75,
       reserveRequirement: 4.0,
       nplRatio: 7.72518485920519,
       centralBankCredibility: 60,
-      currentAccountBalance: -4.87290163435469,
+      currentAccountBalance: -3.313339365411791,
       fiscalStance: 'neutral',
     },
     initialShocks: [],
@@ -258,13 +257,13 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     difficulty: 'crisis',
     initialState: {
       ...INITIAL_STATE,
-      date: { year: 2008, q: 4 },
-      inflation: 3.71484311494064,
+      date: { year: 2008, q: 1 },
+      inflation: 2.441794434980138,
       inflationCore: 1.0,
       inflationExpected: 1.5,
-      gdpGrowth: 5.68453936284732,
-      outputGap: HISTORICAL_OUTPUT_GAPS.morocco2008,
-      unemployment: 9.57,
+      gdpGrowth: 7.852091262747884,
+      outputGap: 0.990341096385583,
+      unemployment: 9.6,
       policyRate: 3.25,
       interbankRate: 3.25,
       lendingRate: 5.70,
@@ -273,7 +272,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
       liquidityNeed: 220.0,
       nplRatio: 18.0,
       centralBankCredibility: 65,
-      currentAccountBalance: -4.4474051229375,
+      currentAccountBalance: -3.237163345564696,
       fiscalStance: 'neutral',
     },
     initialShocks: [

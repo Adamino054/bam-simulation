@@ -9,8 +9,6 @@
  */
 
 import type { EconomicState } from './state'
-import { HISTORICAL_OUTPUT_GAPS } from './historicalMacro'
-
 export const PARAMS = {
   // ── Courbe de Phillips ──────────────────────────────────────────
   beta:  0.95,   // poids des anticipations dans la formation des prix
@@ -65,13 +63,13 @@ export const INITIAL_STATE: EconomicState = {
   quarter: 0,
   date: { year: 2025, q: 1 },
 
-  inflation: 0.701902154839545,
+  inflation: 2.098100368585221,
   inflationCore: 2.0,
   inflationExpected: 2.0,
 
-  gdpGrowth: 4.59524349182247,
-  outputGap: HISTORICAL_OUTPUT_GAPS.morocco2025,
-  unemployment: 9.0,
+  gdpGrowth: 4.8,
+  outputGap: 0.8443805760584899,
+  unemployment: 13.3,
 
   policyRate: 2.25,
   interbankRate: 2.25,
