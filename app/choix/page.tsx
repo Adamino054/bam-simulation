@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useDiscoveryProfile } from '@/store/discoveryStore'
 import { getLevelProgress } from '@/engine/discovery'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { sound } from '@/lib/audio'
 
 /**
@@ -234,6 +235,11 @@ export default function ModeChoicePage() {
           💡 Tu peux changer de mode à tout moment : les deux partagent ton profil <strong>{player?.pseudo}</strong>.
         </motion.p>
       </main>
+
+      <AssistantBot
+        messages={["Je peux t'aider a choisir entre Mode Decouverte et Mode Expert selon ton niveau et ton objectif."]}
+        context="choice"
+      />
     </div>
   )
 }

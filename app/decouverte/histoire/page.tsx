@@ -9,18 +9,15 @@ import { useDiscoveryStore, useDiscoveryProfile } from '@/store/discoveryStore'
 import { STORY_CHAPTERS } from '@/engine/discovery'
 import type { StoryChapter } from '@/engine/discovery'
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader'
-import { Mascot } from '@/components/discovery/Mascot'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { StoryWidget } from '@/components/discovery/StoryWidgets'
 import { Confetti } from '@/components/discovery/Confetti'
 import { sound } from '@/lib/audio'
 
 type Phase = 'slides' | 'checkpoint' | 'done'
 
-const READING_TIPS = [
-  'Prends ton temps : chaque histoire se lit en 2 minutes chrono ! ⏱️',
-  'Les encadrés 🤓 te montrent comment on dit la même chose en mode expert.',
-  'Certaines pages se jouent : bouge les curseurs, appuie sur les boutons !',
-  'À la fin de chaque histoire, 2 petites questions pour gagner ton XP. Facile !',
+const STORY_ASSISTANT_MESSAGES = [
+  'Je peux reformuler une histoire, expliquer simplement un mot économique ou t’aider à comprendre le raisonnement après ton choix.',
 ]
 
 /** 📖 Les Histoires — leçons illustrées et interactives, zéro formule. */
@@ -140,7 +137,7 @@ export default function StoryPage() {
             })}
           </div>
         </main>
-        <Mascot tips={READING_TIPS} autoOpen={false} />
+        <AssistantBot messages={STORY_ASSISTANT_MESSAGES} context="discovery" />
       </div>
     )
   }
@@ -183,6 +180,7 @@ export default function StoryPage() {
             </div>
           </div>
         </main>
+        <AssistantBot messages={STORY_ASSISTANT_MESSAGES} context="discovery" />
       </div>
     )
   }
@@ -263,6 +261,7 @@ export default function StoryPage() {
             </AnimatePresence>
           </div>
         </main>
+        <AssistantBot messages={STORY_ASSISTANT_MESSAGES} context="discovery" />
       </div>
     )
   }
@@ -397,6 +396,7 @@ export default function StoryPage() {
           </button>
         </div>
       </main>
+      <AssistantBot messages={STORY_ASSISTANT_MESSAGES} context="discovery" />
     </div>
   )
 }

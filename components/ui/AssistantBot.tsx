@@ -12,13 +12,77 @@ import type { GlossaryTerm } from '@/engine/botMessages'
 interface AssistantBotProps {
   messages: string[]
   /** Page context for styling */
-  context?: 'landing' | 'courses' | 'dashboard' | 'simulation' | 'debrief'
+  context?: 'landing' | 'courses' | 'dashboard' | 'simulation' | 'debrief' | 'discovery' | 'choice' | 'history' | 'training' | 'campaign' | 'lab' | 'multiplayer'
 }
 
 interface ChatMessage {
   sender: 'bot' | 'user'
   text: string
   timestamp: string
+  origin?: 'welcome' | 'context' | 'conversation' | 'local'
+}
+
+const CHAT_STORAGE_KEY = 'cbs-assistant-history-v1'
+const MAX_STORED_MESSAGES = 60
+
+function isChatMessage(value: unknown): value is ChatMessage {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Partial<ChatMessage>
+  return (
+    (candidate.sender === 'bot' || candidate.sender === 'user') &&
+    typeof candidate.text === 'string' &&
+    typeof candidate.timestamp === 'string'
+  )
+}
+
+function readStoredChat(): ChatMessage[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(CHAT_STORAGE_KEY) ?? '[]') as unknown
+    return Array.isArray(parsed) ? parsed.filter(isChatMessage).slice(-MAX_STORED_MESSAGES) : []
+  } catch {
+    return []
+  }
+}
+
+function storeChat(messages: ChatMessage[]) {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages.slice(-MAX_STORED_MESSAGES)))
+  } catch {
+    // Le stockage privé peut être indisponible : le chat continue simplement en mémoire.
+  }
+}
+
+const GLOSSARY_SPLIT_REGEX = /(taux directeur|inflation|npl|ccyb|taylor|ecart de production|output gap|credibilite|reserves de change|courbe de phillips|phillips|courbe is|is curve|canal du credit|taux debiteur|loi d'okun|okun|chomage|dette-deflation|forward guidance|anticipations)/gi
+const GLOSSARY_TERM_REGEX = /^(taux directeur|inflation|npl|ccyb|taylor|ecart de production|output gap|credibilite|reserves de change|courbe de phillips|phillips|courbe is|is curve|canal du credit|taux debiteur|loi d'okun|okun|chomage|dette-deflation|forward guidance|anticipations)$/i
+
+function answerWithContinuityGuide(
+  query: string,
+  context: NonNullable<AssistantBotProps['context']>,
+  state: Parameters<typeof answerCustomQuestion>[1],
+  pseudo: string,
+) {
+  const normalized = query
+    .toLocaleLowerCase('fr-FR')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+  const address = pseudo.toLocaleLowerCase('fr-FR') === 'gouverneur' ? 'Gouverneur' : `Gouverneur ${pseudo}`
+
+  if (context === 'discovery') {
+    if (/activite|ensuite|conseill|parcours|decouverte/.test(normalized)) {
+      return `${address}, tu peux choisir entre **Histoires** pour comprendre en douceur, **Jeux** pour pratiquer, **Mission guidée** pour décider pas à pas, et **Millionnaire** pour tester tes connaissances.\n\nCommence par **Histoires** si tu débutes, puis passe à la **Mission guidée** pour mettre les idées en pratique.`
+    }
+    if (/defi|challenge/.test(normalized)) {
+      return `${address}, mini-défi : les prix montent vite, mais l’activité ralentit. Choisis entre **augmenter**, **maintenir** ou **baisser** le taux directeur, puis explique en une phrase le risque principal de ton choix.\n\nIndice : une décision peut aider les prix tout en freinant davantage l’activité.`
+    }
+  }
+
+  if (context === 'dashboard' && /scenario|strategie|objectif|risque/.test(normalized)) {
+    return `${address}, sélectionne d’abord une carte de scénario puis lis le **Briefing de mission** : il affiche le niveau de risque, les indicateurs de départ et les objectifs. Une stratégie prudente consiste à identifier le choc dominant avant de choisir un instrument, puis à avancer par petits ajustements.`
+  }
+
+  return answerCustomQuestion(query, state, pseudo).replaceAll('Gouverneur Gouverneur', 'Gouverneur')
 }
 
 // Composant de formatage sémantique interactif pour mettre en valeur le glossaire et compiler LaTeX
@@ -32,7 +96,7 @@ function FormattedChatMessageText({
   if (!text) return null
 
   // 1. Découpage par bloc mathématique $$ (BlockMath)
-  const blockMathRegex = /(\$\$.*?\$\$)/g
+  const blockMathRegex = /(\$\$[\s\S]*?\$\$)/g
   const blockParts = text.split(blockMathRegex)
 
   return (
@@ -44,13 +108,16 @@ function FormattedChatMessageText({
           const formula = blockPart.slice(2, -2).trim()
           return (
             <div key={`block-math-${blockIdx}`} className="my-2.5 overflow-x-auto max-w-full rounded py-1 px-3.5 text-center" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}>
-              <BlockMath math={formula} />
+              <BlockMath
+                math={formula}
+                renderError={() => <code>{`$$${formula}$$`}</code>}
+              />
             </div>
           )
         }
 
         // 2. Découpage par mathématiques en ligne $ (InlineMath)
-        const inlineMathRegex = /(\$.*?\$)/g
+        const inlineMathRegex = /(\$[^\n$]*?\$)/g
         const inlineParts = blockPart.split(inlineMathRegex)
 
         return (
@@ -62,20 +129,22 @@ function FormattedChatMessageText({
                 const formula = inlinePart.slice(1, -1).trim()
                 return (
                   <span key={`inline-math-${inlineIdx}`} className="inline-block px-1 bg-black/10 rounded font-mono text-[11.5px] text-[var(--accent-warm)]">
-                    <InlineMath math={formula} />
+                    <InlineMath
+                      math={formula}
+                      renderError={() => <code>{`$${formula}$`}</code>}
+                    />
                   </span>
                 )
               }
 
               // 3. Découpage par termes du glossaire cliquables
-              const glossaryRegex = /(taux directeur|inflation|npl|ccyb|taylor|ecart de production|output gap|credibilite|reserves de change|courbe de phillips|phillips|courbe is|is curve|canal du credit|taux debiteur|loi d'okun|okun|chomage|dette-deflation|forward guidance|anticipations)/gi
-              const glossaryParts = inlinePart.split(glossaryRegex)
+              const glossaryParts = inlinePart.split(GLOSSARY_SPLIT_REGEX)
 
 
               return (
                 <span key={`glossary-block-${inlineIdx}`}>
                   {glossaryParts.map((part, index) => {
-                    const isTerm = glossaryRegex.test(part)
+                    const isTerm = GLOSSARY_TERM_REGEX.test(part)
                     
                     if (isTerm) {
                       return (
@@ -146,17 +215,65 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
   const [dismissed, setDismissed] = useState(false)
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [aiMode, setAiMode] = useState<'ready' | 'connecting' | 'online' | 'fallback'>('ready')
   const [chatLog, setChatLog] = useState<ChatMessage[]>([])
+  const [historyReady, setHistoryReady] = useState(false)
   const [selectedTerm, setSelectedTerm] = useState<GlossaryTerm | null>(null)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const lastQuarterRef = useRef<number>(-1)
-  const lastProcessedMessagesRef = useRef<string[]>([])
+  const lastProcessedMessagesRef = useRef('')
+  const chatLogRef = useRef<ChatMessage[]>([])
+  const requestInFlightRef = useRef(false)
+  const activeRequestRef = useRef<AbortController | null>(null)
+  const mountedRef = useRef(true)
+  const isOpenRef = useRef(false)
 
   const currentState = useGameStore(s => s.currentState)
-  const currentUser = useAuthStore(s => s.currentUser)
+  const pseudo = useAuthStore(s => {
+    if (!s.currentUser) return 'Gouverneur'
+    return s.players[s.currentUser]?.pseudo ?? s.currentUser
+  })
+  const governorLabel = pseudo.toLocaleLowerCase('fr-FR') === 'gouverneur'
+    ? 'Gouverneur'
+    : `Gouverneur ${pseudo}`
 
-  const pseudo = currentUser ? currentUser : 'Gouverneur'
+  const appendMessages = useCallback((entries: ChatMessage[]) => {
+    setChatLog(prev => {
+      const next = [...prev, ...entries].slice(-MAX_STORED_MESSAGES)
+      chatLogRef.current = next
+      storeChat(next)
+      return next
+    })
+  }, [])
+
+  useEffect(() => {
+    const stored = readStoredChat()
+    setChatLog(prev => {
+      const next = stored.length > 0 ? stored : prev
+      chatLogRef.current = next
+      return next
+    })
+    setHistoryReady(true)
+  }, [])
+
+  useEffect(() => {
+    chatLogRef.current = chatLog
+    if (historyReady) storeChat(chatLog)
+  }, [chatLog, historyReady])
+
+  useEffect(() => {
+    isOpenRef.current = isOpen
+  }, [isOpen])
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      activeRequestRef.current?.abort()
+    }
+  }, [])
 
   // 1. Calcul de l'état d'humeur du robot (Mascot Moods)
   const botMood = useMemo(() => {
@@ -202,15 +319,18 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
 
   // 2. Gestion de l'historique de discussion persistant
   useEffect(() => {
-    // Éviter de traiter plusieurs fois le même tableau de messages
-    const serialized = JSON.stringify(messages)
-    if (serialized === JSON.stringify(lastProcessedMessagesRef.current)) return
-    lastProcessedMessagesRef.current = messages
+    const isSimulation = context === 'simulation'
+    const serialized = JSON.stringify({
+      context,
+      quarter: isSimulation ? currentState.quarter : null,
+      messages,
+    })
+    if (serialized === lastProcessedMessagesRef.current) return
+    lastProcessedMessagesRef.current = serialized
 
     if (messages.length === 0) return
 
     const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    const isSimulation = context === 'simulation'
     const quarterChanged = isSimulation && currentState.quarter !== lastQuarterRef.current
 
     const newEntries: ChatMessage[] = []
@@ -218,8 +338,9 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
     if (quarterChanged && lastQuarterRef.current !== -1) {
       newEntries.push({
         sender: 'bot',
-        text: `🔔 **Trimestre T${currentState.quarter + 1} (${currentState.date.year} Q${currentState.date.q})**\n\nGouverneur ${pseudo}, voici mes analyses de conjoncture à cette étape :`,
-        timestamp: now
+        text: `🔔 **Trimestre T${currentState.quarter + 1} (${currentState.date.year} Q${currentState.date.q})**\n\n${governorLabel}, voici mes analyses de conjoncture à cette étape :`,
+        timestamp: now,
+        origin: 'context',
       })
     }
 
@@ -227,7 +348,8 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
       newEntries.push({
         sender: 'bot',
         text: m,
-        timestamp: now
+        timestamp: now,
+        origin: 'context',
       })
     })
 
@@ -236,34 +358,39 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
     }
 
     setChatLog(prev => {
-      // Si la liste est vide, on injecte l'accueil d'abord
-      if (prev.length === 0) {
-        const welcome: ChatMessage = {
-          sender: 'bot',
-          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller. Posez-moi des questions sur les mécanismes ou tapez un concept clé (ex. **Taux directeur**, **NPL**) pour analyser l'économie marocaine.`,
-          timestamp: now
-        }
-        return [welcome, ...newEntries]
+      const welcome: ChatMessage = {
+        sender: 'bot',
+        text: `Bonjour **${governorLabel}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller. Posez-moi des questions sur les mécanismes ou tapez un concept clé (ex. **Taux directeur**, **NPL**) pour analyser l'économie marocaine.`,
+        timestamp: now,
+        origin: 'welcome',
       }
-      return [...prev, ...newEntries]
+      const base = prev.length === 0 ? [welcome] : prev
+      const entriesToAdd = isSimulation
+        ? newEntries
+        : newEntries.filter(entry => !base.some(existing => existing.sender === 'bot' && existing.text === entry.text))
+      const next = [...base, ...entriesToAdd].slice(-MAX_STORED_MESSAGES)
+      chatLogRef.current = next
+      return next
     })
 
-    setHasNewMessage(true)
-  }, [messages, context, currentState, pseudo])
+    if (!isOpenRef.current) setHasNewMessage(true)
+  }, [messages, context, currentState, governorLabel, pseudo])
 
   // Initialisation par défaut si aucun message n'arrive
   useEffect(() => {
-    if (chatLog.length === 0) {
-      const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      setChatLog([
-        {
-          sender: 'bot',
-          text: `Bonjour Gouverneur **${pseudo}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller économique. Demandez-moi n'importe quelle explication ou tapez un concept (ex. **Inflation**, **Taylor**, **CCyB**) pour l'analyser.`,
-          timestamp: now
-        }
-      ])
-    }
-  }, [pseudo, chatLog.length])
+    const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    setChatLog(prev => {
+      if (prev.length > 0) return prev
+      const next: ChatMessage[] = [{
+        sender: 'bot',
+        text: `Bonjour **${governorLabel}** ! 💼\nJe suis l'**Assistant CBS**, votre conseiller économique. Demandez-moi n'importe quelle explication ou tapez un concept (ex. **Inflation**, **Taylor**, **CCyB**) pour l'analyser.`,
+        timestamp: now,
+        origin: 'welcome',
+      }]
+      chatLogRef.current = next
+      return next
+    })
+  }, [governorLabel])
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -275,40 +402,129 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
     }
   }, [chatLog, isOpen, scrollToBottom])
 
-  // 3. Moteur de traitement d'envoi de messages
-  const handleSend = useCallback((textToSend: string) => {
-    if (!textToSend.trim()) return
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        isOpenRef.current = false
+        setIsOpen(false)
+        setSelectedTerm(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    window.requestAnimationFrame(() => inputRef.current?.focus())
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen])
+
+  // 3. Envoi au proxy Gemini côté serveur, avec le moteur local en repli.
+  const handleSend = useCallback(async (textToSend: string) => {
+    const cleanText = textToSend.trim()
+    if (!cleanText || requestInFlightRef.current) return
+
+    requestInFlightRef.current = true
+    const relevantHistory = chatLogRef.current
+      .filter(message => message.sender === 'user' || message.origin === 'conversation' || message.origin === 'local')
+      .slice(-10)
+      .map(message => ({
+        role: message.sender === 'user' ? 'user' as const : 'model' as const,
+        text: message.text,
+      }))
 
     const now = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    const userMsg: ChatMessage = { sender: 'user', text: textToSend, timestamp: now }
+    const userMsg: ChatMessage = { sender: 'user', text: cleanText, timestamp: now, origin: 'conversation' }
 
-    setChatLog(prev => [...prev, userMsg])
+    appendMessages([userMsg])
     setInputText('')
     setIsTyping(true)
+    setAiMode('connecting')
 
-    // Simulation de la rédaction du bot
-    setTimeout(() => {
-      const botResponseText = answerCustomQuestion(textToSend, currentState, pseudo)
+    const controller = new AbortController()
+    activeRequestRef.current = controller
+    const timeoutId = window.setTimeout(() => controller.abort(), 28_000)
+
+    try {
+      const hasLiveEconomy = context === 'simulation' || context === 'debrief'
+      const economy = hasLiveEconomy ? {
+        trimestre: `T${currentState.quarter + 1}`,
+        date: `${currentState.date.year} Q${currentState.date.q}`,
+        inflation: `${currentState.inflation.toFixed(2)} %`,
+        croissance: `${currentState.gdpGrowth.toFixed(2)} %`,
+        chomage: `${currentState.unemployment.toFixed(2)} %`,
+        tauxDirecteur: `${currentState.policyRate.toFixed(2)} %`,
+        ecartProduction: `${currentState.outputGap.toFixed(2)} %`,
+        croissanceCredit: `${currentState.creditGrowth.toFixed(2)} %`,
+        creancesDouteuses: `${currentState.nplRatio.toFixed(2)} %`,
+        credibilite: `${currentState.centralBankCredibility.toFixed(0)} / 100`,
+      } : undefined
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          message: cleanText,
+          history: relevantHistory,
+          context,
+          playerName: pseudo,
+          economy,
+        }),
+        signal: controller.signal,
+      })
+
+      const payload = await response.json().catch(() => ({})) as {
+        text?: string
+        model?: string
+        source?: string
+        error?: string
+      }
+      if (!response.ok) throw new Error(payload.error ?? `Chat API ${response.status}`)
+      if (!payload.text?.trim()) throw new Error('Réponse vide')
+
       const botMsg: ChatMessage = {
         sender: 'bot',
-        text: botResponseText,
+        text: payload.text.trim(),
         timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        origin: 'conversation',
       }
-      setChatLog(prev => [...prev, botMsg])
-      setIsTyping(false)
-    }, 600)
-  }, [currentState, pseudo])
+      appendMessages([botMsg])
+      setAiMode('online')
+      if (!isOpenRef.current) setHasNewMessage(true)
+    } catch {
+      if (!mountedRef.current) return
+      const hasLiveEconomy = context === 'simulation' || context === 'debrief'
+      const localResponse = answerWithContinuityGuide(
+        cleanText,
+        context,
+        hasLiveEconomy ? currentState : undefined,
+        pseudo,
+      )
+      appendMessages([{
+        sender: 'bot',
+        text: `${localResponse}\n\n*Mode continuité — réponse issue du guide pédagogique CBS.*`,
+        timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        origin: 'local',
+      }])
+      setAiMode('fallback')
+      if (!isOpenRef.current) setHasNewMessage(true)
+    } finally {
+      window.clearTimeout(timeoutId)
+      if (activeRequestRef.current === controller) activeRequestRef.current = null
+      requestInFlightRef.current = false
+      if (mountedRef.current) {
+        setIsTyping(false)
+        if (isOpenRef.current) window.requestAnimationFrame(() => inputRef.current?.focus())
+      }
+    }
+  }, [appendMessages, context, currentState, pseudo])
 
   // 4. Écoute de l'événement système d'ouverture depuis "Assistant"
   useEffect(() => {
     const handleOpenSystem = (e: Event) => {
       const ev = e as CustomEvent
+      isOpenRef.current = true
       setIsOpen(true)
       setHasNewMessage(false)
-      if (ev.detail?.query) {
-        setTimeout(() => {
-          handleSend(ev.detail.query)
-        }, 300)
+      if (typeof ev.detail?.query === 'string') {
+        void handleSend(ev.detail.query)
       }
     }
 
@@ -324,6 +540,21 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
     { label: 'Taux directeur ?', query: 'Taux directeur' },
     { label: 'Règle de Taylor ?', query: 'Taylor' },
     { label: 'Indicateur NPL ?', query: 'NPL' },
+  ] : context === 'discovery' ? [
+    { label: 'Défi rapide', query: 'Donne-moi un mini-défi sur l’inflation.' },
+    { label: 'Pourquoi 2 % ?', query: 'Pourquoi vise-t-on environ 2 % d’inflation ?' },
+    { label: 'Taux directeur', query: 'Explique le taux directeur avec une analogie simple.' },
+    { label: 'Que faire ensuite ?', query: 'Quelle activité Découverte me conseilles-tu ?' },
+  ] : context === 'dashboard' || context === 'campaign' || context === 'training' || context === 'lab' ? [
+    { label: 'Quel scenario ?', query: 'Aide-moi a choisir un scenario adapte a mon niveau.' },
+    { label: 'Objectif mandat', query: 'Explique les objectifs de scoring du mandat.' },
+    { label: 'Strategie initiale', query: 'Quelle strategie initiale adopter et pourquoi ?' },
+    { label: 'Risques caches', query: 'Quels risques dois-je surveiller dans ce scenario ?' },
+  ] : context === 'history' || context === 'debrief' ? [
+    { label: 'Analyser scores', query: 'Analyse mes scores et donne-moi une piste de progression.' },
+    { label: 'Pourquoi grade ?', query: 'Explique comment le grade est calcule.' },
+    { label: 'Prochaine partie', query: 'Quel scenario rejouer pour progresser ?' },
+    { label: 'Levier cle', query: 'Quel levier de politique monetaire dois-je mieux maitriser ?' },
   ] : [
     { label: 'But du jeu ?', query: 'but' },
     { label: 'Inflation cible ?', query: 'inflation' },
@@ -363,12 +594,16 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
         <AnimatePresence>
           {isOpen && (
             <motion.div
+              id="cbs-assistant-dialog"
+              role="dialog"
+              aria-modal="false"
+              aria-label={context === 'discovery' ? 'Coach Découverte Floussi' : 'Assistant CBS'}
               initial={{ opacity: 0, y: 20, scale: 0.92 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 15, scale: 0.95 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                width: '390px', maxWidth: 'calc(100vw - 48px)', height: '510px', borderRadius: '16px', overflow: 'hidden', backdropFilter: 'blur(25px)',
+                width: '390px', maxWidth: 'calc(100vw - 48px)', height: 'min(510px, calc(100dvh - 104px))', minHeight: '320px', borderRadius: '16px', overflow: 'hidden', backdropFilter: 'blur(25px)',
                 backgroundColor: 'var(--bg-overlay)', border: '1px solid var(--border-default)',
                 boxShadow: '0 20px 64px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04) inset', display: 'flex', flexDirection: 'column',
               }}
@@ -377,24 +612,42 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', background: 'linear-gradient(135deg, rgba(180,25,35,0.06) 0%, rgba(201,168,106,0.03) 100%)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div className="w-2.5 h-2.5 rounded-full animate-pulse-soft" style={{ backgroundColor: botMood.ringColor }} />
-                  <span style={{ fontSize: '11px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                    Assistant CBS · Conseiller
-                  </span>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '11px', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-primary)' }}>
+                      {context === 'discovery' ? 'Floussi · Coach Découverte' : 'Assistant CBS · Conseiller'}
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', fontSize: '8px', color: aiMode === 'fallback' ? 'var(--accent-warm)' : 'var(--text-tertiary)' }}>
+                      <Sparkles size={8} />
+                      {aiMode === 'connecting' ? 'Connexion sécurisée…' : aiMode === 'online' ? 'Gemini connecté' : aiMode === 'fallback' ? 'Guide CBS actif' : 'Prêt à répondre'}
+                    </span>
+                  </div>
                 </div>
-                <button onClick={() => { setIsOpen(false); setSelectedTerm(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)' }}><X size={15} /></button>
+                <button
+                  type="button"
+                  aria-label="Fermer l’assistant"
+                  onClick={() => { isOpenRef.current = false; setIsOpen(false); setSelectedTerm(null) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', color: 'var(--text-tertiary)' }}
+                >
+                  <X size={15} />
+                </button>
               </div>
 
               {/* Conteneur de messages */}
-              <div className="chat-messages-container" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div
+                className="chat-messages-container"
+                aria-live="polite"
+                aria-busy={isTyping}
+                style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+              >
                 {chatLog.map((msg, idx) => (
                   <div key={idx} className={msg.sender === 'bot' ? 'chat-bubble-bot' : 'chat-bubble-user'} style={{ wordBreak: 'break-word', whiteSpace: 'pre-line', position: 'relative' }}>
-                    <p style={{ margin: 0 }}>
+                    <div style={{ margin: 0 }}>
                       {msg.sender === 'bot' ? (
                         <FormattedChatMessageText text={msg.text} onTermClick={handleTermClick} />
                       ) : (
                         msg.text
                       )}
-                    </p>
+                    </div>
                     <span style={{ display: 'block', textAlign: 'right', fontSize: '8px', opacity: 0.5, marginTop: '5px', fontFamily: 'monospace' }}>
                       {msg.timestamp}
                     </span>
@@ -402,7 +655,7 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                 ))}
                 {isTyping && (
                   <div className="chat-bubble-bot" style={{ fontStyle: 'italic', color: 'var(--text-tertiary)', opacity: 0.8 }}>
-                    L'Assistant CBS analyse les indicateurs...
+                    {context === 'discovery' ? 'Floussi prépare une explication simple...' : "L'Assistant CBS analyse les indicateurs..."}
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -429,6 +682,8 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                         Fiche Glossaire CBS
                       </div>
                       <button 
+                        type="button"
+                        aria-label="Fermer la fiche du glossaire"
                         onClick={() => setSelectedTerm(null)} 
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: '2px' }}
                       >
@@ -443,7 +698,10 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                     
                     {selectedTerm.formula && (
                       <div className="my-2 rounded py-1 px-3" style={{ backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', fontSize: '12px' }}>
-                        <InlineMath math={selectedTerm.formula} />
+                        <InlineMath
+                          math={selectedTerm.formula}
+                          renderError={() => <code>{`$${selectedTerm.formula}$`}</code>}
+                        />
                       </div>
                     )}
                     
@@ -462,8 +720,10 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
                 {suggestions.map((sug, i) => (
                   <button 
                     key={i} 
-                    onClick={() => handleSend(sug.query)} 
-                    style={{ fontSize: '10px', padding: '5px 10px', borderRadius: '14px', border: '1px solid var(--border-default)', backgroundColor: 'var(--bg-panel)', color: 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s ease' }} 
+                    type="button"
+                    disabled={isTyping}
+                    onClick={() => void handleSend(sug.query)}
+                    style={{ fontSize: '10px', padding: '5px 10px', borderRadius: '14px', border: '1px solid var(--border-default)', backgroundColor: 'var(--bg-panel)', color: 'var(--text-secondary)', cursor: isTyping ? 'not-allowed' : 'pointer', opacity: isTyping ? 0.55 : 1, transition: 'all 0.15s ease' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = botMood.ringColor; (e.currentTarget as HTMLElement).style.color = 'var(--text-primary)'; }} 
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border-default)'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; }}
                   >
@@ -473,17 +733,22 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
               </div>
 
               {/* Formulaire d'envoi de messages */}
-              <form onSubmit={(e) => { e.preventDefault(); handleSend(inputText) }} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-panel)' }}>
+              <form onSubmit={(e) => { e.preventDefault(); void handleSend(inputText) }} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-panel)' }}>
                 <input 
+                  ref={inputRef}
                   type="text" 
-                  placeholder="Posez une question économique..." 
+                  aria-label={context === 'discovery' ? 'Question pour Floussi' : 'Question pour l’assistant CBS'}
+                  placeholder={context === 'discovery' ? 'Demande quelque chose à Floussi...' : 'Posez une question économique...'}
                   value={inputText} 
                   onChange={(e) => setInputText(e.target.value)} 
+                  maxLength={1200}
                   style={{ flex: 1, backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-default)', borderRadius: '8px', padding: '8px 14px', fontSize: '12px', color: 'var(--text-primary)', outline: 'none', marginRight: '8px' }} 
                 />
                 <button 
                   type="submit" 
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: botMood.ringColor, color: '#fff', border: 'none', cursor: 'pointer', transition: 'transform 0.15s ease, background-color 0.2s' }} 
+                  disabled={isTyping || !inputText.trim()}
+                  aria-label="Envoyer le message"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '34px', height: '34px', borderRadius: '50%', backgroundColor: botMood.ringColor, color: '#fff', border: 'none', cursor: isTyping || !inputText.trim() ? 'not-allowed' : 'pointer', opacity: isTyping || !inputText.trim() ? 0.55 : 1, transition: 'transform 0.15s ease, background-color 0.2s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)' }} 
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}
                 >
@@ -496,8 +761,18 @@ export function AssistantBot({ messages, context = 'landing' }: AssistantBotProp
 
         {/* Bouton Bulle Mascotte Flottante */}
         <motion.button
+          type="button"
+          aria-label={isOpen ? 'Fermer l’assistant CBS' : 'Ouvrir l’assistant CBS'}
+          aria-expanded={isOpen}
+          aria-controls="cbs-assistant-dialog"
           className={`bot-avatar ${hasNewMessage && !isOpen ? 'has-message' : ''}`}
-          onClick={() => { setIsOpen(!isOpen); setHasNewMessage(false); setSelectedTerm(null) }}
+          onClick={() => {
+            const nextOpen = !isOpen
+            isOpenRef.current = nextOpen
+            setIsOpen(nextOpen)
+            setHasNewMessage(false)
+            setSelectedTerm(null)
+          }}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.96 }}
           style={{ 

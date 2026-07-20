@@ -18,6 +18,7 @@ import { useAuthStore } from '@/store/authStore'
 import { SCENARIOS } from '@/engine/scenarios'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { Stepper } from '@/components/ui/Stepper'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { fmtPct, fmtBp } from '@/lib/format'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { sound } from '@/lib/audio'
@@ -133,6 +134,11 @@ export default function MultiplayerPage() {
           {phase === 'finished' && <FinishedView key="finished" />}
         </AnimatePresence>
       </main>
+
+      <AssistantBot
+        messages={["Je peux expliquer les regles du duel, la co-gouvernance et les indicateurs de chaque joueur."]}
+        context="multiplayer"
+      />
     </div>
   )
 }

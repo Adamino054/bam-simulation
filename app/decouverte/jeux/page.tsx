@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '@/store/authStore'
 import { useDiscoveryProfile } from '@/store/discoveryStore'
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader'
-import { Mascot } from '@/components/discovery/Mascot'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { QuizGame } from '@/components/discovery/QuizGame'
 import { PredictionGame } from '@/components/discovery/PredictionGame'
 import { MatchingGame } from '@/components/discovery/MatchingGame'
@@ -16,12 +16,8 @@ import { sound } from '@/lib/audio'
 
 type GameId = 'quiz' | 'prediction' | 'matching' | 'balloon'
 
-const ARCADE_TIPS = [
-  'Chaque jeu te fait gagner de l’XP : plus tu joues, plus tu montes de niveau ! 🎮',
-  'Vise les 3 étoiles ⭐⭐⭐ sur chaque jeu pour devenir un vrai maître.',
-  'Le jeu des paires 🧩 est mon préféré : il t’apprend les vrais mots du mode expert.',
-  'Un sans-faute au quiz débloque le badge « Sans faute » 🎯. Chiche ?',
-  'Dans le Gardien du Ballon, anticipe le vent au lieu de le subir. Comme un vrai gouverneur !',
+const ARCADE_ASSISTANT_MESSAGES = [
+  'Je peux expliquer les règles du Quiz, du Prédicteur, du Traducteur et du Gardien du Ballon, ainsi que les notions économiques rencontrées.',
 ]
 
 /** Émojis décoratifs qui flottent dans le fond du menu */
@@ -265,7 +261,7 @@ export default function ArcadePage() {
           )}
         </AnimatePresence>
       </main>
-      {activeGame === null && <Mascot tips={ARCADE_TIPS} autoOpen={false} />}
+      <AssistantBot messages={ARCADE_ASSISTANT_MESSAGES} context="discovery" />
     </div>
   )
 }

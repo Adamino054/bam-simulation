@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Bot, Check, HandCoins, HelpCircle, PieChart, RotateCcw, Scissors, Trophy, Users, X } from 'lucide-react'
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader'
 import { Confetti } from '@/components/discovery/Confetti'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { useAuthStore } from '@/store/authStore'
 import { useDiscoveryStore } from '@/store/discoveryStore'
 import { sound } from '@/lib/audio'
@@ -27,6 +28,9 @@ const MONEY_LADDER = [
 ]
 
 const SAFETY_LEVELS = [4, 9, 12]
+const MILLIONAIRE_ASSISTANT_MESSAGES = [
+  'Je peux expliquer les notions du quiz et le raisonnement derrière une réponse après ton choix, sans révéler la solution à l’avance.',
+]
 
 const QUESTIONS: MillionQuestion[] = [
   {
@@ -578,6 +582,7 @@ export default function MillionairePage() {
           </aside>
         </div>
       </main>
+      <AssistantBot messages={MILLIONAIRE_ASSISTANT_MESSAGES} context="discovery" />
     </div>
   )
 }

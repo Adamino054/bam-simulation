@@ -14,6 +14,7 @@ import {
 } from 'recharts'
 import { InlineKatex, BlockKatex, LatexText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { sound } from '@/lib/audio'
 import { PARAMS } from '@/engine/parameters'
 
@@ -998,6 +999,11 @@ export default function LabPage() {
           </div>
         </section>
       </main>
+
+      <AssistantBot
+        messages={["Je peux expliquer les courbes IS/Phillips, les chocs et les parametres du laboratoire."]}
+        context="lab"
+      />
     </div>
   )
 }

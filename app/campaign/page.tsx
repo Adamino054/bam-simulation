@@ -8,6 +8,7 @@ import { CAMPAIGNS, type CampaignConfig } from '@/engine/campaigns'
 import { useGameStore } from '@/store/gameStore'
 import { BlockKatex, MarkdownText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 
 export default function CampaignPage() {
   const router = useRouter()
@@ -243,6 +244,11 @@ export default function CampaignPage() {
         </section>
 
       </main>
+
+      <AssistantBot
+        messages={["Je peux decoder les missions historiques, les conditions de victoire et les risques de crise."]}
+        context="campaign"
+      />
     </div>
   )
 }

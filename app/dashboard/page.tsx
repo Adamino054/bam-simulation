@@ -8,6 +8,7 @@ import {
   Trophy, TrendingUp, Target, BarChart3, LogOut,
   Clock, Star, ChevronRight, Award, History, GraduationCap, Users,
   Sliders, ShieldAlert, LayoutDashboard, Swords, Compass,
+  Bot, Crosshair, Radio, Flame, PlayCircle,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -116,8 +117,40 @@ export default function DashboardPage() {
   }
 
   const scenarios = Object.values(SCENARIOS)
-  const selectedMeta = DIFFICULTY_META[SCENARIOS[selected].difficulty]
+  const selectedScenario = SCENARIOS[selected]
+  const selectedMeta = DIFFICULTY_META[selectedScenario.difficulty]
+  const initialState = selectedScenario.initialState
   const gameHistory = player?.gameHistory ?? []
+  const riskScore = Math.min(100, Math.round(
+    Math.abs(initialState.inflation - 2) * 10 +
+    Math.abs(initialState.outputGap) * 7 +
+    Math.max(0, initialState.nplRatio - 5) * 5 +
+    selectedScenario.initialShocks.length * 12 +
+    (selectedScenario.difficulty === 'crisis' ? 22 : selectedScenario.difficulty === 'hard' ? 12 : 4) +
+    (100 - initialState.centralBankCredibility) * 0.18
+  ))
+  const riskColor = riskScore >= 70 ? '#C25450' : riskScore >= 45 ? '#C9A86A' : '#4A9D7C'
+  const riskLabel = riskScore >= 70 ? 'Crise ouverte' : riskScore >= 45 ? 'Tension elevee' : 'Mandat stable'
+  const mandateVitals = [
+    { label: 'Inflation', value: `${initialState.inflation.toFixed(1)} %`, color: initialState.inflation > 4 ? '#C25450' : initialState.inflation < 1 ? '#C9A86A' : '#4A9D7C' },
+    { label: 'Output gap', value: `${initialState.outputGap.toFixed(1)} %`, color: Math.abs(initialState.outputGap) > 2 ? '#C25450' : '#5C7E92' },
+    { label: 'NPL', value: `${initialState.nplRatio.toFixed(1)} %`, color: initialState.nplRatio > 8 ? '#C25450' : '#4A9D7C' },
+    { label: 'Credibilite', value: `${initialState.centralBankCredibility}/100`, color: initialState.centralBankCredibility < 55 ? '#C25450' : '#C9A86A' },
+  ]
+  const missionObjectives = [
+    'Ramener l inflation vers la cible sans casser l activite.',
+    'Preserver la credibilite de la banque centrale.',
+    'Surveiller les risques bancaires et les chocs initiaux.',
+  ]
+
+  const askScenarioCoach = () => {
+    sound.playTick()
+    window.dispatchEvent(new CustomEvent('open-cbs-assistant', {
+      detail: {
+        query: `Explique-moi le scenario "${selectedScenario.title}" en niveau ${difficultyLevel}. Donne-moi les risques, les objectifs et une strategie initiale claire.`,
+      },
+    }))
+  }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-base)' }}>
@@ -269,6 +302,94 @@ export default function DashboardPage() {
 
             {activeView === 'scenarios' ? (
               <>
+                <motion.div
+                  className="rounded-lg p-4 mb-4 overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${riskColor}16 0%, rgba(255,255,255,0.02) 48%, rgba(92,126,146,0.10) 100%)`,
+                    border: `1px solid ${riskColor}44`,
+                  }}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-5 items-stretch">
+                    <div className="flex flex-col justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Radio size={14} style={{ color: riskColor }} />
+                          <span className="label-caps" style={{ color: riskColor }}>Briefing de mission</span>
+                        </div>
+                        <h2 className="font-editorial-roman text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>
+                          {selectedScenario.title}
+                        </h2>
+                        <p className="text-xs leading-relaxed max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
+                          {selectedScenario.descriptionByLevel[difficultyLevel] || selectedScenario.description}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {missionObjectives.map((objective, index) => (
+                          <span
+                            key={objective}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[10px]"
+                            style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
+                          >
+                            <Crosshair size={11} style={{ color: index === 0 ? '#B41923' : index === 1 ? '#C9A86A' : '#5C7E92' }} />
+                            {objective}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-[140px_1fr] gap-4">
+                      <div className="rounded-lg p-3 flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-default)' }}>
+                        <div
+                          className="w-24 h-24 rounded-full flex items-center justify-center"
+                          style={{ background: `conic-gradient(${riskColor} ${riskScore}%, rgba(255,255,255,0.10) 0)` }}
+                        >
+                          <div className="w-[72px] h-[72px] rounded-full flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--bg-base)' }}>
+                            <Flame size={18} style={{ color: riskColor }} />
+                            <span className="font-mono text-lg tabular" style={{ color: 'var(--text-primary)' }}>{riskScore}</span>
+                          </div>
+                        </div>
+                        <span className="label-caps mt-2 text-center" style={{ color: riskColor }}>{riskLabel}</span>
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          {mandateVitals.map(vital => (
+                            <div key={vital.label} className="rounded-lg p-2.5" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
+                              <span className="label-caps block mb-1" style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{vital.label}</span>
+                              <span className="font-mono text-sm font-bold tabular" style={{ color: vital.color }}>{vital.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={askScenarioCoach}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-bold"
+                            style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--text-primary)', border: '1px solid var(--border-default)', cursor: 'pointer' }}
+                          >
+                            <Bot size={14} />
+                            Expliquer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleStart}
+                            disabled={isStarting}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-xs font-bold"
+                            style={{ backgroundColor: riskColor, color: '#fff', border: 'none', cursor: isStarting ? 'wait' : 'pointer', opacity: isStarting ? 0.8 : 1 }}
+                          >
+                            <PlayCircle size={14} />
+                            Lancer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   {scenarios.map(sc => {
                     const isSelected = sc.id === selected
@@ -277,7 +398,7 @@ export default function DashboardPage() {
                       <button
                         key={sc.id}
                         type="button"
-                        onClick={() => setSelected(sc.id)}
+                        onClick={() => { setSelected(sc.id); sound.playTick(); }}
                         className="relative text-left rounded-lg p-5 transition-all duration-200"
                         style={{
                           backgroundColor: isSelected ? 'var(--bg-elevated)' : 'var(--bg-panel)',

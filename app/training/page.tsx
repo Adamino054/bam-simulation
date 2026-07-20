@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { InlineKatex, BlockKatex, LatexText, MarkdownText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { sound } from '@/lib/audio'
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
@@ -1193,6 +1194,11 @@ export default function TrainingPage() {
           )}
         </AnimatePresence>
       </main>
+
+      <AssistantBot
+        messages={["Je peux expliquer les formules, les chocs et les scenarios de l'espace entrainement."]}
+        context="training"
+      />
     </div>
   )
 }

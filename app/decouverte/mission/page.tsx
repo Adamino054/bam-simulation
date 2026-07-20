@@ -13,11 +13,10 @@ import {
   MISSION_INITIAL_STATE, MISSION_QUARTERS, MISSION_CHOICES, MISSION_EVENTS,
   plainShockNews, pricesMood, jobsMood, trustMood, growthMood,
   missionSeasonLabel, computeMissionVerdict, missionAdvice,
-  MASCOT_TIPS_MISSION,
 } from '@/engine/discovery'
 import type { MissionChoice, MissionChoiceId, MissionVerdict } from '@/engine/discovery'
 import { DiscoveryHeader } from '@/components/discovery/DiscoveryHeader'
-import { Mascot } from '@/components/discovery/Mascot'
+import { AssistantBot } from '@/components/ui/AssistantBot'
 import { BigGauge } from '@/components/discovery/BigGauge'
 import { Confetti } from '@/components/discovery/Confetti'
 import { sound } from '@/lib/audio'
@@ -37,6 +36,9 @@ interface TurnFeedback {
 
 const XP_BASE = 50
 const XP_PER_STAR = 25
+const MISSION_ASSISTANT_MESSAGES = [
+  'Je peux expliquer les règles de la Mission Capitaine, le taux directeur et les effets possibles de chaque type de décision.',
+]
 
 /** Résume en une phrase simple ce qui vient de changer */
 function summarizeTurn(prev: EconomicState, next: EconomicState): TurnFeedback[] {
@@ -241,6 +243,7 @@ export default function MissionPage() {
             </div>
           </motion.div>
         </main>
+        <AssistantBot messages={MISSION_ASSISTANT_MESSAGES} context="discovery" />
       </div>
     )
   }
@@ -370,6 +373,7 @@ export default function MissionPage() {
             )}
           </div>
         </main>
+        <AssistantBot messages={MISSION_ASSISTANT_MESSAGES} context="discovery" />
       </div>
     )
   }
@@ -540,7 +544,7 @@ export default function MissionPage() {
         </div>
       </main>
 
-      <Mascot tips={MASCOT_TIPS_MISSION} autoOpen={false} />
+      <AssistantBot messages={MISSION_ASSISTANT_MESSAGES} context="discovery" />
     </div>
   )
 }
