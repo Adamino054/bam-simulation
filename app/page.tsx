@@ -221,6 +221,9 @@ export default function LandingPage() {
               <span className="label-caps hidden sm:block" style={{ color: 'var(--text-tertiary)' }}>Centrale Bank Simulateur</span>
             </div>
             <div className="hidden md:flex items-center gap-4 ml-4" style={{ borderLeft: '1px solid var(--border-subtle)', paddingLeft: '16px' }}>
+              <a href="/videos" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Vidéos
+              </a>
               <a href="/courses" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Cours
               </a>
@@ -610,6 +613,7 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-6">
               {[
+                { href: '/videos', label: 'Vidéos' },
                 { href: '/courses', label: 'Cours' },
                 { href: '/training', label: 'Entraînement' },
                 { href: currentUser ? '/dashboard' : '/login', label: 'Simulation' },
