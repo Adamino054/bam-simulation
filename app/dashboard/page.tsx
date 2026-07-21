@@ -132,8 +132,8 @@ export default function DashboardPage() {
   const riskColor = riskScore >= 70 ? '#C25450' : riskScore >= 45 ? '#C9A86A' : '#4A9D7C'
   const riskLabel = riskScore >= 70 ? 'Crise ouverte' : riskScore >= 45 ? 'Tension elevee' : 'Mandat stable'
   const mandateVitals = [
-    { label: 'Inflation', value: `${initialState.inflation.toFixed(1)} %`, color: initialState.inflation > 4 ? '#C25450' : initialState.inflation < 1 ? '#C9A86A' : '#4A9D7C' },
-    { label: 'Output gap', value: `${initialState.outputGap.toFixed(1)} %`, color: Math.abs(initialState.outputGap) > 2 ? '#C25450' : '#5C7E92' },
+    { label: 'Inflation', value: `${initialState.inflation.toFixed(2)} %`, color: initialState.inflation > 4 ? '#C25450' : initialState.inflation < 1 ? '#C9A86A' : '#4A9D7C' },
+    { label: 'Output gap', value: `${initialState.outputGap.toFixed(2)} %`, color: Math.abs(initialState.outputGap) > 2 ? '#C25450' : '#5C7E92' },
     { label: 'NPL', value: `${initialState.nplRatio.toFixed(1)} %`, color: initialState.nplRatio > 8 ? '#C25450' : '#4A9D7C' },
     { label: 'Credibilite', value: `${initialState.centralBankCredibility}/100`, color: initialState.centralBankCredibility < 55 ? '#C25450' : '#C9A86A' },
   ]
@@ -341,7 +341,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="grid sm:grid-cols-[140px_1fr] gap-4">
+                    <div className="grid md:grid-cols-[140px_minmax(0,1fr)] gap-4">
                       <div className="rounded-lg p-3 flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-default)' }}>
                         <div
                           className="w-24 h-24 rounded-full flex items-center justify-center"
@@ -355,12 +355,12 @@ export default function DashboardPage() {
                         <span className="label-caps mt-2 text-center" style={{ color: riskColor }}>{riskLabel}</span>
                       </div>
 
-                      <div className="flex flex-col gap-3">
+                      <div className="min-w-0 flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-2">
                           {mandateVitals.map(vital => (
-                            <div key={vital.label} className="rounded-lg p-2.5" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
-                              <span className="label-caps block mb-1" style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{vital.label}</span>
-                              <span className="font-mono text-sm font-bold tabular" style={{ color: vital.color }}>{vital.value}</span>
+                            <div key={vital.label} className="rounded-lg p-2.5 min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
+                              <span className="label-caps block mb-1 truncate" style={{ fontSize: '8px', color: 'var(--text-tertiary)' }}>{vital.label}</span>
+                              <span className="font-mono text-xs sm:text-sm font-bold tabular block truncate" style={{ color: vital.color }}>{vital.value}</span>
                             </div>
                           ))}
                         </div>
@@ -502,14 +502,14 @@ export default function DashboardPage() {
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
                           <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.inflation > 4 ? 'var(--data-negative)' : SCENARIOS[selected].initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
-                            {SCENARIOS[selected].initialState.inflation.toFixed(1)} %
+                            {SCENARIOS[selected].initialState.inflation.toFixed(2)} %
                           </span>
                         </div>
 
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Croissance PIB</span>
                           <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
-                            {SCENARIOS[selected].initialState.gdpGrowth.toFixed(1)} %
+                            {SCENARIOS[selected].initialState.gdpGrowth.toFixed(2)} %
                           </span>
                         </div>
 

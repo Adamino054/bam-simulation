@@ -116,7 +116,7 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     initialState: {
       ...INITIAL_STATE,
       date: { year: 2020, q: 1 },
-      inflation: 1.3,
+      inflation: 1.4,
       inflationCore: 0.5,
       inflationExpected: 0.8,
       gdpGrowth: -0.8364815689324678,

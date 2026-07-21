@@ -197,6 +197,7 @@ export function Dashboard() {
             label="Inflation"
             value={currentState.inflation}
             unit="%"
+            precision={2}
             delta={prev ? currentState.inflation - prev.inflation : undefined}
             history={inflationHistory}
             accentColor="#B41923"
@@ -213,6 +214,7 @@ export function Dashboard() {
             label="Croissance PIB"
             value={currentState.gdpGrowth}
             unit="%"
+            precision={2}
             delta={prev ? currentState.gdpGrowth - prev.gdpGrowth : undefined}
             history={growthHistory}
             tooltipContent={
@@ -227,6 +229,7 @@ export function Dashboard() {
             label="Chômage"
             value={currentState.unemployment}
             unit="%"
+            precision={2}
             delta={prev ? currentState.unemployment - prev.unemployment : undefined}
             history={unemployHistory}
             invertDelta
@@ -242,6 +245,7 @@ export function Dashboard() {
             label="Output gap"
             value={currentState.outputGap}
             unit="%"
+            precision={2}
             delta={prev ? currentState.outputGap - prev.outputGap : undefined}
             history={gapHistory}
             tooltipContent={
@@ -334,6 +338,7 @@ export function Dashboard() {
             label="Solde courant"
             value={currentState.currentAccountBalance}
             unit="% PIB"
+            precision={2}
             delta={prev ? currentState.currentAccountBalance - prev.currentAccountBalance : undefined}
             history={currentAccountHistory}
             accentColor={caColor}

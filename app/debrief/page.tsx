@@ -61,6 +61,7 @@ export default function DebriefPage() {
   const [mounted, setMounted] = useState(false)
   const [isCertificateOpen, setIsCertificateOpen] = useState(false)
   const [isReplaying, setIsReplaying] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
   const savedRef = useRef(false)
 
 
@@ -82,6 +83,14 @@ export default function DebriefPage() {
   const addGameRecord = useAuthStore(s => s.addGameRecord)
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis?.speaking) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
 
   const levelConfig = useMemo(() => getLevelConfig(difficultyLevel), [difficultyLevel])
   const maxTotal = useMemo(() => {
@@ -324,8 +333,7 @@ export default function DebriefPage() {
 
                     if (synth.speaking) {
                       synth.cancel()
-                      // Update DOM state by dispatching a custom event or letting play state toggle
-                      window.dispatchEvent(new CustomEvent('bam-speech-stop'))
+                      setIsSpeaking(false)
                       return
                     }
 
@@ -337,43 +345,23 @@ export default function DebriefPage() {
                     const frVoice = voices.find(v => v.lang.includes('fr'))
                     if (frVoice) utterance.voice = frVoice
 
-                    utterance.onstart = () => window.dispatchEvent(new CustomEvent('bam-speech-start'))
-                    utterance.onend = () => window.dispatchEvent(new CustomEvent('bam-speech-stop'))
-                    utterance.onerror = () => window.dispatchEvent(new CustomEvent('bam-speech-stop'))
+                    utterance.onstart = () => setIsSpeaking(true)
+                    utterance.onend = () => setIsSpeaking(false)
+                    utterance.onerror = () => setIsSpeaking(false)
 
                     synth.speak(utterance)
                   }}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-all font-semibold uppercase tracking-wider speech-btn"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-all font-semibold uppercase tracking-wider"
                   style={{
-                    backgroundColor: 'var(--bg-elevated)',
+                    backgroundColor: isSpeaking ? 'rgba(180,25,35,0.12)' : 'var(--bg-elevated)',
                     border: '1px solid var(--border-default)',
-                    color: 'var(--text-secondary)',
+                    color: isSpeaking ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
                 >
-                  <span id="speech-btn-text">🔊 Écouter</span>
+                  {isSpeaking ? 'Arrêter' : 'Écouter'}
                 </button>
               </div>
-              <script dangerouslySetInnerHTML={{ __html: `
-                window.addEventListener('bam-speech-start', () => {
-                  const btn = document.querySelector('.speech-btn');
-                  const txt = document.getElementById('speech-btn-text');
-                  if (btn && txt) {
-                    btn.style.backgroundColor = 'rgba(180,25,35,0.12)';
-                    btn.style.color = 'var(--accent-primary)';
-                    txt.textContent = '⏸ Arrêter';
-                  }
-                });
-                window.addEventListener('bam-speech-stop', () => {
-                  const btn = document.querySelector('.speech-btn');
-                  const txt = document.getElementById('speech-btn-text');
-                  if (btn && txt) {
-                    btn.style.backgroundColor = 'var(--bg-elevated)';
-                    btn.style.color = 'var(--text-secondary)';
-                    txt.textContent = '🔊 Écouter';
-                  }
-                });
-              ` }} />
               <div className="space-y-3">
                 {[
                   { icon: '⚠', color: 'var(--data-negative)', text: report.biggestMistake },

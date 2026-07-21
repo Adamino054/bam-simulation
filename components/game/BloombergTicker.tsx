@@ -19,29 +19,29 @@ export function BloombergTicker() {
 
     // 2. Nouvelles liées à l'inflation
     if (currentState.inflation > 4.0) {
-      list.push(`🚨 ALERTE INFLATION : L'indice des prix à la consommation flambe à ${currentState.inflation.toFixed(1)}%, pression sur le pouvoir d'achat.`)
+      list.push(`🚨 ALERTE INFLATION : L'indice des prix à la consommation flambe à ${currentState.inflation.toFixed(2)}%, pression sur le pouvoir d'achat.`)
       list.push(`ANALYSE : La hausse des prix des produits de première nécessité inquiète les ménages à Rabat.`)
-      list.push(`DEBATS : Les syndicats appellent à des mesures d'aide d'urgence face à une inflation de ${currentState.inflation.toFixed(1)}%.`)
+      list.push(`DEBATS : Les syndicats appellent à des mesures d'aide d'urgence face à une inflation de ${currentState.inflation.toFixed(2)}%.`)
     } else if (currentState.inflation > 2.5) {
-      list.push(`📈 INFLATION HORS CIBLE : Les pressions sur les prix persistent à ${currentState.inflation.toFixed(1)}%, CBS reste vigilante.`)
+      list.push(`📈 INFLATION HORS CIBLE : Les pressions sur les prix persistent à ${currentState.inflation.toFixed(2)}%, CBS reste vigilante.`)
     } else if (currentState.inflation < 0.5) {
-      list.push(`⚠️ RISQUE DE DÉFLATION : L'inflation stagne à ${currentState.inflation.toFixed(1)}%, l'ombre d'une récession à la japonaise plane.`)
+      list.push(`⚠️ RISQUE DE DÉFLATION : L'inflation stagne à ${currentState.inflation.toFixed(2)}%, l'ombre d'une récession à la japonaise plane.`)
       list.push(`OPINION : La Centrale Bank Simulateur doit-elle baisser ses taux pour ranimer l'activité ?`)
     } else if (currentState.inflation < 1.5) {
-      list.push(`📉 BASSE INFLATION : L'indice s'établit à ${currentState.inflation.toFixed(1)}%, offrant une marge de manœuvre monétaire.`)
+      list.push(`📉 BASSE INFLATION : L'indice s'établit à ${currentState.inflation.toFixed(2)}%, offrant une marge de manœuvre monétaire.`)
     } else {
-      list.push(`✅ STABILITÉ DES PRIX : L'inflation est ancrée à un niveau idéal de ${currentState.inflation.toFixed(1)}%, saluée par les marchés.`)
+      list.push(`✅ STABILITÉ DES PRIX : L'inflation est ancrée à un niveau idéal de ${currentState.inflation.toFixed(2)}%, saluée par les marchés.`)
     }
 
     // 3. Nouvelles liées à la croissance (PIB)
     if (currentState.gdpGrowth > 3.0) {
-      list.push(`🚀 DYNAMISME ÉCONOMIQUE : La croissance du PIB s'accélère à +${currentState.gdpGrowth.toFixed(1)}%, portée par l'industrie.`)
+      list.push(`🚀 DYNAMISME ÉCONOMIQUE : La croissance du PIB s'accélère à +${currentState.gdpGrowth.toFixed(2)}%, portée par l'industrie.`)
       list.push(`CASABLANCA : Forte accélération des investissements dans l'écosystème aéronautique et automobile.`)
     } else if (currentState.gdpGrowth <= 0) {
-      list.push(`🚨 RÉCESSION IMMINENTE : L'activité recule à ${currentState.gdpGrowth.toFixed(1)}%, climat d'inquiétude chez les entrepreneurs.`)
+      list.push(`🚨 RÉCESSION IMMINENTE : L'activité recule à ${currentState.gdpGrowth.toFixed(2)}%, climat d'inquiétude chez les entrepreneurs.`)
       list.push(`ENTREPRISES : Baisse marquée des investissements privés face à la contraction de la demande.`)
     } else if (currentState.gdpGrowth < 1.5) {
-      list.push(`🐢 CROISSANCE MOLLE : Le PIB marocain progresse timidement de +${currentState.gdpGrowth.toFixed(1)}%, l'emploi sous pression.`)
+      list.push(`🐢 CROISSANCE MOLLE : Le PIB marocain progresse timidement de +${currentState.gdpGrowth.toFixed(2)}%, l'emploi sous pression.`)
     }
 
     // 4. Nouvelles liées aux taux

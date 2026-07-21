@@ -98,16 +98,16 @@ export function getSimulationTips(ctx: SimulationContext, level: DifficultyLevel
       tips.push("Bienvenue à votre premier trimestre. Analysez attentivement l'inflation et la croissance avant de modifier le taux directeur.")
     }
     if (ctx.inflation > 4) {
-      tips.push(`Inflation trop élevée à ${ctx.inflation.toFixed(1)}% (cible: 2.0%). Il conviendrait de relever le taux directeur de 25 ou 50 points de base.`)
+      tips.push(`Inflation trop élevée à ${ctx.inflation.toFixed(2)}% (cible: 2.0%). Il conviendrait de relever le taux directeur de 25 ou 50 points de base.`)
     }
     if (ctx.inflation < 1) {
-      tips.push(`Risque de déflation avec une inflation à ${ctx.inflation.toFixed(1)}%. Envisagez une baisse du taux directeur pour relancer la demande.`)
+      tips.push(`Risque de déflation avec une inflation à ${ctx.inflation.toFixed(2)}%. Envisagez une baisse du taux directeur pour relancer la demande.`)
     }
     if (ctx.outputGap < -2) {
-      tips.push(`Activité très faible (output gap à ${ctx.outputGap.toFixed(1)}%). Une baisse de taux aiderait à relancer la croissance.`)
+      tips.push(`Activité très faible (output gap à ${ctx.outputGap.toFixed(2)}%). Une baisse de taux aiderait à relancer la croissance.`)
     }
     if (ctx.outputGap > 2) {
-      tips.push(`Surchauffe économique (output gap à ${ctx.outputGap.toFixed(1)}%). Resserrez votre politique pour apaiser les tensions.`)
+      tips.push(`Surchauffe économique (output gap à ${ctx.outputGap.toFixed(2)}%). Resserrez votre politique pour apaiser les tensions.`)
     }
   }
 

@@ -377,7 +377,7 @@ export function LeftPanel() {
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-text-primary">Stabilité des Prix (Inflation)</span>
                 <span className="text-[10px] font-mono font-bold" style={{ color: isInflationTargetMet ? '#4A9D7C' : '#C25450' }}>
-                  {currentState.inflation.toFixed(1)}%
+                  {currentState.inflation.toFixed(2).replace('.', ',')}%
                 </span>
               </div>
               <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
@@ -404,7 +404,7 @@ export function LeftPanel() {
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-text-primary">Plein Potentiel PIB (Output Gap)</span>
                 <span className="text-[10px] font-mono font-bold" style={{ color: isOutputGapMet ? '#4A9D7C' : '#C9A86A' }}>
-                  {currentState.outputGap > 0 ? '+' : ''}{currentState.outputGap.toFixed(1)}%
+                  {currentState.outputGap > 0 ? '+' : ''}{currentState.outputGap.toFixed(2).replace('.', ',')}%
                 </span>
               </div>
               <p className="text-[9px] text-text-tertiary mt-0.5 leading-tight">
@@ -542,7 +542,7 @@ export function LeftPanel() {
         >
           <AlertTriangle size={13} style={{ color: '#C25450', flexShrink: 0 }} />
           <span style={{ fontSize: '12px', color: '#C25450' }}>
-            Solde courant critique ({fmtPct(currentState.currentAccountBalance)})
+            Solde courant critique ({fmtPct(currentState.currentAccountBalance, 2)})
           </span>
         </div>
       )}
@@ -571,12 +571,12 @@ export function LeftPanel() {
           />
           <MetricTile
             label="Crédit"
-            value={fmtPct(currentState.creditGrowth)}
+            value={fmtPct(currentState.creditGrowth, 2)}
             color={creditColor}
           />
           <MetricTile
             label="Solde courant"
-            value={fmtPct(currentState.currentAccountBalance)}
+            value={fmtPct(currentState.currentAccountBalance, 2)}
             color={caColor}
           />
           <MetricTile

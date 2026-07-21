@@ -410,10 +410,10 @@ function DuelPlayView() {
       {/* Economy snapshot */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
         {[
-          { l: 'Inflation', v: fmtPct(currentState.inflation), c: Math.abs(currentState.inflation - 2) < 0.5 ? 'var(--data-positive)' : Math.abs(currentState.inflation - 2) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)' },
-          { l: 'PIB', v: fmtPct(currentState.gdpGrowth), c: currentState.gdpGrowth > 2 ? 'var(--data-positive)' : currentState.gdpGrowth > 0 ? 'var(--data-warning)' : 'var(--data-negative)' },
-          { l: 'Output gap', v: fmtPct(currentState.outputGap), c: 'var(--text-primary)' },
-          { l: 'Chômage', v: fmtPct(currentState.unemployment), c: currentState.unemployment > 12 ? 'var(--data-negative)' : 'var(--text-primary)' },
+          { l: 'Inflation', v: fmtPct(currentState.inflation, 2), c: Math.abs(currentState.inflation - 2) < 0.5 ? 'var(--data-positive)' : Math.abs(currentState.inflation - 2) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)' },
+          { l: 'PIB', v: fmtPct(currentState.gdpGrowth, 2), c: currentState.gdpGrowth > 2 ? 'var(--data-positive)' : currentState.gdpGrowth > 0 ? 'var(--data-warning)' : 'var(--data-negative)' },
+          { l: 'Output gap', v: fmtPct(currentState.outputGap, 2), c: 'var(--text-primary)' },
+          { l: 'Chômage', v: fmtPct(currentState.unemployment, 2), c: currentState.unemployment > 12 ? 'var(--data-negative)' : 'var(--text-primary)' },
           { l: 'Taux dir.', v: fmtPct(currentState.policyRate, 2), c: 'var(--text-primary)' },
           { l: 'NPL', v: fmtPct(currentState.nplRatio), c: currentState.nplRatio > 10 ? 'var(--data-negative)' : 'var(--text-primary)' },
         ].map(m => (
@@ -589,10 +589,10 @@ function CoopPlayView() {
       {/* Economy metrics */}
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
         {[
-          { l: 'Inflation', v: fmtPct(sharedState.inflation), c: Math.abs(sharedState.inflation - 2) < 0.5 ? 'var(--data-positive)' : 'var(--data-negative)' },
-          { l: 'PIB', v: fmtPct(sharedState.gdpGrowth), c: sharedState.gdpGrowth > 2 ? 'var(--data-positive)' : 'var(--data-negative)' },
-          { l: 'Output gap', v: fmtPct(sharedState.outputGap), c: 'var(--text-primary)' },
-          { l: 'Chômage', v: fmtPct(sharedState.unemployment), c: 'var(--text-primary)' },
+          { l: 'Inflation', v: fmtPct(sharedState.inflation, 2), c: Math.abs(sharedState.inflation - 2) < 0.5 ? 'var(--data-positive)' : 'var(--data-negative)' },
+          { l: 'PIB', v: fmtPct(sharedState.gdpGrowth, 2), c: sharedState.gdpGrowth > 2 ? 'var(--data-positive)' : 'var(--data-negative)' },
+          { l: 'Output gap', v: fmtPct(sharedState.outputGap, 2), c: 'var(--text-primary)' },
+          { l: 'Chômage', v: fmtPct(sharedState.unemployment, 2), c: 'var(--text-primary)' },
           { l: 'Taux dir.', v: fmtPct(sharedState.policyRate, 2), c: 'var(--text-primary)' },
           { l: 'NPL', v: fmtPct(sharedState.nplRatio), c: sharedState.nplRatio > 10 ? 'var(--data-negative)' : 'var(--text-primary)' },
         ].map(m => (
@@ -1013,9 +1013,9 @@ function QuarterReviewView() {
   const p2 = duel.p2State
 
   const comparisons = [
-    { label: 'Inflation', p1: fmtPct(p1.inflation), p2: fmtPct(p2.inflation), p1v: p1.inflation, p2v: p2.inflation, target: INFLATION_TARGET, lowerBetter: true },
-    { label: 'Croissance PIB', p1: fmtPct(p1.gdpGrowth), p2: fmtPct(p2.gdpGrowth), p1v: p1.gdpGrowth, p2v: p2.gdpGrowth, target: 3, lowerBetter: false },
-    { label: 'Chômage', p1: fmtPct(p1.unemployment), p2: fmtPct(p2.unemployment), p1v: p1.unemployment, p2v: p2.unemployment, target: 10, lowerBetter: true },
+    { label: 'Inflation', p1: fmtPct(p1.inflation, 2), p2: fmtPct(p2.inflation, 2), p1v: p1.inflation, p2v: p2.inflation, target: INFLATION_TARGET, lowerBetter: true },
+    { label: 'Croissance PIB', p1: fmtPct(p1.gdpGrowth, 2), p2: fmtPct(p2.gdpGrowth, 2), p1v: p1.gdpGrowth, p2v: p2.gdpGrowth, target: 3, lowerBetter: false },
+    { label: 'Chômage', p1: fmtPct(p1.unemployment, 2), p2: fmtPct(p2.unemployment, 2), p1v: p1.unemployment, p2v: p2.unemployment, target: 10, lowerBetter: true },
     { label: 'Crédibilité', p1: `${Math.round(p1.centralBankCredibility)}`, p2: `${Math.round(p2.centralBankCredibility)}`, p1v: p1.centralBankCredibility, p2v: p2.centralBankCredibility, target: 80, lowerBetter: false },
     { label: 'Taux directeur', p1: fmtPct(p1.policyRate, 2), p2: fmtPct(p2.policyRate, 2), p1v: p1.policyRate, p2v: p2.policyRate, target: 2.5, lowerBetter: false },
     { label: 'Crédit', p1: fmtPct(p1.creditGrowth), p2: fmtPct(p2.creditGrowth), p1v: p1.creditGrowth, p2v: p2.creditGrowth, target: 5, lowerBetter: false },

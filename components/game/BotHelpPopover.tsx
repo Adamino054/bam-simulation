@@ -66,10 +66,10 @@ export function BotHelpPopover() {
   // 4. Générer le court conseil en fonction des métriques
   const shortHint = useMemo(() => {
     if (currentState.inflation > 3.0) {
-      return `L'inflation est trop haute (${currentState.inflation.toFixed(1)}%). Relever les taux aiderait à calmer les prix.`
+      return `L'inflation est trop haute (${currentState.inflation.toFixed(2)}%). Relever les taux aiderait à calmer les prix.`
     }
     if (currentState.inflation < 1.0) {
-      return `L'inflation est trop basse (${currentState.inflation.toFixed(1)}%). Envisagez de réduire le taux directeur.`
+      return `L'inflation est trop basse (${currentState.inflation.toFixed(2)}%). Envisagez de réduire le taux directeur.`
     }
     if (currentState.outputGap < -1.5) {
       return `L'économie est en ralentissement. Une baisse de taux stimulerait l'investissement.`

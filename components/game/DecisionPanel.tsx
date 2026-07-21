@@ -202,12 +202,12 @@ export function DecisionPanel() {
   const projectionItems = [
     {
       label: 'Inflation',
-      value: fmtPct(preview.inflation),
+      value: fmtPct(preview.inflation, 2),
       color: Math.abs(preview.inflation - 2) < 0.5 ? 'var(--data-positive)' : Math.abs(preview.inflation - 2) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)',
     },
     {
       label: 'Output gap',
-      value: fmtPct(preview.outputGap),
+      value: fmtPct(preview.outputGap, 2),
       color: Math.abs(preview.outputGap) < 0.5 ? 'var(--data-positive)' : Math.abs(preview.outputGap) < 1.5 ? 'var(--data-warning)' : 'var(--data-negative)',
     },
     {
@@ -217,7 +217,7 @@ export function DecisionPanel() {
     },
     {
       label: 'Chômage',
-      value: fmtPct(preview.unemployment),
+      value: fmtPct(preview.unemployment, 2),
       color: preview.unemployment > 12 ? 'var(--data-negative)' : preview.unemployment > 10 ? 'var(--data-warning)' : 'var(--data-positive)',
     },
     {
@@ -227,7 +227,7 @@ export function DecisionPanel() {
     },
     {
       label: 'Solde courant',
-      value: fmtPct(preview.currentAccountBalance),
+      value: fmtPct(preview.currentAccountBalance, 2),
       color: preview.currentAccountBalance > -4 ? 'var(--data-positive)' : preview.currentAccountBalance > -6 ? 'var(--data-warning)' : 'var(--data-negative)',
     },
   ]

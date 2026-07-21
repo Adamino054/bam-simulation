@@ -85,7 +85,7 @@ export const INITIAL_STATE: EconomicState = {
 
   // New fields (Task 2)
   centralBankCredibility: 70,
-  currentAccountBalance: -2.49808221535456,
+  currentAccountBalance: -0.5217204598508653,
   fiscalStance: 'neutral',
 
   // New fields (Gameplay v2)
