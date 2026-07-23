@@ -4,7 +4,20 @@ import { useMemo, useState } from 'react'
 import { ArrowLeft, ExternalLink, Landmark, PlayCircle } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 
-const PLAYLIST_ID = 'PLUiQ2wy2F2cOjqR0lEDJ7wvVt3Ki_L95z'
+const PLAYLISTS = [
+  {
+    id: 'PLUiQ2wy2F2cOjqR0lEDJ7wvVt3Ki_L95z',
+    title: 'Éducation financière',
+  },
+  {
+    id: 'PLUiQ2wy2F2cMUh_XOCxWqCl3XoNrhfmAq',
+    title: 'Stabilité des prix',
+  },
+  {
+    id: 'PLUiQ2wy2F2cO-BDcTD68lAgcyD14GjbVT',
+    title: 'Missions de BAM',
+  },
+]
 
 const VIDEOS = [
   {
@@ -12,6 +25,7 @@ const VIDEOS = [
     title: "Global Money Week : Différence entre le taux directeur, le taux d'intérêt et le taux de change",
     duration: '3:34',
     language: 'Français',
+    playlistTitle: 'Éducation financière',
     watchUrl: 'https://www.youtube.com/watch?v=nrg-FWQ-Cdg',
   },
   {
@@ -19,6 +33,7 @@ const VIDEOS = [
     title: 'أيام الثقافة المالية: ما الفرق بين سعر الفائدة، سعر الفائدة الرئيسي و سعر الصرف ؟',
     duration: '3:34',
     language: 'العربية',
+    playlistTitle: 'Éducation financière',
     watchUrl: 'https://www.youtube.com/watch?v=uig1eWzEvuY',
   },
   {
@@ -26,6 +41,7 @@ const VIDEOS = [
     title: "Qu'est ce que la monnaie?",
     duration: '2:16',
     language: 'Français',
+    playlistTitle: 'Éducation financière',
     watchUrl: 'https://www.youtube.com/watch?v=U1CnKB1jdpA',
   },
   {
@@ -33,7 +49,50 @@ const VIDEOS = [
     title: 'Quel est le rôle du réseau de Bank Al-Maghrib ?',
     duration: '6:12',
     language: 'Français',
+    playlistTitle: 'Éducation financière',
     watchUrl: 'https://www.youtube.com/watch?v=0unQAPLO730',
+  },
+  {
+    id: 'HjyRQg0W_dI',
+    title: "Qu'est ce que la stabilité des prix?",
+    language: 'Français',
+    playlistTitle: 'Stabilité des prix',
+    watchUrl: 'https://www.youtube.com/watch?v=HjyRQg0W_dI',
+  },
+  {
+    id: 'DWui4MSYcsk',
+    title: 'ما هو استقرار الأسعار',
+    language: 'العربية',
+    playlistTitle: 'Stabilité des prix',
+    watchUrl: 'https://www.youtube.com/watch?v=DWui4MSYcsk',
+  },
+  {
+    id: 'RtigizTy-18',
+    title: 'What is price stability?',
+    language: 'English',
+    playlistTitle: 'Stabilité des prix',
+    watchUrl: 'https://www.youtube.com/watch?v=RtigizTy-18',
+  },
+  {
+    id: 'FhmSWB0svvg',
+    title: 'Quelles sont les missions de Bank-Al-Maghrib',
+    language: 'Français',
+    playlistTitle: 'Missions de BAM',
+    watchUrl: 'https://www.youtube.com/watch?v=FhmSWB0svvg',
+  },
+  {
+    id: 'w0bfStlP-Fw',
+    title: 'ما هي مهام بنك المغرب',
+    language: 'العربية',
+    playlistTitle: 'Missions de BAM',
+    watchUrl: 'https://www.youtube.com/watch?v=w0bfStlP-Fw',
+  },
+  {
+    id: 'M9pQrm5k-U0',
+    title: 'بام كيدز 🙋‍♀️🙋‍♂️ BAM KIDS : لنكتشف مهام بنك المغرب !',
+    language: 'العربية',
+    playlistTitle: 'Missions de BAM',
+    watchUrl: 'https://www.youtube.com/watch?v=M9pQrm5k-U0',
   },
 ]
 
@@ -130,28 +189,30 @@ export default function VideosPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-10">
             <div className="max-w-2xl">
-              <span className="label-caps block mb-3" style={{ color: 'var(--accent-primary)' }}>
-                Bank Al-Maghrib
-              </span>
               <h1 className="font-editorial-roman text-4xl sm:text-5xl mb-4" style={{ lineHeight: 1, color: 'var(--text-primary)' }}>
                 Vidéos
               </h1>
               <p className="text-base" style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-                Éducation financière / الثقافة المالية : une sélection pédagogique issue de la playlist officielle de Bank Al-Maghrib pour expliquer la monnaie,
-                le taux directeur, le taux d&apos;intérêt, le taux de change et le rôle du réseau bancaire. Ces vidéos complètent les cours du simulateur avec des
-                notions simples et directement utiles pour comprendre les décisions du joueur.
+                Une sélection pédagogique issue des playlists officielles de Bank Al-Maghrib pour expliquer la monnaie, le taux directeur, la stabilité des prix,
+                les missions de la Banque centrale et le rôle du réseau bancaire. Ces vidéos complètent les cours du simulateur avec des notions simples et
+                directement utiles pour comprendre les décisions du joueur.
               </p>
             </div>
-            <a
-              href={`https://www.youtube.com/playlist?list=${PLAYLIST_ID}`}
-              target="_blank"
-              rel="noreferrer"
-              className="label-caps inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md"
-              style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--accent-primary)', border: '1px solid var(--border-default)', textDecoration: 'none', fontSize: '12px' }}
-            >
-              Ouvrir la playlist
-              <ExternalLink size={14} />
-            </a>
+            <div className="flex flex-wrap lg:justify-end gap-2">
+              {PLAYLISTS.map(playlist => (
+                <a
+                  key={playlist.id}
+                  href={`https://www.youtube.com/playlist?list=${playlist.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="label-caps inline-flex items-center justify-center gap-2 px-4 py-3 rounded-md"
+                  style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--accent-primary)', border: '1px solid var(--border-default)', textDecoration: 'none', fontSize: '12px' }}
+                >
+                  {playlist.title}
+                  <ExternalLink size={14} />
+                </a>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -167,12 +228,14 @@ export default function VideosPage() {
                 <div className="p-5">
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <span className="label-caps" style={{ color: 'var(--accent-cool)', fontSize: '11px' }}>
-                      Vidéo {String(index + 1).padStart(2, '0')}
+                      Vidéo {String(index + 1).padStart(2, '0')} · {video.playlistTitle}
                     </span>
-                    <span className="label-caps inline-flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
-                      <PlayCircle size={13} />
-                      {video.duration}
-                    </span>
+                    {video.duration && (
+                      <span className="label-caps inline-flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)', fontSize: '11px' }}>
+                        <PlayCircle size={13} />
+                        {video.duration}
+                      </span>
+                    )}
                   </div>
                   <h2 className="font-semibold text-lg mb-3" style={{ color: 'var(--text-primary)', lineHeight: 1.35 }} dir={video.language === 'العربية' ? 'rtl' : 'ltr'}>
                     {video.title}
