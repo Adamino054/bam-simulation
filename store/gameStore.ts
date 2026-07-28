@@ -4,10 +4,12 @@ import type { EconomicState, PolicyAction, Shock, ScenarioId, DifficultyLevel } 
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
+import { stepV5 } from '@/engine/v5'
+import { isHistoricalScenario, historicalInitialState } from '@/engine/v5/historicalScenarios'
+import { historicalStepInput, historicalStepDate } from '@/engine/v5/replay'
+import { gameQuarters } from '@/engine/gameLength'
 import { SCENARIOS } from '@/engine/scenarios'
 import { fetchCentralBankPolicySettings } from '@/engine/centralBankPolicy'
-import { getLevelConfig } from '@/engine/difficulty'
-import { FREE_MODE_QUARTERS } from '@/lib/constants'
 import { PRESS_CONFERENCES } from '@/engine/pressConferences'
 
 interface GameStore {
@@ -90,7 +92,11 @@ export const useGameStore = create<GameStore>()(
         const chosenLevel = level ?? get().difficultyLevel
         let initialState = { ...scenario.initialState }
 
-        if (shouldUseLivePolicy(scenarioId, scenario.initialState)) {
+        // Scénario historique : partir de l'état OBSERVÉ du trimestre précédant le
+        // premier tour, pour que reproduire les décisions officielles redonne le HCP.
+        if (isHistoricalScenario(scenarioId)) {
+          initialState = historicalInitialState(scenarioId, initialState)
+        } else if (shouldUseLivePolicy(scenarioId, scenario.initialState)) {
           const policy = await fetchCentralBankPolicySettings(scenarioPolicyDate(scenario.initialState))
           initialState = applyCentralBankInitialPolicy(
             scenario.initialState,
@@ -105,7 +111,9 @@ export const useGameStore = create<GameStore>()(
           currentState: initialState,
           history: [],
           actionHistory: [],
-          activeShocks: [...scenario.initialShocks],
+          // En rejeu historique les chocs de gameplay sont neutralisés : ce sont les
+          // constantes trimestrielles (u^π, u^y, u^u) qui portent l'histoire réelle.
+          activeShocks: isHistoricalScenario(scenarioId) ? [] : [...scenario.initialShocks],
           pendingAction: { ...DEFAULT_POLICY_ACTION },
           status: 'playing',
           seed: generateSeed(),
@@ -119,7 +127,8 @@ export const useGameStore = create<GameStore>()(
       async syncInitialCentralBankPolicy() {
         const { currentState, history, status, scenario } = get()
         if (status !== 'playing' || currentState.quarter !== 0 || history.length > 0) return
-        if (!scenario || !shouldUseLivePolicy(scenario, currentState)) return
+        if (!scenario || isHistoricalScenario(scenario)) return // historique : état déjà fixé
+        if (!shouldUseLivePolicy(scenario, currentState)) return
 
         const scenarioInitialState = SCENARIOS[scenario].initialState
         const policy = await fetchCentralBankPolicySettings(scenarioPolicyDate(scenarioInitialState))
@@ -145,13 +154,17 @@ export const useGameStore = create<GameStore>()(
           currentState, pendingAction, activeShocks, seed, history,
           actionHistory, scenario, previousPolicyRateChangeBp, fxInterventionHistory, freeMode,
         } = get()
-        const { difficultyLevel } = get()
-        const levelConfig = getLevelConfig(difficultyLevel)
-        
-        const isCampaign = scenario === 'volcker1979' || scenario === 'crisis2008'
-        const maxQuarters = isCampaign ? 8 : (freeMode ? FREE_MODE_QUARTERS : levelConfig.quarters)
 
-        if (currentState.quarter >= maxQuarters - 1) {
+        const isCampaign = scenario === 'volcker1979' || scenario === 'crisis2008'
+        const maxQuarters = gameQuarters(scenario, freeMode)
+
+        // Dans un rejeu historique, l'état initial est le trimestre PRÉCÉDANT le premier
+        // tour (COVID : 2020T2) : il ne consomme pas de tour, et les 20 trimestres de la
+        // série doivent tous être simulés. Ailleurs l'état initial est déjà le trimestre 1,
+        // et le dernier tour ne fait que clore la partie (comportement d'origine).
+        const lastDecisionQuarter = isHistoricalScenario(scenario) ? maxQuarters : maxQuarters - 1
+
+        if (currentState.quarter >= lastDecisionQuarter) {
           if (isCampaign) {
             let won = false
             if (scenario === 'volcker1979') {
@@ -169,11 +182,30 @@ export const useGameStore = create<GameStore>()(
           return
         }
 
-        const result = step(currentState, pendingAction, activeShocks, seed, {
-          scenarioId: scenario ?? undefined,
-          previousPolicyRateChangeBp,
-          fxInterventionHistory,
-        })
+        // Scénario historique : moteur v5 + constantes du trimestre courant, pour que
+        // reproduire les décisions officielles redonne les séries du HCP.
+        const replay = historicalStepInput(scenario, currentState, history)
+
+        const result = replay
+          ? stepV5(replay.state, pendingAction, activeShocks, seed, {
+              scenarioId: scenario ?? undefined,
+              previousPolicyRateChangeBp,
+              fxInterventionHistory,
+              ...replay.options,
+            })
+          : step(currentState, pendingAction, activeShocks, seed, {
+              scenarioId: scenario ?? undefined,
+              previousPolicyRateChangeBp,
+              fxInterventionHistory,
+            })
+
+        // Caler la date de sortie sur le trimestre réel simulé. La croissance vient de
+        // l'équation v5 (g^pot + Δ4 gap) : elle RÉAGIT au taux du joueur au lieu d'être
+        // recopiée du HCP.
+        if (replay && scenario) {
+          result.newState.date = historicalStepDate(scenario, currentState.quarter)
+        }
+
         const newActiveShocks = [
           ...activeShocks
             .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))

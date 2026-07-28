@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useGameStore } from '@/store/gameStore'
-import { TOTAL_QUARTERS, FREE_MODE_QUARTERS } from '@/lib/constants'
+import { gameQuarters } from '@/engine/gameLength'
 import { fmtQuarter } from '@/lib/format'
 import type { EconomicState } from '@/engine/state'
 
@@ -123,16 +123,17 @@ const AXIS = { fontSize: 8, fill: '#5E6066', fontFamily: 'monospace' }
 
 // ── Main component ─────────────────────────────────────────────────────────
 export function EconomyChart() {
-  const { history, currentState, freeMode } = useGameStore(
+  const { history, currentState, freeMode, scenario } = useGameStore(
     useShallow(s => ({
       history:      s.history,
       currentState: s.currentState,
       freeMode:     s.freeMode,
+      scenario:     s.scenario,
     }))
   )
 
   const [activeTab, setActiveTab] = useState<ChartTab>('activity')
-  const maxQ = freeMode ? FREE_MODE_QUARTERS : TOTAL_QUARTERS
+  const maxQ = gameQuarters(scenario, freeMode)
   const data = useMemo(() => buildData(history, currentState, maxQ), [history, currentState, maxQ])
   const currentQ = currentState.quarter
 

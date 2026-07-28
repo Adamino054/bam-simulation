@@ -51,19 +51,21 @@ Votre nomination s'accompagne d'une directive d'une fermeté historique : briser
     title: 'Crise Systémique 2008',
     subtitle: 'Le spectre du gel bancaire et de la récession',
     difficulty: 'Niveau Institutionnel — Expert',
-    duration: 8, // 8 Quarters
+    duration: 20, // rejeu historique 2008T2 → 2013T1 (cf. engine/v5)
     description: 'Une explosion des créances douteuses (NPL) paralyse le canal du crédit bancaire, menaçant l\'économie réelle de dépression.',
     contextMarkdown: `
 2008 : À la suite de la crise des subprimes mondiale, le système bancaire marocain fait face à une détérioration critique de ses portefeuilles d'actifs. Les créances douteuses (NPL) bondissent à **18 %**, poussant les banques à couper drastiquement le crédit ($\\\\Delta Credit = -4 \\\\%$) pour préserver leurs ratios de fonds propres.
 
 La liquidité s'est évaporée (besoin de liquidité critique de **220 milliards MAD**). Le canal de transmission est totalement bloqué.
+
+Cette campagne est un **rejeu historique** : elle couvre 2008T2 → 2013T1 et reproduit les chocs réellement observés. Si vous reprenez les décisions officielles de l'époque (taux directeur et réserve obligatoire), la trajectoire macroéconomique redonne les séries publiées par le HCP.
 `,
     winConditionsMarkdown: `
-*   **Assainissement des actifs** : Ramener le ratio de NPL bancaires ($NPL_t$) sous **10,0 %** avant la fin des 8 trimestres.
+*   **Assainissement des actifs** : Ramener le ratio de NPL bancaires ($NPL_t$) sous **10,0 %** avant la fin des 20 trimestres.
 *   **Relance du canal du crédit** : Redresser la croissance annuelle des encours de crédit ($Credit\\\\_Growth_t$) au-dessus de **+2,0 %**.
 `,
     lossConditionsMarkdown: `
-*   **Faillite Systémique** : Si l'un des deux objectifs n'est pas rempli au terme des 8 trimestres.
+*   **Faillite Systémique** : Si l'un des deux objectifs n'est pas rempli au terme des 20 trimestres.
 `,
     startingKpi: [
       { label: 'Ratio de NPL bancaires', value: '18,00 %', hint: 'Seuil critique d\'insolvabilité' },
@@ -74,7 +76,7 @@ La liquidité s'est évaporée (besoin de liquidité critique de **220 milliards
     goals: [
       { label: 'Ratio NPL cible', value: '< 10.0 %', formula: 'NPL_t < 10.0' },
       { label: 'Croissance crédit', value: '> +2.0 %', formula: 'Credit\\_Growth_t > 2.0' },
-      { label: 'Horizon temporel', value: '8 trimestres (2 ans)', formula: 'T \\le 8' },
+      { label: 'Horizon temporel', value: '20 trimestres (5 ans)', formula: 'T \\le 20' },
     ]
   }
 }

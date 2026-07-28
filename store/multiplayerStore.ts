@@ -4,8 +4,11 @@ import type { EconomicState, PolicyAction, Shock, ScenarioId, DifficultyLevel } 
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { SCENARIOS } from '@/engine/scenarios'
 import { step } from '@/engine/simulator'
+import { stepV5 } from '@/engine/v5'
+import { isHistoricalScenario, historicalInitialState } from '@/engine/v5/historicalScenarios'
+import { historicalStepInput, historicalStepDate } from '@/engine/v5/replay'
+import { gameQuarters } from '@/engine/gameLength'
 import { computeScore, type ScoreResult } from '@/engine/scoring'
-import { getLevelConfig } from '@/engine/difficulty'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -124,19 +127,34 @@ function generateSeed(): number {
 
 const PLAYER_AVATARS = ['🏛️', '🏦', '📊', '💹', '🎯', '🦁', '🦅', '⚡']
 
-function getDefaultDuelState(scenario: ScenarioId): DuelState {
+/**
+ * État de départ d'un scénario en multijoueur.
+ * Sur un scénario de rejeu historique, on part de l'observé et on neutralise les chocs
+ * de gameplay — exactement comme en solo, sinon les deux modes ne simuleraient pas la
+ * même économie.
+ */
+function scenarioStart(scenario: ScenarioId): { state: EconomicState; shocks: Shock[] } {
   const sc = SCENARIOS[scenario]
+  if (isHistoricalScenario(scenario)) {
+    return { state: historicalInitialState(scenario, { ...sc.initialState }), shocks: [] }
+  }
+  return { state: { ...sc.initialState }, shocks: [...sc.initialShocks] }
+}
+
+function getDefaultDuelState(scenario: ScenarioId): DuelState {
+  const p1 = scenarioStart(scenario)
+  const p2 = scenarioStart(scenario)
   return {
-    p1State: { ...sc.initialState },
+    p1State: p1.state,
     p1History: [],
-    p1ActiveShocks: [...sc.initialShocks],
+    p1ActiveShocks: p1.shocks,
     p1PendingAction: { ...DEFAULT_POLICY_ACTION },
     p1PreviousRateChange: 0,
     p1FxHistory: [],
 
-    p2State: { ...sc.initialState },
+    p2State: p2.state,
     p2History: [],
-    p2ActiveShocks: [...sc.initialShocks],
+    p2ActiveShocks: p2.shocks,
     p2PendingAction: { ...DEFAULT_POLICY_ACTION },
     p2PreviousRateChange: 0,
     p2FxHistory: [],
@@ -146,17 +164,41 @@ function getDefaultDuelState(scenario: ScenarioId): DuelState {
 }
 
 function getDefaultCoopState(scenario: ScenarioId): CoopState {
-  const sc = SCENARIOS[scenario]
+  const start = scenarioStart(scenario)
   return {
-    sharedState: { ...sc.initialState },
+    sharedState: start.state,
     sharedHistory: [],
-    sharedActiveShocks: [...sc.initialShocks],
+    sharedActiveShocks: start.shocks,
     sharedPendingAction: { ...DEFAULT_POLICY_ACTION },
     sharedPreviousRateChange: 0,
     sharedFxHistory: [],
     p1Locked: false,
     p2Locked: false,
   }
+}
+
+/**
+ * Un tour de simulation, quel que soit le mode : moteur v5 + constantes historiques
+ * sur les scénarios de rejeu, moteur d'origine partout ailleurs.
+ */
+function simulateTurn(
+  scenario: ScenarioId,
+  state: EconomicState,
+  history: EconomicState[],
+  action: PolicyAction,
+  shocks: Shock[],
+  seed: number,
+  opts: { previousPolicyRateChangeBp: number; fxInterventionHistory: number[] },
+) {
+  const replay = historicalStepInput(scenario, state, history)
+  if (!replay) {
+    return step(state, action, shocks, seed, { scenarioId: scenario, ...opts })
+  }
+  const result = stepV5(replay.state, action, shocks, seed, {
+    scenarioId: scenario, ...opts, ...replay.options,
+  })
+  result.newState.date = historicalStepDate(scenario, state.quarter)
+  return result
 }
 
 // ── Store ────────────────────────────────────────────────────────────────────
@@ -218,16 +260,15 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
       },
 
       submitDuelTurn() {
-        const { duel, seed, scenario, difficultyLevel } = get()
+        const { duel, seed, scenario } = get()
         const ap = duel.activePlayer
-        const levelConfig = getLevelConfig(difficultyLevel)
-        const maxQ = levelConfig.quarters
+        const maxQ = gameQuarters(scenario)
 
         if (ap === 'p1') {
           // Simuler le tour de P1
-          const result = step(
-            duel.p1State, duel.p1PendingAction, duel.p1ActiveShocks, seed,
-            { scenarioId: scenario, previousPolicyRateChangeBp: duel.p1PreviousRateChange, fxInterventionHistory: duel.p1FxHistory }
+          const result = simulateTurn(
+            scenario, duel.p1State, duel.p1History, duel.p1PendingAction, duel.p1ActiveShocks, seed,
+            { previousPolicyRateChangeBp: duel.p1PreviousRateChange, fxInterventionHistory: duel.p1FxHistory }
           )
           const newShocks = [
             ...duel.p1ActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),
@@ -249,9 +290,9 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
           }))
         } else {
           // Simuler le tour de P2
-          const result = step(
-            duel.p2State, duel.p2PendingAction, duel.p2ActiveShocks, seed,
-            { scenarioId: scenario, previousPolicyRateChangeBp: duel.p2PreviousRateChange, fxInterventionHistory: duel.p2FxHistory }
+          const result = simulateTurn(
+            scenario, duel.p2State, duel.p2History, duel.p2PendingAction, duel.p2ActiveShocks, seed,
+            { previousPolicyRateChangeBp: duel.p2PreviousRateChange, fxInterventionHistory: duel.p2FxHistory }
           )
           const newShocks = [
             ...duel.p2ActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),
@@ -324,15 +365,15 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
       },
 
       submitCoopTurn() {
-        const { coop, seed, scenario, difficultyLevel, currentQuarterIndex } = get()
+        const { coop, seed, scenario, currentQuarterIndex } = get()
         if (!coop.p1Locked || !coop.p2Locked) return
 
-        const levelConfig = getLevelConfig(difficultyLevel)
-        const maxQ = levelConfig.quarters
+        const maxQ = gameQuarters(scenario)
 
-        const result = step(
-          coop.sharedState, coop.sharedPendingAction, coop.sharedActiveShocks, seed,
-          { scenarioId: scenario, previousPolicyRateChangeBp: coop.sharedPreviousRateChange, fxInterventionHistory: coop.sharedFxHistory }
+        const result = simulateTurn(
+          scenario, coop.sharedState, coop.sharedHistory, coop.sharedPendingAction,
+          coop.sharedActiveShocks, seed,
+          { previousPolicyRateChangeBp: coop.sharedPreviousRateChange, fxInterventionHistory: coop.sharedFxHistory }
         )
         const newShocks = [
           ...coop.sharedActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),

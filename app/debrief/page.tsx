@@ -15,6 +15,7 @@ import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import type { ScenarioId, EconomicState, PolicyAction, Shock, DifficultyLevel } from '@/engine/state'
 import { getLevelConfig } from '@/engine/difficulty'
+import { gameQuarters } from '@/engine/gameLength'
 import { getDebriefMessage } from '@/engine/botMessages'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 import { GovernorCertificate } from '@/components/ui/GovernorCertificate'
@@ -38,9 +39,10 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLeve
   let state: EconomicState = { ...scenarioData.initialState }
   let activeShocks: Shock[] = [...scenarioData.initialShocks]
   const allStates: EconomicState[] = [state]
-  const levelConfig = getLevelConfig(difficultyLevel)
 
-  for (let q = 0; q < levelConfig.quarters - 1; q++) {
+  // Le repère « Taylor » doit couvrir la MÊME durée que la partie du joueur,
+  // sinon les deux scores ne sont pas comparables.
+  for (let q = 0; q < gameQuarters(scenario) - 1; q++) {
     const taylorRate = computeTaylorRate(state.inflation, state.outputGap)
     const rateChange = Math.round((taylorRate - state.policyRate) * 100 / 25) * 25
     const clampedChange = Math.max(-100, Math.min(100, rateChange))
@@ -465,7 +467,7 @@ export default function DebriefPage() {
 
         {/* ── Graphe ── */}
         <div className="rounded p-6 mb-12" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
-          <p className="label-caps mb-4">Trajectoire complète — {levelConfig.quarters / 4} ans</p>
+          <p className="label-caps mb-4">Trajectoire complète — {gameQuarters(scenario, freeMode) / 4} ans</p>
           <DebriefChart />
         </div>
 

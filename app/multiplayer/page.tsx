@@ -23,6 +23,7 @@ import { fmtPct, fmtBp } from '@/lib/format'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { sound } from '@/lib/audio'
 import { getLevelConfig, isInstrumentVisible } from '@/engine/difficulty'
+import { gameQuarters } from '@/engine/gameLength'
 import type { ScenarioId, DifficultyLevel, CommunicationStance, EconomicState } from '@/engine/state'
 import {
   POLICY_RATE_BOUNDS, FX_INTERVENTION_OPTIONS, EMERGENCY_LENDING_OPTIONS,
@@ -362,7 +363,7 @@ function DuelPlayView() {
   const store = useMultiplayerStore()
   const { duel, player1, player2, difficultyLevel, currentQuarterIndex, scenario } = store
   const levelConfig = getLevelConfig(difficultyLevel)
-  const maxQ = levelConfig.quarters
+  const maxQ = gameQuarters(scenario)
   const ap = duel.activePlayer
   const playerConfig = ap === 'p1' ? player1 : player2
   const playerColor = ap === 'p1' ? '#5C7E92' : '#C9A86A'
@@ -551,9 +552,9 @@ function DuelPlayView() {
 
 function CoopPlayView() {
   const store = useMultiplayerStore()
-  const { coop, player1, player2, difficultyLevel, currentQuarterIndex } = store
+  const { coop, player1, player2, difficultyLevel, currentQuarterIndex, scenario } = store
   const levelConfig = getLevelConfig(difficultyLevel)
-  const maxQ = levelConfig.quarters
+  const maxQ = gameQuarters(scenario)
   const { sharedState, sharedPendingAction, p1Locked, p2Locked } = coop
   const bothLocked = p1Locked && p2Locked
 

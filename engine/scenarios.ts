@@ -245,8 +245,8 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     description:
       'Inspiré de la grande crise de 2008 : les créances en souffrance (NPL) des banques atteignent un niveau critique de 18 %, le crédit se contracte à -4 % et la liquidité interbancaire gèle.',
     descriptionByLevel: {
-      beginner: "Les banques font faillite ! Le ratio NPL est à 18% et le crédit recule de -4%. Votre mission : assainir le système (NPL < 10% et crédit > 2%) en injectant massivement de la liquidité sous 8 trimestres.",
-      intermediate: "Objectif de stabilité financière 2008 : ramener les créances en souffrance (NPL) sous 10% et restaurer la croissance du crédit au-delà de 2% en moins de 8 trimestres.",
+      beginner: "Les banques font faillite ! Le ratio NPL est à 18% et le crédit recule de -4%. Votre mission : assainir le système (NPL < 10% et crédit > 2%) en injectant massivement de la liquidité sur les 20 trimestres du mandat.",
+      intermediate: "Rejeu historique 2008T2 → 2013T1. Objectif de stabilité financière : ramener les créances en souffrance (NPL) sous 10% et restaurer la croissance du crédit au-delà de 2% avant la fin des 20 trimestres.",
       expert: "Gérez le gel de liquidité bancaire de 2008. Utilisez les prêts d'urgence (Emergency Lending), les opérations de marché et baissez le coussin contracyclique CCyB pour restaurer le canal du crédit.",
     },
     hintsByLevel: {

@@ -4,20 +4,21 @@ import { useShallow } from 'zustand/react/shallow'
 import { Loader2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useGameStore } from '@/store/gameStore'
-import { TOTAL_QUARTERS, FREE_MODE_QUARTERS } from '@/lib/constants'
+import { gameQuarters } from '@/engine/gameLength'
 
 export function TurnButton() {
-  const { advanceTurn, currentState, isTransitioning, setTransitioning, freeMode } = useGameStore(
+  const { advanceTurn, currentState, isTransitioning, setTransitioning, freeMode, scenario } = useGameStore(
     useShallow(s => ({
       advanceTurn:      s.advanceTurn,
       currentState:     s.currentState,
       isTransitioning:  s.isTransitioning,
       setTransitioning: s.setTransitioning,
       freeMode:         s.freeMode,
+      scenario:         s.scenario,
     }))
   )
 
-  const maxQuarters = freeMode ? FREE_MODE_QUARTERS : TOTAL_QUARTERS
+  const maxQuarters = gameQuarters(scenario, freeMode)
   const isLast     = currentState.quarter >= maxQuarters - 1
   const isDisabled = isTransitioning
 

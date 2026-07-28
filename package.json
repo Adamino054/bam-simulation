@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:v5": "jiti engine/v5/validate.ts",
+    "check:replay": "node scripts/replay-check.js"
   },
   "dependencies": {
     "@types/katex": "^0.16.8",

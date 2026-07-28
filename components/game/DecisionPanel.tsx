@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { motion, AnimatePresence } from 'framer-motion'
-import { TrendingDown, Minus, TrendingUp, ChevronDown } from 'lucide-react'
+import { TrendingDown, Minus, TrendingUp, ChevronDown, History, Check } from 'lucide-react'
 import { useGameStore } from '@/store/gameStore'
 import { Stepper } from '@/components/ui/Stepper'
 import { TurnButton } from './TurnButton'
@@ -13,6 +13,9 @@ import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { simulateN } from '@/engine/simulator'
 import type { CommunicationStance } from '@/engine/state'
 import { isInstrumentVisible, getLevelConfig } from '@/engine/difficulty'
+import {
+  isHistoricalScenario, historicalPolicyRate, historicalReserveRequirement, historicalDate,
+} from '@/engine/v5/historicalScenarios'
 import { BotHelpPopover } from './BotHelpPopover'
 import { generateInflationFanChart } from '@/engine/monteCarlo'
 import { FanChartModal } from './FanChartModal'
@@ -28,11 +31,13 @@ const RATE_CHANGE_OPTIONS = [
 ]
 
 const RO_OPTIONS = [
+  { value: -200, label: '−200' },
   { value: -100, label: '−100' },
   { value: -50,  label: '−50' },
   { value: 0,    label: '0' },
   { value: 50,   label: '+50' },
   { value: 100,  label: '+100' },
+  { value: 200,  label: '+200' },
 ]
 
 const MARKET_OPS_LABELS: Record<number, string> = {
@@ -194,6 +199,29 @@ export function DecisionPanel() {
   const taylorDiff = newPolicyRate - taylor
   const taylorAlignment = Math.max(0, Math.min(100, 100 - Math.abs(taylorDiff) * 40))
 
+  // ── Repère historique (scénarios de rejeu) ──
+  // Le trimestre en cours de décision correspond à une décision réellement prise.
+  // La reproduire redonne, par construction du moteur v5, les séries publiées du HCP.
+  const historical = useMemo(() => {
+    if (!scenario || !isHistoricalScenario(scenario)) return null
+    const idx = currentState.quarter
+    const rate = historicalPolicyRate(scenario, idx)
+    if (rate === null) return null
+    const reserve = historicalReserveRequirement(scenario, idx)
+    const date = historicalDate(scenario, idx)
+    return {
+      rate,
+      reserve,
+      label: `T${date.q} ${date.year}`,
+      rateChangeBp: Math.round((rate - currentState.policyRate) * 100),
+      reserveChangeBp: reserve === null ? 0 : Math.round((reserve - currentState.reserveRequirement) * 100),
+    }
+  }, [scenario, currentState.quarter, currentState.policyRate, currentState.reserveRequirement])
+
+  const matchesHistory = historical !== null
+    && pendingAction.policyRateChangeBp === historical.rateChangeBp
+    && pendingAction.reserveRequirementChangeBp === historical.reserveChangeBp
+
   // Emergency lending availability check
   const hasFinancialShock = activeShocks.some(s => s.type === 'financial')
   const emergencyAvailable = currentState.liquidityNeed > 100 || hasFinancialShock
@@ -277,6 +305,57 @@ export function DecisionPanel() {
 
       {/* ══ Section 1: Taux & Liquidité ══ */}
       <AccordionSection title="TAUX & LIQUIDITÉ">
+        {/* ── Repère historique : la décision réellement prise ce trimestre-là ── */}
+        {historical && (
+          <div
+            className="rounded overflow-hidden"
+            style={{
+              border: '1px solid var(--border-subtle)',
+              borderLeft: '3px solid var(--accent-cool, #5C7E92)',
+              backgroundColor: 'var(--bg-elevated)',
+            }}
+          >
+            <div className="px-3 py-2 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <span className="label-caps flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+                <History size={11} />
+                Décision réelle — {historical.label}
+              </span>
+              {matchesHistory && (
+                <span className="label-caps flex items-center gap-1" style={{ color: 'var(--data-positive)', fontSize: '9px' }}>
+                  <Check size={10} /> reproduite
+                </span>
+              )}
+            </div>
+            <div className="px-3 py-2 flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-mono text-xs tabular" style={{ color: 'var(--text-primary)' }}>
+                  Taux {fmtPct(historical.rate, 2)}
+                  {historical.reserve !== null && <> · RO {fmtPct(historical.reserve, 1)}</>}
+                </span>
+                <span style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>
+                  Reproduire ces décisions redonne les séries publiées du HCP.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingAction({
+                  policyRateChangeBp: historical.rateChangeBp,
+                  reserveRequirementChangeBp: historical.reserveChangeBp,
+                })}
+                className="shrink-0 px-2.5 py-1.5 rounded text-[10px] font-semibold uppercase tracking-wider transition-all"
+                style={{
+                  backgroundColor: matchesHistory ? 'transparent' : 'var(--bg-hover)',
+                  border: '1px solid var(--border-strong)',
+                  color: matchesHistory ? 'var(--text-tertiary)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                }}
+              >
+                Reproduire
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Taux directeur ── */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '@/store/gameStore'
-import { TOTAL_QUARTERS } from '@/lib/constants'
+import { gameQuarters } from '@/engine/gameLength'
 import { fmtQuarter } from '@/lib/format'
 import { Sun, CloudRain, Snowflake, Leaf } from 'lucide-react'
 
@@ -16,11 +17,20 @@ const SEASONS: Record<number, { label: string; icon: any; color: string }> = {
 }
 
 export function Timeline() {
-  const currentState = useGameStore(s => s.currentState)
+  const { currentState, scenario, freeMode } = useGameStore(
+    useShallow(s => ({
+      currentState: s.currentState,
+      scenario:     s.scenario,
+      freeMode:     s.freeMode,
+    }))
+  )
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  
+
+  // Longueur réelle de la partie en cours (rejeu historique, campagne, mode libre).
+  const totalQuarters = gameQuarters(scenario, freeMode)
   const currentQ = currentState.quarter
-  const pct = Math.round(((currentQ + 1) / TOTAL_QUARTERS) * 100)
+  const pct = Math.round(((currentQ + 1) / totalQuarters) * 100)
+  const yearMarkers = Array.from({ length: Math.ceil(totalQuarters / 4) }, (_, i) => `A${i + 1}`)
 
   const getSeason = (qIdx: number) => SEASONS[(qIdx % 4) + 1]
 
@@ -32,7 +42,7 @@ export function Timeline() {
           {fmtQuarter(currentState.date.year, currentState.date.q)}
         </span>
         <span className="text-text-tertiary">·</span>
-        <span className="label-caps">Trimestre {currentQ + 1} / {TOTAL_QUARTERS}</span>
+        <span className="label-caps">Trimestre {currentQ + 1} / {totalQuarters}</span>
         <span className="text-text-tertiary">·</span>
         <span className="label-caps text-text-tertiary">{pct}% du mandat</span>
       </div>
@@ -55,16 +65,16 @@ export function Timeline() {
           />
         </div>
 
-        {/* Year markers */}
+        {/* Year markers — un repère par année de mandat, selon la durée réelle */}
         <div className="flex justify-between mt-1 px-0">
-          {['T1','T2','T3','T4','T5'].map((y, i) => (
+          {yearMarkers.map((y, i) => (
             <span
               key={y}
               className="label-caps"
               style={{
                 fontSize: '8px',
                 color: i < Math.ceil(currentQ / 4) ? 'var(--text-tertiary)' : 'var(--border-default)',
-                transform: i === 4 ? 'translateX(50%)' : i === 0 ? 'translateX(-50%)' : 'none',
+                transform: i === yearMarkers.length - 1 ? 'translateX(50%)' : i === 0 ? 'translateX(-50%)' : 'none',
               }}
             >
               {y}
@@ -74,7 +84,7 @@ export function Timeline() {
 
         {/* Dots */}
         <div className="flex items-center justify-between mt-1">
-          {Array.from({ length: TOTAL_QUARTERS }, (_, i) => {
+          {Array.from({ length: totalQuarters }, (_, i) => {
             const isPast    = i < currentQ
             const isCurrent = i === currentQ
             const season    = getSeason(i)
@@ -119,7 +129,7 @@ export function Timeline() {
                       <span className="font-bold uppercase tracking-wider" style={{ fontSize: '10px' }}>{season.label}</span>
                     </div>
                     <span style={{ color: 'var(--text-secondary)', fontSize: '9px' }}>
-                      Trimestre {i + 1} / {TOTAL_QUARTERS}
+                      Trimestre {i + 1} / {totalQuarters}
                     </span>
                   </div>
                 )}
