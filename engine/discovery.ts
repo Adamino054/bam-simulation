@@ -384,7 +384,7 @@ export const STORY_CHAPTERS: StoryChapter[] = [
         emoji: '🏦',
         title: 'Une banque très spéciale',
         text: 'La banque centrale ne ressemble pas aux autres : tu ne peux pas y ouvrir un compte. Ses clients, ce sont... les banques elles-mêmes ! Quand elles ont besoin d’argent, c’est elle qui leur en prête.',
-        funFact: 'Au Maroc, elle s’appelle Bank Al-Maghrib. Dans le jeu, c’est la CBS.',
+        funFact: 'Chaque pays a la sienne ! Dans le jeu, la Banque Centrale s’appelle la CBS.',
       },
       {
         emoji: '💲',

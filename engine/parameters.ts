@@ -3,7 +3,7 @@
  *
  * Calibration basée sur :
  * — Littérature sur les économies émergentes à régime de change rigide
- * — Rapports annuels Bank Al-Maghrib (2019-2024)
+ * — Rapports annuels de la Banque Centrale (2019-2024)
  * — Modèle QPM du FMI adapté au Maroc
  * — PNUD Morocco Macro Model (2022)
  */

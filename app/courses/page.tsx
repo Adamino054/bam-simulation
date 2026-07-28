@@ -8,7 +8,7 @@ import {
   Calculator, Zap, Shield, ChevronDown, ChevronRight,
   BookOpen, CheckCircle2, Circle, ArrowLeft, Lightbulb,
   FlaskConical, Gamepad2, GraduationCap, BarChart2,
-  Award, Sparkles, FileText, Check
+  Award, Sparkles, FileText, Check, ExternalLink
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { BlockKatex, LatexText } from '@/components/ui/InlineKatex'
@@ -746,6 +746,75 @@ export default function CoursesPage() {
                 </motion.div>
               ))}
             </div>
+
+            {/* ── Documents de référence ─────────────────────────────── */}
+            <motion.div
+              className="mt-12"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <FileText size={15} style={{ color: 'var(--accent-warm)' }} />
+                <h2 className="font-editorial text-lg" style={{ color: 'var(--text-primary)' }}>
+                  Aller plus loin — documents de référence
+                </h2>
+              </div>
+              <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                Les présentations complètes du moteur : d&apos;où viennent les équations des modules ci-dessus, et comment elles sont calibrées.
+              </p>
+              <div className="grid sm:grid-cols-3 gap-3">
+                {[
+                  {
+                    href: '/docs/presentation-modeles-mathematiques.html',
+                    title: 'Les modèles mathématiques',
+                    desc: 'Les 8 modèles du moteur, expliqués visuellement — la version présentation.',
+                    tag: 'Présentation',
+                  },
+                  {
+                    href: '/docs/dossier-theorique-modeles.html',
+                    title: 'Dossier théorique',
+                    desc: 'Fondements académiques, sources et calibration de chaque équation.',
+                    tag: 'Dossier',
+                  },
+                  {
+                    href: '/docs/guide-fonctionnalites-cbs.pdf',
+                    title: 'Guide des fonctionnalités',
+                    desc: "L'application expliquée écran par écran, du login au débrief.",
+                    tag: 'PDF',
+                  },
+                ].map(doc => (
+                  <a
+                    key={doc.href}
+                    href={doc.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex flex-col gap-2 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      backgroundColor: 'var(--bg-panel)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span
+                        className="label-caps px-2 py-0.5 rounded-full"
+                        style={{ fontSize: '8px', color: 'var(--accent-warm)', backgroundColor: 'rgba(201,168,106,0.12)' }}
+                      >
+                        {doc.tag}
+                      </span>
+                      <ExternalLink size={11} className="opacity-40 transition-opacity duration-200 group-hover:opacity-100" style={{ color: 'var(--text-tertiary)' }} />
+                    </div>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      {doc.title}
+                    </span>
+                    <span className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                      {doc.desc}
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </motion.div>
           </>
         ) : (
           <motion.div

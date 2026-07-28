@@ -294,8 +294,8 @@ const TAYLOR_DATA = [
 ]
 
 const TAYLOR_POINTS = [
-  { inflation: 6.1, bam: 3.0,  label: 'Banque centrale 2022' },
-  { inflation: 2.0, bam: 2.75, label: 'Banque centrale 2024' },
+  { inflation: 6.1, bc: 3.0,  label: 'Banque centrale 2022' },
+  { inflation: 2.0, bc: 2.75, label: 'Banque centrale 2024' },
 ]
 
 export function TaylorRuleChart() {
@@ -337,7 +337,7 @@ export function TaylorRuleChart() {
             <span style={{ fontFamily: 'monospace', fontSize: '8px', color: 'var(--text-tertiary)' }}>
               {pt.label} : π={pt.inflation}% →{' '}
               <span style={{ color: '#C9A86A', fontWeight: 700 }}>Taylor={((0.5 + 1.5 * pt.inflation)).toFixed(1)}%</span>
-              {' '}vs Banque centrale={pt.bam}%
+              {' '}vs Banque centrale={pt.bc}%
             </span>
           </div>
         ))}

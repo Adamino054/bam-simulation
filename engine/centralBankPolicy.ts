@@ -1,16 +1,16 @@
-export const BKAM_POLICY_SOURCE_URL =
+export const CENTRAL_BANK_POLICY_SOURCE_URL =
   'https://www.bkam.ma/Politique-monetaire/Cadre-strategique/Decision-de-la-politique-monetaire/Historique-des-decisions'
 
-export interface BkamPolicySettings {
+export interface CentralBankPolicySettings {
   policyRate: number
   reserveRequirement: number
   sourceUrl: string
-  source: 'bkam' | 'fallback'
+  source: 'live' | 'fallback'
   fetchedAt: string
   effectiveDate?: string
 }
 
-export const BKAM_HISTORICAL_POLICY_FALLBACKS: Array<{
+export const HISTORICAL_POLICY_FALLBACKS: Array<{
   effectiveDate: string
   policyRate: number
   reserveRequirement: number
@@ -28,9 +28,9 @@ export const BKAM_HISTORICAL_POLICY_FALLBACKS: Array<{
   { effectiveDate: '2025-03-18', policyRate: 2.25, reserveRequirement: 0 },
 ]
 
-export const FALLBACK_BKAM_POLICY: BkamPolicySettings = {
-  ...BKAM_HISTORICAL_POLICY_FALLBACKS[BKAM_HISTORICAL_POLICY_FALLBACKS.length - 1],
-  sourceUrl: BKAM_POLICY_SOURCE_URL,
+export const FALLBACK_CENTRAL_BANK_POLICY: CentralBankPolicySettings = {
+  ...HISTORICAL_POLICY_FALLBACKS[HISTORICAL_POLICY_FALLBACKS.length - 1],
+  sourceUrl: CENTRAL_BANK_POLICY_SOURCE_URL,
   source: 'fallback',
   fetchedAt: '2026-07-16T00:00:00.000Z',
 }
@@ -41,17 +41,17 @@ function normalizeTargetDate(targetDate?: string | null): string {
     : new Date().toISOString().slice(0, 10)
 }
 
-export function getFallbackBkamPolicyForDate(targetDate?: string | null): BkamPolicySettings {
+export function getFallbackPolicyForDate(targetDate?: string | null): CentralBankPolicySettings {
   const normalizedDate = normalizeTargetDate(targetDate)
   const fallback =
-    [...BKAM_HISTORICAL_POLICY_FALLBACKS]
+    [...HISTORICAL_POLICY_FALLBACKS]
       .reverse()
       .find(item => item.effectiveDate <= normalizedDate) ??
-    BKAM_HISTORICAL_POLICY_FALLBACKS[0]
+    HISTORICAL_POLICY_FALLBACKS[0]
 
   return {
     ...fallback,
-    sourceUrl: BKAM_POLICY_SOURCE_URL,
+    sourceUrl: CENTRAL_BANK_POLICY_SOURCE_URL,
     source: 'fallback',
     fetchedAt: new Date().toISOString(),
   }
@@ -68,7 +68,7 @@ function decodeHtmlEntities(value: string): string {
 }
 
 function stripAccents(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return value.normalize('NFD').replace(/[̀-ͯ]/g, '')
 }
 
 function toText(html: string): string {
@@ -147,11 +147,11 @@ function parsePolicyHistoryEntries(text: string): PolicyHistoryEntry[] {
   return entries.sort((a, b) => a.effectiveDate.localeCompare(b.effectiveDate))
 }
 
-function findBkamPolicyForDateFromHtml(text: string, targetDate?: string | null): BkamPolicySettings | null {
+function findPolicyForDateFromHtml(text: string, targetDate?: string | null): CentralBankPolicySettings | null {
   if (!targetDate) return null
 
   const normalizedDate = normalizeTargetDate(targetDate)
-  const fallbackForDate = getFallbackBkamPolicyForDate(targetDate)
+  const fallbackForDate = getFallbackPolicyForDate(targetDate)
   const entries = parsePolicyHistoryEntries(text)
   const entry = [...entries].reverse().find(item => item.effectiveDate <= normalizedDate)
   if (entry && entry.effectiveDate < (fallbackForDate.effectiveDate ?? '0000-00-00')) return null
@@ -160,23 +160,23 @@ function findBkamPolicyForDateFromHtml(text: string, targetDate?: string | null)
   return {
     policyRate: entry.policyRate,
     reserveRequirement: entry.reserveRequirement ?? fallbackForDate.reserveRequirement,
-    sourceUrl: BKAM_POLICY_SOURCE_URL,
-    source: 'bkam',
+    sourceUrl: CENTRAL_BANK_POLICY_SOURCE_URL,
+    source: 'live',
     fetchedAt: new Date().toISOString(),
     effectiveDate: entry.effectiveDate,
   }
 }
 
-export function parseBkamPolicySettings(
+export function parseCentralBankPolicySettings(
   html: string,
   fetchedAt = new Date().toISOString(),
   targetDate?: string | null,
-): BkamPolicySettings | null {
+): CentralBankPolicySettings | null {
   const text = toText(html)
-  const historicalPolicy = findBkamPolicyForDateFromHtml(text, targetDate)
+  const historicalPolicy = findPolicyForDateFromHtml(text, targetDate)
   if (historicalPolicy) return { ...historicalPolicy, fetchedAt }
 
-  const fallbackForDate = getFallbackBkamPolicyForDate(targetDate)
+  const fallbackForDate = getFallbackPolicyForDate(targetDate)
   const policyRate =
     findPercentAfterLabel(text, /taux\s+directeur/i) ??
     findPercentAfterLabel(text, /key\s+rate/i)
@@ -195,33 +195,33 @@ export function parseBkamPolicySettings(
   return {
     policyRate: policyRate ?? fallbackForDate.policyRate,
     reserveRequirement,
-    sourceUrl: BKAM_POLICY_SOURCE_URL,
-    source: 'bkam',
+    sourceUrl: CENTRAL_BANK_POLICY_SOURCE_URL,
+    source: 'live',
     fetchedAt,
   }
 }
 
-export async function fetchBkamPolicySettings(targetDate?: string | null): Promise<BkamPolicySettings> {
+export async function fetchCentralBankPolicySettings(targetDate?: string | null): Promise<CentralBankPolicySettings> {
   const params = targetDate ? `?date=${encodeURIComponent(targetDate)}` : ''
 
   try {
-    const response = await fetch(`/api/bkam-policy${params}`, { cache: 'no-store' })
-    if (!response.ok) return getFallbackBkamPolicyForDate(targetDate)
+    const response = await fetch(`/api/central-bank-policy${params}`, { cache: 'no-store' })
+    if (!response.ok) return getFallbackPolicyForDate(targetDate)
 
-    const data = (await response.json()) as Partial<BkamPolicySettings>
+    const data = (await response.json()) as Partial<CentralBankPolicySettings>
     if (typeof data.policyRate !== 'number' || typeof data.reserveRequirement !== 'number') {
-      return getFallbackBkamPolicyForDate(targetDate)
+      return getFallbackPolicyForDate(targetDate)
     }
 
     return {
       policyRate: data.policyRate,
       reserveRequirement: data.reserveRequirement,
-      sourceUrl: data.sourceUrl ?? BKAM_POLICY_SOURCE_URL,
-      source: data.source === 'bkam' ? 'bkam' : 'fallback',
+      sourceUrl: data.sourceUrl ?? CENTRAL_BANK_POLICY_SOURCE_URL,
+      source: data.source === 'live' ? 'live' : 'fallback',
       fetchedAt: data.fetchedAt ?? new Date().toISOString(),
       effectiveDate: data.effectiveDate,
     }
   } catch {
-    return getFallbackBkamPolicyForDate(targetDate)
+    return getFallbackPolicyForDate(targetDate)
   }
 }

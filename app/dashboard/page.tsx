@@ -74,7 +74,7 @@ export default function DashboardPage() {
   const leaderboard = useMemo(() => {
     const userBest = stats ? stats.bestScore : 0
     const competitors = [
-      { name: 'Abdellatif Jouahri', score: 96, title: "Gouverneur de Légende", avatar: "🇲🇦" },
+      { name: 'Gouverneur Floussi', score: 96, title: "Gouverneur de Légende", avatar: "🪙" },
       { name: 'Taylor Rule Bot', score: 91, title: "Gouverneur d'Or", avatar: "🤖" },
       { name: 'Ilyass E.', score: 87, title: "Gouverneur d'Or", avatar: "👨‍💻" },
       { name: 'Prof. Alami', score: 82, title: "Gouverneur d'Argent", avatar: "👨‍🏫" },
@@ -643,7 +643,7 @@ export default function DashboardPage() {
                     (e.currentTarget as HTMLElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.2), 0 4px 20px rgba(180,25,35,0.3)'
                   }}
                 >
-                  {isStarting ? 'Synchronisation BKAM...' : 'Commencer la partie'}
+                  {isStarting ? 'Synchronisation Banque Centrale...' : 'Commencer la partie'}
                   <ChevronRight size={16} />
                 </button>
               </>
@@ -725,7 +725,7 @@ export default function DashboardPage() {
                 <div className="mt-5 p-3 rounded-lg border text-[11px] leading-relaxed text-left" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
                   <span className="font-semibold block mb-1 text-[var(--text-primary)]">🚀 Améliorez votre classement :</span>
                   <p className="text-[11px] text-[var(--text-secondary)] m-0">
-                    Chaque partie terminée avec un score élevé met immédiatement à jour votre classement. Battez le score de 96 points du gouverneur <strong>Abdellatif Jouahri</strong> pour inscrire votre nom tout en haut de la Légende CBS !
+                    Chaque partie terminée avec un score élevé met immédiatement à jour votre classement. Battez le score de 96 points du légendaire <strong>Gouverneur Floussi</strong> pour inscrire votre nom tout en haut de la Légende CBS !
                   </p>
                 </div>
               </div>

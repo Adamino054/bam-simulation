@@ -150,8 +150,8 @@ Les paramètres structurant l'économie CBS sont calibrés pour refléter les ca
 | :--- | :---: | :---: | :--- | :--- |
 | **Persistance IS** | $\rho$ | $0,70$ | Forte inertie de la demande globale et de la consommation des ménages. | IMF Country Report (Morocco) |
 | **Élasticité IS** | $\sigma$ | $0,12$ | Faible sensibilité initiale de l'investissement privé au taux réel (frictions financières). | Modèle QPM - FMI |
-| **Pente Phillips** | $\kappa$ | $0,15$ | Rigidités modérées des salaires et des prix dans le secteur non échangeable. | Working Paper Bank Al-Maghrib |
-| **Pass-through FX** | $\alpha$ | $0,08$ | Transmission partielle des fluctuations du taux de change aux prix domestiques. | Revue Économique BAM |
+| **Pente Phillips** | $\kappa$ | $0,15$ | Rigidités modérées des salaires et des prix dans le secteur non échangeable. | Working Paper Banque Centrale |
+| **Pass-through FX** | $\alpha$ | $0,08$ | Transmission partielle des fluctuations du taux de change aux prix domestiques. | Revue Économique Banque Centrale |
 | **Sensibilité Agricole** | $\gamma$ | $0,20$ | Poids élevé du secteur agricole (produits volatils) sur l'indice global des prix. | Haut Commissariat au Plan (HCP) |
 | **Coeff. Okun** | $\lambda$ | $0,40$ | Frictions sur le marché du travail ; élasticité de l'emploi au PIB modérée. | FMI Working Paper MENA |
 | **Ajustement Débiteur** | $\lambda_{debt}$ | $0,35$ | Ajustement asymétrique et progressif des taux bancaires sur 3 trimestres. | Littérature Canal Bancaire |

@@ -32,26 +32,26 @@ export function DebriefChart() {
   const data = useMemo(() => {
     return [...history, currentState].map((s, index) => {
       // Calibrage du taux réel historique marocain / international selon le scénario
-      let bamRate = 2.50
+      let actualRate = 2.50
       const scenarioId = scenario || 'standard'
       if (scenarioId === 'inflation2022') {
         const rates = [1.50, 1.50, 2.00, 2.00, 2.50, 2.50, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00]
-        bamRate = rates[index] ?? 3.00
+        actualRate = rates[index] ?? 3.00
       } else if (scenarioId === 'covid2020') {
         const rates = [2.25, 2.00, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50]
-        bamRate = rates[index] ?? 1.50
+        actualRate = rates[index] ?? 1.50
       } else if (scenarioId === 'flexibilite') {
         const rates = [2.25, 2.25, 2.25, 2.50, 2.50, 2.50, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00]
-        bamRate = rates[index] ?? 3.00
+        actualRate = rates[index] ?? 3.00
       } else if (scenarioId === 'volcker1979') {
         const rates = [11.0, 12.5, 14.0, 15.5, 17.5, 19.0, 20.0, 18.0]
-        bamRate = rates[index] ?? 18.0
+        actualRate = rates[index] ?? 18.0
       } else if (scenarioId === 'crisis2008') {
         const rates = [3.25, 3.25, 3.00, 3.00, 3.00, 3.00, 3.25, 3.25]
-        bamRate = rates[index] ?? 3.25
+        actualRate = rates[index] ?? 3.25
       } else {
         const rates = [2.50, 2.50, 2.50, 2.50, 2.50, 2.50, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75, 2.75]
-        bamRate = rates[index] ?? 2.75
+        actualRate = rates[index] ?? 2.75
       }
 
       return {
@@ -63,7 +63,7 @@ export function DebriefChart() {
         unemployment: s.unemployment,
         target: 2,
         taylorRate: computeTaylorRate(s.inflation, s.outputGap),
-        bamActualRate: bamRate,
+        actualHistoricalRate: actualRate,
       }
     })
   }, [history, currentState, scenario])
@@ -183,7 +183,7 @@ export function DebriefChart() {
           {showComparison && (
             <Line
               type="stepAfter"
-              dataKey="bamActualRate"
+              dataKey="actualHistoricalRate"
               name="Taux Réel Historique"
               stroke="#D8A436"
               strokeWidth={1.5}
@@ -220,4 +220,3 @@ export function DebriefChart() {
     </div>
   )
 }
-

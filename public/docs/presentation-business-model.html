@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Présentation — Business Model Canvas Éco Inclusif · CBS</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>">
+<style>
+  /* ═══════════════ TOKENS — système CBS (lib/design-tokens.ts) ═══════════════ */
+  :root {
+    --bg-base: #F8F8F4;
+    --bg-panel: #FFFFFF;
+    --bg-elevated: #F0F0EC;
+    --text-primary: #141418;
+    --text-secondary: #4E4E54;
+    --text-tertiary: #888890;
+    --border-subtle: rgba(20, 20, 24, 0.06);
+    --border-default: rgba(20, 20, 24, 0.10);
+    --border-strong: rgba(20, 20, 24, 0.18);
+    --accent-primary: #B41923;
+    --accent-warm: #A68A4F;
+    --accent-cool: #4A6574;
+    --accent-green: #3A8B6A;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.07);
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.09);
+
+    --font-display: 'Fraunces', 'Georgia Pro', Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --font-body: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, ui-monospace, 'SF Mono', monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-base: #0E0F12;
+      --bg-panel: #14161A;
+      --bg-elevated: #1C1F26;
+      --text-primary: #F0F0EA;
+      --text-secondary: #9A9B9B;
+      --text-tertiary: #6E7076;
+      --border-subtle: rgba(240, 240, 234, 0.05);
+      --border-default: rgba(240, 240, 234, 0.10);
+      --border-strong: rgba(240, 240, 234, 0.18);
+      --accent-primary: #D6454F;
+      --accent-warm: #C9A86A;
+      --accent-cool: #7BA3B8;
+      --accent-green: #4A9D7C;
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+      --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg-base: #0E0F12;
+    --bg-panel: #14161A;
+    --bg-elevated: #1C1F26;
+    --text-primary: #F0F0EA;
+    --text-secondary: #9A9B9B;
+    --text-tertiary: #6E7076;
+    --border-subtle: rgba(240, 240, 234, 0.05);
+    --border-default: rgba(240, 240, 234, 0.10);
+    --border-strong: rgba(240, 240, 234, 0.18);
+    --accent-primary: #D6454F;
+    --accent-warm: #C9A86A;
+    --accent-cool: #7BA3B8;
+    --accent-green: #4A9D7C;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.45);
+  }
+
+  :root[data-theme="light"] {
+    --bg-base: #F8F8F4;
+    --bg-panel: #FFFFFF;
+    --bg-elevated: #F0F0EC;
+    --text-primary: #141418;
+    --text-secondary: #4E4E54;
+    --text-tertiary: #888890;
+    --border-subtle: rgba(20, 20, 24, 0.06);
+    --border-default: rgba(20, 20, 24, 0.10);
+    --border-strong: rgba(20, 20, 24, 0.18);
+    --accent-primary: #B41923;
+    --accent-warm: #A68A4F;
+    --accent-cool: #4A6574;
+    --accent-green: #3A8B6A;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.07);
+    --shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.09);
+  }
+
+  /* ═══════════════ BASE ═══════════════ */
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* ═══════════════ CHROME (barre de progression, thème, navigation) ═══════════════ */
+  .progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent-primary);
+    z-index: 30;
+    transition: width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+    background: var(--bg-panel);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-strong);
+    border-radius: 9999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+  }
+  .theme-toggle:hover { color: var(--text-primary); box-shadow: var(--shadow-hover); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+  .theme-toggle svg { width: 14px; height: 14px; }
+  .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+  }
+
+  .navbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px clamp(16px, 3vw, 40px);
+    border-top: 1px solid var(--border-subtle);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: color-mix(in srgb, var(--bg-base) 88%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .nav-controls { display: flex; align-items: center; gap: 10px; }
+
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    background: var(--bg-panel);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-strong);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .nav-btn:hover { color: var(--text-primary); box-shadow: var(--shadow-hover); }
+  .nav-btn:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+  .nav-btn svg { width: 16px; height: 16px; }
+
+  .counter { font-variant-numeric: tabular-nums; min-width: 56px; text-align: center; }
+
+  .hint { display: none; }
+  @media (min-width: 720px) { .hint { display: block; } }
+
+  /* ═══════════════ DIAPOSITIVES ═══════════════ */
+  .deck { position: fixed; inset: 0; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(24px, 5vh, 64px) clamp(20px, 6vw, 96px) 76px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(24px);
+    transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s linear 380ms;
+    overflow-y: auto;
+  }
+
+  .slide.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    transition: opacity 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 380ms cubic-bezier(0.16, 1, 0.3, 1),
+                visibility 0s;
+    z-index: 10;
+  }
+
+  .slide.from-left { transform: translateX(-24px); }
+  .slide.active.from-left { transform: translateX(0); }
+
+  .slide-inner { width: 100%; max-width: 1060px; margin: 0 auto; }
+
+  /* Révélation en cascade du contenu de la diapo active */
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.active .reveal {
+      animation: rise 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-delay: calc(var(--r, 0) * 70ms + 120ms);
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  /* ── Typographie commune ── */
+  .eyebrow {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(10px, 1.1vw, 12px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent-primary);
+    transform: rotate(45deg);
+    flex: none;
+  }
+
+  h1 {
+    margin: 14px 0 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 6.5vw, 4.6rem);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  h1 em { font-style: italic; color: var(--accent-primary); }
+
+  .lede {
+    margin: 18px 0 0;
+    max-width: 58ch;
+    font-size: clamp(15px, 1.8vw, 19px);
+    color: var(--text-secondary);
+    text-wrap: pretty;
+  }
+
+  .legend { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 26px; }
+  .legend-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .legend-chip i { width: 10px; height: 10px; border-radius: 2px; background: var(--c); flex: none; }
+
+  /* ── Diapos de bloc ── */
+  .slide[data-zone="infra"]  { --zone: var(--accent-cool); }
+  .slide[data-zone="offre"]  { --zone: var(--accent-primary); }
+  .slide[data-zone="marche"] { --zone: var(--accent-green); }
+  .slide[data-zone="fin"]    { --zone: var(--accent-warm); }
+
+  .block-header {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    padding-bottom: 18px;
+    margin-bottom: 26px;
+    border-bottom: 2px solid color-mix(in srgb, var(--zone) 55%, transparent);
+  }
+
+  .big-num {
+    font-family: var(--font-mono);
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-weight: 700;
+    line-height: 1;
+    color: color-mix(in srgb, var(--zone) 30%, transparent);
+    font-variant-numeric: tabular-nums;
+    flex: none;
+  }
+
+  .block-header hgroup { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+
+  .zone-label {
+    font-family: var(--font-mono);
+    font-size: clamp(10px, 1.1vw, 12px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--zone) 80%, var(--text-secondary));
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zone-label svg { width: 15px; height: 15px; flex: none; }
+
+  h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+
+  .slide ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 2vh, 20px);
+    max-width: 62ch;
+  }
+
+  .slide li {
+    position: relative;
+    padding-left: 22px;
+    font-size: clamp(14.5px, 1.9vw, 18.5px);
+    line-height: 1.55;
+    color: var(--text-secondary);
+    text-wrap: pretty;
+  }
+
+  .slide li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0.55em;
+    width: 7px; height: 7px;
+    background: color-mix(in srgb, var(--zone, var(--accent-primary)) 75%, transparent);
+    transform: rotate(45deg);
+  }
+
+  .slide li strong { color: var(--text-primary); font-weight: 600; }
+
+  .pitch {
+    margin: 0 0 22px;
+    max-width: 56ch;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(16px, 2.3vw, 23px);
+    line-height: 1.45;
+    color: var(--text-primary);
+    padding: 14px 18px;
+    background: var(--bg-elevated);
+    border-left: 3px solid var(--zone, var(--accent-primary));
+    border-radius: 0 8px 8px 0;
+    text-wrap: pretty;
+  }
+
+  .note {
+    margin: 26px 0 0;
+    max-width: 68ch;
+    padding: 12px 16px;
+    background: color-mix(in srgb, var(--zone, var(--accent-primary)) 6%, var(--bg-panel));
+    border: 1px solid color-mix(in srgb, var(--zone, var(--accent-primary)) 25%, transparent);
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: clamp(11px, 1.3vw, 13px);
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+  .note strong { color: var(--text-primary); }
+
+  /* ── Corps de diapo : liste + figure ── */
+  .slide-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+  }
+  @media (min-width: 960px) {
+    .slide-body {
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: clamp(28px, 4vw, 60px);
+    }
+  }
+
+  .fig {
+    margin: 0;
+    width: 100%;
+    max-width: 460px;
+    justify-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .fig figcaption {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+  }
+
+  /* Texte des figures : toujours en encres de texte, jamais en couleur de série */
+  .fig text { font-family: var(--font-body); }
+  .fig .t-lab { fill: var(--text-primary); font-weight: 600; }
+  .fig .t-sub { fill: var(--text-secondary); }
+  .fig .t-cap { fill: var(--text-tertiary); font-family: var(--font-mono); }
+
+  /* Marques : dérivées de la couleur de zone */
+  .fig .mk       { fill: color-mix(in srgb, var(--zone, var(--accent-primary)) 42%, var(--bg-panel)); }
+  .fig .mk-soft  { fill: color-mix(in srgb, var(--zone, var(--accent-primary)) 18%, var(--bg-panel)); }
+  .fig .mk-solid { fill: var(--zone, var(--accent-primary)); }
+  .fig .ln       { stroke: var(--zone, var(--accent-primary)); stroke-width: 2; fill: none; }
+  .fig .ln-soft  { stroke: color-mix(in srgb, var(--zone, var(--accent-primary)) 45%, transparent); stroke-width: 1.5; fill: none; }
+  .fig .frame    { fill: var(--bg-panel); stroke: var(--border-strong); }
+  .fig .grid     { stroke: var(--border-default); stroke-width: 1; }
+  .fig .ring     { stroke: var(--bg-base); }
+
+  .fig-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .fig-legend span {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  .fig-legend i { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+
+  /* Décor de la diapo titre : silhouette du canvas */
+  .title-decor {
+    position: absolute;
+    right: clamp(24px, 6vw, 96px);
+    top: 50%;
+    transform: translateY(-50%);
+    width: min(30vw, 380px);
+    pointer-events: none;
+  }
+  @media (max-width: 1099px) { .title-decor { display: none; } }
+  .title-decor .cell { fill: color-mix(in srgb, var(--c) 14%, var(--bg-panel)); }
+  .title-decor .bar  { fill: color-mix(in srgb, var(--c) 70%, transparent); }
+
+  /* ── Vue d'ensemble : mini-canvas cliquable ── */
+  .mini-canvas {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-areas:
+      "pa pa ac ac vp vp re re se se"
+      "pa pa rs rs vp vp ca ca se se"
+      "co co co co co rv rv rv rv rv";
+    margin-top: 26px;
+  }
+
+  .mini {
+    --zone: var(--accent-cool);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 12px 12px 10px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-default);
+    border-top: 2px solid color-mix(in srgb, var(--zone) 70%, transparent);
+    border-radius: 6px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .mini:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+  .mini:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+
+  .mini.zone-infra  { --zone: var(--accent-cool); }
+  .mini.zone-offre  { --zone: var(--accent-primary); }
+  .mini.zone-marche { --zone: var(--accent-green); }
+  .mini.zone-fin    { --zone: var(--accent-warm); }
+
+  .mini .m-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: color-mix(in srgb, var(--zone) 85%, var(--text-tertiary));
+    font-variant-numeric: tabular-nums;
+  }
+  .mini .m-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(12px, 1.5vw, 16px);
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+  .mini .m-sub {
+    font-size: clamp(10px, 1.2vw, 12px);
+    line-height: 1.4;
+    color: var(--text-tertiary);
+  }
+
+  .m-pa { grid-area: pa; } .m-ac { grid-area: ac; } .m-rs { grid-area: rs; }
+  .m-vp { grid-area: vp; } .m-re { grid-area: re; } .m-ca { grid-area: ca; }
+  .m-se { grid-area: se; } .m-co { grid-area: co; } .m-rv { grid-area: rv; }
+
+  @media (max-width: 719px) {
+    .mini-canvas {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "vp vp" "se se" "ca re" "ac rs" "pa pa" "co rv";
+    }
+    .mini .m-sub { display: none; }
+  }
+
+  /* ── Synthèse ── */
+  .principles {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 30px;
+  }
+  @media (max-width: 860px) { .principles { grid-template-columns: 1fr; } }
+
+  .principle {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-default);
+    border-top: 2px solid color-mix(in srgb, var(--z) 70%, transparent);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .principle .p-kicker {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--z) 80%, var(--text-secondary));
+  }
+  .principle .p-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(15px, 1.8vw, 19px);
+    line-height: 1.3;
+  }
+  .principle .p-body {
+    margin: 0;
+    font-size: clamp(12.5px, 1.4vw, 14px);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    text-wrap: pretty;
+  }
+
+  /* ═══════════════ IMPRESSION : une diapo par page ═══════════════ */
+  @page { size: A4 landscape; margin: 10mm; }
+  @media print {
+    body { overflow: visible; background: #FFFFFF; }
+    .deck { position: static; }
+    .slide {
+      position: static;
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: none !important;
+      min-height: 180mm;
+      break-after: page;
+      overflow: visible;
+      padding: 10mm;
+    }
+    .slide .reveal { animation: none !important; }
+    .progress, .theme-toggle, .navbar { display: none; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" role="presentation"></div>
+
+<button class="theme-toggle" type="button" aria-label="Basculer le thème clair / sombre">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="5"/>
+    <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <span>Thème</span>
+</button>
+
+<main class="deck" aria-live="polite">
+
+  <!-- ── 1 · Titre ── -->
+  <section class="slide" aria-label="Diapositive de titre">
+    <svg class="title-decor reveal" style="--r: 4" viewBox="0 0 300 190" aria-hidden="true">
+      <!-- Silhouette du canvas : 9 blocs, couleurs de zone -->
+      <g style="--c: var(--accent-cool)">
+        <rect class="cell" x="0"   y="0"  width="56" height="117" rx="5"/><rect class="bar" x="0"   y="0"  width="56" height="3" rx="1.5"/>
+        <rect class="cell" x="61"  y="0"  width="56" height="56"  rx="5"/><rect class="bar" x="61"  y="0"  width="56" height="3" rx="1.5"/>
+        <rect class="cell" x="61"  y="61" width="56" height="56"  rx="5"/><rect class="bar" x="61"  y="61" width="56" height="3" rx="1.5"/>
+      </g>
+      <g style="--c: var(--accent-primary)">
+        <rect class="cell" x="122" y="0"  width="56" height="117" rx="5"/><rect class="bar" x="122" y="0"  width="56" height="3" rx="1.5"/>
+      </g>
+      <g style="--c: var(--accent-green)">
+        <rect class="cell" x="183" y="0"  width="56" height="56"  rx="5"/><rect class="bar" x="183" y="0"  width="56" height="3" rx="1.5"/>
+        <rect class="cell" x="183" y="61" width="56" height="56"  rx="5"/><rect class="bar" x="183" y="61" width="56" height="3" rx="1.5"/>
+        <rect class="cell" x="244" y="0"  width="56" height="117" rx="5"/><rect class="bar" x="244" y="0"  width="56" height="3" rx="1.5"/>
+      </g>
+      <g style="--c: var(--accent-warm)">
+        <rect class="cell" x="0"   y="122" width="148" height="56" rx="5"/><rect class="bar" x="0"   y="122" width="148" height="3" rx="1.5"/>
+        <rect class="cell" x="153" y="122" width="147" height="56" rx="5"/><rect class="bar" x="153" y="122" width="147" height="3" rx="1.5"/>
+      </g>
+    </svg>
+    <div class="slide-inner">
+      <p class="eyebrow reveal" style="--r: 0">Projet de fin d'année · CBS — Centrale Bank Simulateur · Juillet 2026</p>
+      <h1 class="reveal" style="--r: 1">Business Model Canvas<br><em>Éco&nbsp;Inclusif</em></h1>
+      <p class="lede reveal" style="--r: 2">
+        Plateforme de jeu sérieux qui démocratise la culture économique et financière :
+        le joueur incarne le gouverneur d'une banque centrale, du citoyen néophyte
+        au futur économiste.
+      </p>
+      <div class="legend reveal" style="--r: 3" role="list" aria-label="Zones du canvas">
+        <span class="legend-chip" role="listitem"><i style="--c: var(--accent-primary)"></i>Offre</span>
+        <span class="legend-chip" role="listitem"><i style="--c: var(--accent-green)"></i>Marché</span>
+        <span class="legend-chip" role="listitem"><i style="--c: var(--accent-cool)"></i>Infrastructure</span>
+        <span class="legend-chip" role="listitem"><i style="--c: var(--accent-warm)"></i>Finances</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2 · Vue d'ensemble ── -->
+  <section class="slide" aria-label="Vue d'ensemble du canvas">
+    <div class="slide-inner">
+      <p class="eyebrow reveal" style="--r: 0">Vue d'ensemble · 9 blocs · cliquez pour naviguer</p>
+      <h2 class="reveal" style="--r: 1">Le modèle en un coup d'œil</h2>
+      <div class="mini-canvas reveal" style="--r: 2">
+        <button class="mini zone-infra m-pa" type="button" data-goto="9">
+          <span class="m-num">08</span><span class="m-title">Partenaires clés</span>
+          <span class="m-sub">Académie, banques centrales, ONG</span>
+        </button>
+        <button class="mini zone-infra m-ac" type="button" data-goto="8">
+          <span class="m-num">07</span><span class="m-title">Activités clés</span>
+          <span class="m-sub">Moteur, contenu, communauté</span>
+        </button>
+        <button class="mini zone-infra m-rs" type="button" data-goto="7">
+          <span class="m-num">06</span><span class="m-title">Ressources clés</span>
+          <span class="m-sub">Moteur propriétaire, Floussi</span>
+        </button>
+        <button class="mini zone-offre m-vp" type="button" data-goto="3">
+          <span class="m-num">02</span><span class="m-title">Proposition de valeur</span>
+          <span class="m-sub">Apprendre l'économie en la pilotant</span>
+        </button>
+        <button class="mini zone-marche m-re" type="button" data-goto="5">
+          <span class="m-num">04</span><span class="m-title">Relations clients</span>
+          <span class="m-sub">Gamification, communauté</span>
+        </button>
+        <button class="mini zone-marche m-ca" type="button" data-goto="4">
+          <span class="m-num">03</span><span class="m-title">Canaux</span>
+          <span class="m-sub">Web, écoles, viralité</span>
+        </button>
+        <button class="mini zone-marche m-se" type="button" data-goto="2">
+          <span class="m-num">01</span><span class="m-title">Segments</span>
+          <span class="m-sub">Grand public, étudiants, institutions</span>
+        </button>
+        <button class="mini zone-fin m-co" type="button" data-goto="10">
+          <span class="m-num">09</span><span class="m-title">Structure de coûts</span>
+          <span class="m-sub">Coûts fixes légers, marginal ≈ 0</span>
+        </button>
+        <button class="mini zone-fin m-rv" type="button" data-goto="6">
+          <span class="m-num">05</span><span class="m-title">Sources de revenus</span>
+          <span class="m-sub">Freemium, B2B, mécénat</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3 · 01 Segments ── -->
+  <section class="slide" data-zone="marche" aria-label="Segments de clientèle">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">01</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Marché
+          </span>
+          <h2>Segments de clientèle</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Grand public néophyte.</strong> Citoyens sans bagage économique — cœur de la mission d'inclusion, servi par le Mode Découverte.</li>
+            <li class="reveal" style="--r: 2"><strong>Élèves &amp; étudiants.</strong> Lycées, prépas, universités, écoles de commerce et d'ingénieurs.</li>
+            <li class="reveal" style="--r: 3"><strong>Enseignants &amp; établissements.</strong> Acheteurs de licences : outil de cours clé en main avec suivi de classe.</li>
+            <li class="reveal" style="--r: 4"><strong>Institutions financières publiques.</strong> Banques centrales et régulateurs cherchant un outil d'éducation financière grand public.</li>
+            <li class="reveal" style="--r: 5"><strong>ONG &amp; programmes d'inclusion.</strong> Structures qui déploient la plateforme auprès de publics éloignés de la finance.</li>
+          </ul>
+          <p class="note reveal" style="--r: 6"><strong>Clé de lecture :</strong> utilisateurs gratuits ≠ clients payeurs. Le grand public est servi, les institutions financent.</p>
+        </div>
+        <figure class="fig reveal" style="--r: 3">
+          <svg viewBox="0 0 420 262" role="img" aria-label="Portée relative des cinq segments, du grand public aux ONG">
+            <text class="t-sub" x="0" y="14" font-size="12">Grand public</text>
+            <rect class="mk-soft" x="0" y="22" width="360" height="20" rx="4"><title>Grand public — servi gratuitement</title></rect>
+            <text class="t-sub" x="0" y="66" font-size="12">Élèves &amp; étudiants</text>
+            <rect class="mk-soft" x="0" y="74" width="280" height="20" rx="4"><title>Élèves &amp; étudiants — servis gratuitement</title></rect>
+            <text class="t-sub" x="0" y="118" font-size="12">Enseignants &amp; établissements</text>
+            <rect class="mk" x="0" y="126" width="215" height="20" rx="4"><title>Enseignants &amp; établissements — payeurs</title></rect>
+            <text class="t-sub" x="0" y="170" font-size="12">Institutions financières publiques</text>
+            <rect class="mk" x="0" y="178" width="160" height="20" rx="4"><title>Institutions publiques — payeuses</title></rect>
+            <text class="t-sub" x="0" y="222" font-size="12">ONG &amp; programmes d'inclusion</text>
+            <rect class="mk" x="0" y="230" width="120" height="20" rx="4"><title>ONG — payeuses</title></rect>
+          </svg>
+          <div class="fig-legend">
+            <span><i style="background: color-mix(in srgb, var(--zone) 18%, var(--bg-panel)); border: 1px solid var(--border-default)"></i>Servis (gratuit)</span>
+            <span><i style="background: color-mix(in srgb, var(--zone) 42%, var(--bg-panel))"></i>Payeurs</span>
+          </div>
+          <figcaption>Portée relative des segments — qualitatif.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4 · 02 Proposition de valeur ── -->
+  <section class="slide" data-zone="offre" aria-label="Proposition de valeur">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">02</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            Offre
+          </span>
+          <h2>Proposition de valeur</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <p class="pitch reveal" style="--r: 1">« Comprendre l'économie en la pilotant soi-même — quel que soit son niveau de départ. »</p>
+          <ul>
+            <li class="reveal" style="--r: 2"><strong>Apprendre en gouvernant.</strong> Le joueur tient les commandes d'une banque centrale sur 20 trimestres : décisions réelles, conséquences simulées.</li>
+            <li class="reveal" style="--r: 3"><strong>Deux portes d'entrée.</strong> Mode Découverte vulgarisé (histoires, mini-jeux, Floussi, zéro math) et Mode Expert (moteur macro complet, scoring institutionnel /100).</li>
+            <li class="reveal" style="--r: 4"><strong>Inclusif par conception.</strong> Gratuit à l'entrée, en français, jouable dans le navigateur sans installation, sur mobile comme sur ordinateur.</li>
+            <li class="reveal" style="--r: 5"><strong>Rigueur académique.</strong> Équations calibrées et validées en contexte universitaire — pas un quiz déguisé.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 3">
+          <svg viewBox="0 0 420 258" role="img" aria-label="Deux portes d'entrée, Découverte et Expert, alimentées par le même moteur">
+            <defs>
+              <marker id="arr-vp" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L8 4 L0 8 Z" class="mk-solid"/>
+              </marker>
+            </defs>
+            <rect class="mk-soft" x="20" y="16" width="170" height="60" rx="8"/>
+            <rect class="mk-solid" x="20" y="16" width="170" height="3" rx="1.5"/>
+            <text class="t-lab" x="105" y="42" font-size="13" text-anchor="middle">Mode Découverte</text>
+            <text class="t-sub" x="105" y="60" font-size="10.5" text-anchor="middle">Histoires · mini-jeux · zéro math</text>
+            <rect class="mk-soft" x="230" y="16" width="170" height="60" rx="8"/>
+            <rect class="mk-solid" x="230" y="16" width="170" height="3" rx="1.5"/>
+            <text class="t-lab" x="315" y="42" font-size="13" text-anchor="middle">Mode Expert</text>
+            <text class="t-sub" x="315" y="60" font-size="10.5" text-anchor="middle">IS · Phillips · Taylor · score /100</text>
+            <path class="ln" d="M105 80 C 105 120, 160 130, 192 150" marker-end="url(#arr-vp)"/>
+            <path class="ln" d="M315 80 C 315 120, 260 130, 228 150" marker-end="url(#arr-vp)"/>
+            <circle class="ln-soft" cx="210" cy="178" r="46"/>
+            <circle class="ln-soft" cx="210" cy="178" r="30"/>
+            <circle class="mk-solid" cx="210" cy="178" r="13"/>
+            <text class="t-lab" x="210" y="248" font-size="12.5" text-anchor="middle">Moteur CBS calibré</text>
+          </svg>
+          <figcaption>Deux portes d'entrée, un même moteur académique.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5 · 03 Canaux ── -->
+  <section class="slide" data-zone="marche" aria-label="Canaux">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">03</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Marché
+          </span>
+          <h2>Canaux</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Application web.</strong> Accessible par simple lien, sans installation ni compte payant — le canal est lui-même un facteur d'inclusion.</li>
+            <li class="reveal" style="--r: 2"><strong>Prescription académique.</strong> Enseignants et établissements intègrent le jeu en TD ; chaque classe devient un canal d'acquisition.</li>
+            <li class="reveal" style="--r: 3"><strong>Viralité étudiante.</strong> Concours inter-écoles, réseaux sociaux, bouche-à-oreille autour du palmarès.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 2">
+          <svg viewBox="0 0 420 190" role="img" aria-label="Effet multiplicateur des canaux : un lien, une classe, un réseau">
+            <defs>
+              <marker id="arr-ca" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L8 4 L0 8 Z" class="mk-solid"/>
+              </marker>
+            </defs>
+            <rect class="mk-soft" x="4" y="30" width="112" height="54" rx="8"/>
+            <rect class="mk-solid" x="4" y="30" width="112" height="3" rx="1.5"/>
+            <text class="t-lab" x="60" y="53" font-size="12" text-anchor="middle">Lien web</text>
+            <text class="t-sub" x="60" y="70" font-size="10" text-anchor="middle">zéro friction</text>
+            <rect class="mk-soft" x="154" y="30" width="112" height="54" rx="8"/>
+            <rect class="mk-solid" x="154" y="30" width="112" height="3" rx="1.5"/>
+            <text class="t-lab" x="210" y="53" font-size="12" text-anchor="middle">Classes &amp; TD</text>
+            <text class="t-sub" x="210" y="70" font-size="10" text-anchor="middle">prescription</text>
+            <rect class="mk-soft" x="304" y="30" width="112" height="54" rx="8"/>
+            <rect class="mk-solid" x="304" y="30" width="112" height="3" rx="1.5"/>
+            <text class="t-lab" x="360" y="53" font-size="12" text-anchor="middle">Concours</text>
+            <text class="t-sub" x="360" y="70" font-size="10" text-anchor="middle">viralité</text>
+            <line class="ln" x1="122" y1="57" x2="146" y2="57" marker-end="url(#arr-ca)"/>
+            <line class="ln" x1="272" y1="57" x2="296" y2="57" marker-end="url(#arr-ca)"/>
+            <!-- Portée croissante : 1 → 4 → 12 -->
+            <g class="mk-solid">
+              <rect x="56" y="112" width="8" height="8" rx="1.5" transform="rotate(45 60 116)"/>
+              <rect x="187" y="112" width="8" height="8" rx="1.5" transform="rotate(45 191 116)"/>
+              <rect x="202" y="112" width="8" height="8" rx="1.5" transform="rotate(45 206 116)"/>
+              <rect x="217" y="112" width="8" height="8" rx="1.5" transform="rotate(45 221 116)"/>
+              <rect x="232" y="112" width="8" height="8" rx="1.5" transform="rotate(45 236 116)"/>
+              <rect x="322" y="112" width="8" height="8" rx="1.5" transform="rotate(45 326 116)"/>
+              <rect x="337" y="112" width="8" height="8" rx="1.5" transform="rotate(45 341 116)"/>
+              <rect x="352" y="112" width="8" height="8" rx="1.5" transform="rotate(45 356 116)"/>
+              <rect x="367" y="112" width="8" height="8" rx="1.5" transform="rotate(45 371 116)"/>
+              <rect x="382" y="112" width="8" height="8" rx="1.5" transform="rotate(45 386 116)"/>
+              <rect x="322" y="127" width="8" height="8" rx="1.5" transform="rotate(45 326 131)"/>
+              <rect x="337" y="127" width="8" height="8" rx="1.5" transform="rotate(45 341 131)"/>
+              <rect x="352" y="127" width="8" height="8" rx="1.5" transform="rotate(45 356 131)"/>
+              <rect x="367" y="127" width="8" height="8" rx="1.5" transform="rotate(45 371 131)"/>
+              <rect x="382" y="127" width="8" height="8" rx="1.5" transform="rotate(45 386 131)"/>
+            </g>
+            <text class="t-cap" x="60" y="162" font-size="10.5" text-anchor="middle">1 joueur</text>
+            <text class="t-cap" x="210" y="162" font-size="10.5" text-anchor="middle">1 classe</text>
+            <text class="t-cap" x="360" y="162" font-size="10.5" text-anchor="middle">1 réseau</text>
+          </svg>
+          <figcaption>Effet multiplicateur : un lien → une classe → un réseau.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 6 · 04 Relations clients ── -->
+  <section class="slide" data-zone="marche" aria-label="Relations clients">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">04</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Marché
+          </span>
+          <h2>Relations clients</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Self-service gamifié.</strong> Onboarding guidé, assistant Floussi intégré, progression XP / badges / étoiles.</li>
+            <li class="reveal" style="--r: 2"><strong>Communauté.</strong> Palmarès public des gouverneurs, défis multijoueur, records partagés.</li>
+            <li class="reveal" style="--r: 3"><strong>Accompagnement enseignants.</strong> Scénarios préconfigurés, debriefs de mandat et supports de cours prêts à l'emploi.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 2">
+          <svg viewBox="0 0 420 220" role="img" aria-label="Mécaniques de fidélisation : anneau d'expérience, badges et palmarès">
+            <!-- Anneau XP -->
+            <circle cx="95" cy="96" r="54" fill="none" stroke="var(--border-default)" stroke-width="10"/>
+            <circle cx="95" cy="96" r="54" class="ln" stroke-width="10" stroke-linecap="round"
+                    stroke-dasharray="231 339" transform="rotate(-90 95 96)"/>
+            <text class="t-lab" x="95" y="93" font-size="16" text-anchor="middle">Niv. 7</text>
+            <text class="t-sub" x="95" y="111" font-size="10.5" text-anchor="middle">1 250 XP</text>
+            <g class="mk-solid">
+              <rect x="61" y="172" width="11" height="11" rx="2" transform="rotate(45 66.5 177.5)"/>
+              <rect x="89" y="172" width="11" height="11" rx="2" transform="rotate(45 94.5 177.5)"/>
+            </g>
+            <rect class="mk-soft" x="117" y="172" width="11" height="11" rx="2" transform="rotate(45 122.5 177.5)"/>
+            <text class="t-cap" x="95" y="208" font-size="10" text-anchor="middle">badges</text>
+            <!-- Palmarès -->
+            <rect class="frame" x="230" y="34" width="180" height="152" rx="8"/>
+            <text class="t-cap" x="246" y="58" font-size="10" letter-spacing="1">PALMARÈS</text>
+            <text class="t-cap" x="246" y="86" font-size="11">1</text>
+            <rect class="mk" x="262" y="76" width="112" height="12" rx="4"/>
+            <text class="t-cap" x="246" y="120" font-size="11">2</text>
+            <rect class="mk-soft" x="262" y="110" width="86" height="12" rx="4"/>
+            <text class="t-cap" x="246" y="154" font-size="11">3</text>
+            <rect class="mk-soft" x="262" y="144" width="64" height="12" rx="4"/>
+          </svg>
+          <figcaption>Progression XP, badges et palmarès public des gouverneurs.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 7 · 05 Sources de revenus ── -->
+  <section class="slide" data-zone="fin" aria-label="Sources de revenus">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">05</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            Finances
+          </span>
+          <h2>Sources de revenus</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Licences établissements (freemium).</strong> Le jeu reste gratuit ; les écoles paient le tableau de bord enseignant et le suivi de classe.</li>
+            <li class="reveal" style="--r: 2"><strong>Licences B2B institutionnelles.</strong> Versions personnalisées (white-label) pour banques centrales et associations professionnelles.</li>
+            <li class="reveal" style="--r: 3"><strong>Subventions &amp; mécénat.</strong> Fondations et programmes publics d'éducation financière finançant la gratuité du grand public.</li>
+            <li class="reveal" style="--r: 4"><strong>Ateliers &amp; certifications.</strong> Sessions animées et parcours certifiants pour entreprises et associations.</li>
+          </ul>
+          <p class="note reveal" style="--r: 5"><strong>Principe :</strong> ceux qui ont mandat ou budget pour l'inclusion financent l'accès de ceux qui n'en ont pas.</p>
+        </div>
+        <figure class="fig reveal" style="--r: 3">
+          <svg viewBox="0 0 420 226" role="img" aria-label="Mix de revenus cible : licences établissements 40 %, B2B 30 %, subventions 20 %, ateliers 10 %">
+            <text class="t-sub" x="0" y="14" font-size="12">Licences établissements</text>
+            <rect class="mk" x="0" y="22" width="320" height="20" rx="4"><title>Licences établissements — 40 %</title></rect>
+            <text class="t-lab" x="330" y="37" font-size="12.5">40 %</text>
+            <text class="t-sub" x="0" y="70" font-size="12">Licences B2B institutionnelles</text>
+            <rect class="mk" x="0" y="78" width="240" height="20" rx="4"><title>Licences B2B — 30 %</title></rect>
+            <text class="t-lab" x="250" y="93" font-size="12.5">30 %</text>
+            <text class="t-sub" x="0" y="126" font-size="12">Subventions &amp; mécénat</text>
+            <rect class="mk" x="0" y="134" width="160" height="20" rx="4"><title>Subventions &amp; mécénat — 20 %</title></rect>
+            <text class="t-lab" x="170" y="149" font-size="12.5">20 %</text>
+            <text class="t-sub" x="0" y="182" font-size="12">Ateliers &amp; certifications</text>
+            <rect class="mk" x="0" y="190" width="80" height="20" rx="4"><title>Ateliers &amp; certifications — 10 %</title></rect>
+            <text class="t-lab" x="90" y="205" font-size="12.5">10 %</text>
+          </svg>
+          <figcaption>Mix de revenus cible à 3 ans — hypothèse illustrative.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 8 · 06 Ressources clés ── -->
+  <section class="slide" data-zone="infra" aria-label="Ressources clés">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">06</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            Infrastructure
+          </span>
+          <h2>Ressources clés</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Moteur de simulation propriétaire.</strong> TypeScript strict, portable, calibré économies MENA — la barrière technique du projet.</li>
+            <li class="reveal" style="--r: 2"><strong>Bibliothèque de contenu vulgarisé.</strong> Histoires, jeux et cours en français, du niveau zéro au niveau académique.</li>
+            <li class="reveal" style="--r: 3"><strong>Équipe hybride.</strong> Double compétence économie monétaire + développement web.</li>
+            <li class="reveal" style="--r: 4"><strong>Marque &amp; mascotte Floussi.</strong> Capital sympathie et identité mémorisable auprès du grand public.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 2">
+          <svg viewBox="0 0 420 246" role="img" aria-label="Pile des actifs : la marque au sommet, le moteur propriétaire à la base">
+            <path class="mk-soft ln-soft" d="M170 10 L290 38 L170 66 L50 38 Z"/>
+            <line class="ln-soft" x1="290" y1="38" x2="304" y2="38"/>
+            <text class="t-lab" x="310" y="42" font-size="12">Marque &amp; Floussi</text>
+            <path class="mk-soft ln-soft" d="M170 66 L290 94 L170 122 L50 94 Z"/>
+            <line class="ln-soft" x1="290" y1="94" x2="304" y2="94"/>
+            <text class="t-lab" x="310" y="98" font-size="12">Équipe hybride</text>
+            <path class="mk-soft ln-soft" d="M170 122 L290 150 L170 178 L50 150 Z"/>
+            <line class="ln-soft" x1="290" y1="150" x2="304" y2="150"/>
+            <text class="t-lab" x="310" y="154" font-size="12">Contenu vulgarisé</text>
+            <path class="mk ln" d="M170 178 L290 206 L170 234 L50 206 Z"/>
+            <line class="ln" x1="290" y1="206" x2="304" y2="206"/>
+            <text class="t-lab" x="310" y="203" font-size="12">Moteur</text>
+            <text class="t-lab" x="310" y="218" font-size="12">propriétaire</text>
+          </svg>
+          <figcaption>Chaque couche s'appuie sur la précédente ; le moteur est le socle.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 9 · 07 Activités clés ── -->
+  <section class="slide" data-zone="infra" aria-label="Activités clés">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">07</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Infrastructure
+          </span>
+          <h2>Activités clés</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Développement &amp; calibration</strong> du moteur macroéconomique (IS, Phillips, Taylor, chocs, Monte-Carlo).</li>
+            <li class="reveal" style="--r: 2"><strong>Création pédagogique.</strong> Histoires, mini-jeux, quiz, scénarios de crise et parcours de progression.</li>
+            <li class="reveal" style="--r: 3"><strong>Animation de communauté.</strong> Palmarès, concours inter-écoles, mode multijoueur.</li>
+            <li class="reveal" style="--r: 4"><strong>Mesure d'impact.</strong> Suivi des scores, badges et progression pour prouver l'efficacité pédagogique.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 2">
+          <svg viewBox="0 0 420 250" role="img" aria-label="Boucle d'amélioration : développer, créer, animer, mesurer">
+            <defs>
+              <marker id="arr-ac" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0 0 L8 4 L0 8 Z" class="mk-solid"/>
+              </marker>
+            </defs>
+            <path class="ln" d="M227 48 A78 78 0 0 1 282 103" marker-end="url(#arr-ac)"/>
+            <path class="ln" d="M282 147 A78 78 0 0 1 227 202" marker-end="url(#arr-ac)"/>
+            <path class="ln" d="M193 202 A78 78 0 0 1 138 147" marker-end="url(#arr-ac)"/>
+            <path class="ln" d="M138 103 A78 78 0 0 1 193 48" marker-end="url(#arr-ac)"/>
+            <circle class="mk-soft ln-soft" cx="210" cy="47" r="21"/>
+            <circle class="mk-soft ln-soft" cx="288" cy="125" r="21"/>
+            <circle class="mk-soft ln-soft" cx="210" cy="203" r="21"/>
+            <circle class="mk-soft ln-soft" cx="132" cy="125" r="21"/>
+            <text class="t-cap" x="210" y="52" font-size="11" text-anchor="middle">1</text>
+            <text class="t-cap" x="288" y="130" font-size="11" text-anchor="middle">2</text>
+            <text class="t-cap" x="210" y="208" font-size="11" text-anchor="middle">3</text>
+            <text class="t-cap" x="132" y="130" font-size="11" text-anchor="middle">4</text>
+            <text class="t-lab" x="210" y="16" font-size="12" text-anchor="middle">Développer le moteur</text>
+            <text class="t-lab" x="322" y="122" font-size="12">Créer le</text>
+            <text class="t-lab" x="322" y="137" font-size="12">contenu</text>
+            <text class="t-lab" x="210" y="243" font-size="12" text-anchor="middle">Animer la communauté</text>
+            <text class="t-lab" x="98" y="122" font-size="12" text-anchor="end">Mesurer</text>
+            <text class="t-lab" x="98" y="137" font-size="12" text-anchor="end">l'impact</text>
+            <text class="t-cap" x="210" y="121" font-size="10" text-anchor="middle">boucle</text>
+            <text class="t-cap" x="210" y="134" font-size="10" text-anchor="middle">d'amélioration</text>
+          </svg>
+          <figcaption>La mesure d'impact nourrit la calibration suivante.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 10 · 08 Partenaires clés ── -->
+  <section class="slide" data-zone="infra" aria-label="Partenaires clés">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">08</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Infrastructure
+          </span>
+          <h2>Partenaires clés</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Institutions académiques.</strong> Écoles, universités et enseignants-chercheurs : validation scientifique du moteur et intégration aux cursus (TD gamifiés).</li>
+            <li class="reveal" style="--r: 2"><strong>Banques centrales &amp; régulateurs.</strong> Caution institutionnelle et relais de diffusion — l'éducation financière fait partie de leur mandat public.</li>
+            <li class="reveal" style="--r: 3"><strong>Fondations &amp; ONG d'inclusion financière.</strong> Financement de la gratuité du cœur de l'offre et accès aux publics éloignés.</li>
+            <li class="reveal" style="--r: 4"><strong>Incubateurs étudiants.</strong> Accompagnement, visibilité concours, premiers financements d'amorçage.</li>
+          </ul>
+        </div>
+        <figure class="fig reveal" style="--r: 2">
+          <svg viewBox="0 0 420 244" role="img" aria-label="Écosystème de partenaires autour de CBS : académie, banques centrales, fondations, incubateurs">
+            <line class="ln-soft" x1="130" y1="52" x2="180" y2="102"/>
+            <line class="ln-soft" x1="290" y1="52" x2="240" y2="102"/>
+            <line class="ln-soft" x1="130" y1="192" x2="180" y2="142"/>
+            <line class="ln-soft" x1="290" y1="192" x2="240" y2="142"/>
+            <rect class="mk-soft ln-soft" x="14" y="14" width="140" height="54" rx="8"/>
+            <text class="t-lab" x="84" y="38" font-size="12" text-anchor="middle">Académie</text>
+            <text class="t-sub" x="84" y="54" font-size="10" text-anchor="middle">écoles &amp; universités</text>
+            <rect class="mk-soft ln-soft" x="266" y="14" width="140" height="54" rx="8"/>
+            <text class="t-lab" x="336" y="38" font-size="12" text-anchor="middle">Banques centrales</text>
+            <text class="t-sub" x="336" y="54" font-size="10" text-anchor="middle">&amp; régulateurs</text>
+            <rect class="mk-soft ln-soft" x="14" y="176" width="140" height="54" rx="8"/>
+            <text class="t-lab" x="84" y="200" font-size="12" text-anchor="middle">Fondations</text>
+            <text class="t-sub" x="84" y="216" font-size="10" text-anchor="middle">&amp; ONG d'inclusion</text>
+            <rect class="mk-soft ln-soft" x="266" y="176" width="140" height="54" rx="8"/>
+            <text class="t-lab" x="336" y="200" font-size="12" text-anchor="middle">Incubateurs</text>
+            <text class="t-sub" x="336" y="216" font-size="10" text-anchor="middle">étudiants</text>
+            <rect class="mk ln" x="168" y="98" width="84" height="48" rx="8"/>
+            <text class="t-lab" x="210" y="127" font-size="14" text-anchor="middle">CBS</text>
+          </svg>
+          <figcaption>L'écosystème apporte caution, diffusion et financement.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 11 · 09 Structure de coûts ── -->
+  <section class="slide" data-zone="fin" aria-label="Structure de coûts">
+    <div class="slide-inner">
+      <header class="block-header reveal" style="--r: 0">
+        <span class="big-num">09</span>
+        <hgroup>
+          <span class="zone-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+            Finances
+          </span>
+          <h2>Structure de coûts</h2>
+        </hgroup>
+      </header>
+      <div class="slide-body">
+        <div class="col-main">
+          <ul>
+            <li class="reveal" style="--r: 1"><strong>Développement &amp; maintenance</strong> de la plateforme — poste principal, essentiellement du temps d'équipe.</li>
+            <li class="reveal" style="--r: 2"><strong>Création de contenu &amp; calibration académique.</strong> Nouveaux scénarios, relecture scientifique.</li>
+            <li class="reveal" style="--r: 3"><strong>Hébergement &amp; infrastructure.</strong> Faible : application web légère, pas de backend lourd.</li>
+            <li class="reveal" style="--r: 4"><strong>Acquisition quasi nulle au lancement.</strong> Canaux organiques (écoles, concours) plutôt que publicité payante.</li>
+          </ul>
+          <p class="note reveal" style="--r: 5"><strong>Structure légère à dominante de coûts fixes :</strong> coût marginal ≈ 0 par utilisateur supplémentaire — condition économique de la gratuité inclusive.</p>
+        </div>
+        <figure class="fig reveal" style="--r: 3">
+          <svg viewBox="0 0 420 250" role="img" aria-label="Courbe schématique : le coût moyen par utilisateur tend vers zéro quand le nombre d'utilisateurs augmente">
+            <text class="t-cap" x="40" y="14" font-size="10.5">Coût moyen / utilisateur</text>
+            <line class="grid" x1="40" y1="22" x2="40" y2="212"/>
+            <line class="grid" x1="40" y1="212" x2="404" y2="212"/>
+            <line class="ln-soft" x1="40" y1="200" x2="404" y2="200" stroke-dasharray="4 4"/>
+            <path class="ln" d="M56 38 C 96 42, 108 128, 168 168 S 300 196, 388 198"/>
+            <circle class="ring" cx="388" cy="198" r="7" fill="none" stroke-width="2.5"/>
+            <circle class="mk-solid" cx="388" cy="198" r="5"/>
+            <text class="t-lab" x="252" y="184" font-size="11.5">coût marginal ≈ 0</text>
+            <text class="t-cap" x="404" y="232" font-size="10.5" text-anchor="end">Utilisateurs →</text>
+          </svg>
+          <figcaption>Courbe schématique : la gratuité de masse devient soutenable.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 12 · Synthèse ── -->
+  <section class="slide" aria-label="Synthèse">
+    <div class="slide-inner">
+      <p class="eyebrow reveal" style="--r: 0">Synthèse</p>
+      <h2 class="reveal" style="--r: 1">Le modèle en une idée</h2>
+      <p class="lede reveal" style="--r: 2">
+        L'inclusion n'est pas un supplément d'âme : c'est l'architecture même du modèle.
+        Trois principes la rendent économiquement viable.
+      </p>
+      <div class="principles">
+        <article class="principle reveal" style="--r: 3; --z: var(--accent-green)">
+          <span class="p-kicker">Marché</span>
+          <h3 class="p-title">Servis ≠ payeurs</h3>
+          <p class="p-body">Le grand public joue gratuitement ; établissements, institutions et mécènes financent — chacun au titre de son propre mandat d'éducation financière.</p>
+        </article>
+        <article class="principle reveal" style="--r: 4; --z: var(--accent-warm)">
+          <span class="p-kicker">Finances</span>
+          <h3 class="p-title">Coût marginal ≈ 0</h3>
+          <p class="p-body">Application web légère, sans backend lourd : chaque utilisateur supplémentaire ne coûte presque rien. La gratuité de masse est soutenable.</p>
+        </article>
+        <article class="principle reveal" style="--r: 5; --z: var(--accent-cool)">
+          <span class="p-kicker">Infrastructure</span>
+          <h3 class="p-title">Un actif, deux publics</h3>
+          <p class="p-body">Le même moteur académique alimente le Mode Découverte vulgarisé et le Mode Expert : la rigueur crédibilise l'inclusion, l'inclusion diffuse la rigueur.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="navbar" aria-label="Navigation de la présentation">
+  <span>CBS · BMC Éco Inclusif</span>
+  <span class="hint">← → naviguer · Début / Fin</span>
+  <div class="nav-controls">
+    <button class="nav-btn" type="button" data-nav="-1" aria-label="Diapositive précédente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="counter" aria-live="polite">1 / 12</span>
+    <button class="nav-btn" type="button" data-nav="1" aria-label="Diapositive suivante">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+</nav>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+
+    /* ── Thème : localStorage > toggle > préférence système ── */
+    var stored = null;
+    try { stored = localStorage.getItem('bmc-theme'); } catch (e) {}
+    if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
+
+    document.querySelector('.theme-toggle').addEventListener('click', function () {
+      var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var current = root.getAttribute('data-theme') || (systemDark ? 'dark' : 'light');
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('bmc-theme', next); } catch (e) {}
+    });
+
+    /* ── Navigation ── */
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var counter = document.querySelector('.counter');
+    var progress = document.querySelector('.progress');
+    var current = 0;
+
+    function show(i, backwards) {
+      i = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach(function (s, k) {
+        s.classList.toggle('active', k === i);
+        s.classList.toggle('from-left', !!backwards && k === i);
+        s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+      });
+      current = i;
+      counter.textContent = (i + 1) + ' / ' + slides.length;
+      progress.style.width = ((i + 1) / slides.length * 100) + '%';
+      if (history.replaceState) history.replaceState(null, '', '#' + (i + 1));
+    }
+
+    function step(delta) { show(current + delta, delta < 0); }
+
+    /* Clavier */
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); step(1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); step(-1); }
+      else if (e.key === 'Home') { e.preventDefault(); show(0); }
+      else if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+    });
+
+    /* Boutons */
+    document.querySelectorAll('[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () { step(parseInt(btn.dataset.nav, 10)); });
+    });
+
+    /* Mini-canvas cliquable */
+    document.querySelectorAll('[data-goto]').forEach(function (btn) {
+      btn.addEventListener('click', function () { show(parseInt(btn.dataset.goto, 10)); });
+    });
+
+    /* Balayage tactile */
+    var touchX = null;
+    window.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+    window.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1);
+      touchX = null;
+    }, { passive: true });
+
+    /* Reprise via l'ancre #n */
+    var hash = parseInt((location.hash || '').replace('#', ''), 10);
+    show(isNaN(hash) ? 0 : hash - 1);
+  })();
+</script>
+
+</body>
+</html>

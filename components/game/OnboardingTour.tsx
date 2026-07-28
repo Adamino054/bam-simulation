@@ -134,7 +134,7 @@ export function OnboardingTour({ isOpen, onClose }: OnboardingTourProps) {
 
   const handleComplete = () => {
     sound.playSuccess()
-    localStorage.setItem('bam_onboarding_completed', 'true')
+    localStorage.setItem('cbs_onboarding_completed', 'true')
     onClose()
   }
 

@@ -494,7 +494,7 @@ L'activation de l'**Emergency Lending** permet d'injecter des fonds pour allége
 
   // J. Question sur la Centrale Bank Simulateur (CBS)
   if (q.includes("qui est cbs") || q.includes("centrale bank") || q.includes("cbs") || q.includes("banque centrale") || q.includes("role de la banque")) {
-    return `Gouverneur ${name}, la **Centrale Bank Simulateur** (CBS) est la simulation de la Banque centrale du Royaume du Maroc, inspirée de Bank Al-Maghrib, instituée en 1959. Notre mission fondamentale, ancrée dans la loi statutaire, est de veiller à la **stabilité des prix** pour soutenir le développement économique harmonieux du Royaume.
+    return `Gouverneur ${name}, la **Centrale Bank Simulateur** (CBS) est la simulation de la Banque Centrale du Royaume du Maroc, instituée en 1959. Notre mission fondamentale, ancrée dans la loi statutaire, est de veiller à la **stabilité des prix** pour soutenir le développement économique harmonieux du Royaume.
 
 Nos attributions majeures intègrent :
 - La formulation et la mise en œuvre de la politique monétaire (taux directeur, réserves obligatoires).

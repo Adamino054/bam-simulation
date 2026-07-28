@@ -5,7 +5,7 @@ import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
 import { SCENARIOS } from '@/engine/scenarios'
-import { fetchBkamPolicySettings } from '@/engine/bkamPolicy'
+import { fetchCentralBankPolicySettings } from '@/engine/centralBankPolicy'
 import { getLevelConfig } from '@/engine/difficulty'
 import { FREE_MODE_QUARTERS } from '@/lib/constants'
 import { PRESS_CONFERENCES } from '@/engine/pressConferences'
@@ -30,7 +30,7 @@ interface GameStore {
   pendingPressConference: { questionId: string; year: number } | null
 
   startGame: (scenario: ScenarioId, level?: DifficultyLevel) => Promise<void>
-  syncInitialBkamPolicy: () => Promise<void>
+  syncInitialCentralBankPolicy: () => Promise<void>
   setDifficultyLevel: (level: DifficultyLevel) => void
   setPendingAction: (action: Partial<PolicyAction>) => void
   advanceTurn: () => void
@@ -44,7 +44,7 @@ function generateSeed(): number {
   return Math.floor(Math.random() * 1_000_000)
 }
 
-function applyBkamInitialPolicy(state: EconomicState, policyRate: number, reserveRequirement: number): EconomicState {
+function applyCentralBankInitialPolicy(state: EconomicState, policyRate: number, reserveRequirement: number): EconomicState {
   const policyRateDelta = policyRate - state.policyRate
 
   return {
@@ -62,7 +62,7 @@ function scenarioPolicyDate(state: EconomicState): string {
   return `${state.date.year}-${String(quarterEndMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
-function shouldUseBkamPolicy(scenarioId: ScenarioId, state: EconomicState): boolean {
+function shouldUseLivePolicy(scenarioId: ScenarioId, state: EconomicState): boolean {
   return scenarioId !== 'volcker1979' && state.date.year >= 2008
 }
 
@@ -90,12 +90,12 @@ export const useGameStore = create<GameStore>()(
         const chosenLevel = level ?? get().difficultyLevel
         let initialState = { ...scenario.initialState }
 
-        if (shouldUseBkamPolicy(scenarioId, scenario.initialState)) {
-          const bkamPolicy = await fetchBkamPolicySettings(scenarioPolicyDate(scenario.initialState))
-          initialState = applyBkamInitialPolicy(
+        if (shouldUseLivePolicy(scenarioId, scenario.initialState)) {
+          const policy = await fetchCentralBankPolicySettings(scenarioPolicyDate(scenario.initialState))
+          initialState = applyCentralBankInitialPolicy(
             scenario.initialState,
-            bkamPolicy.policyRate,
-            bkamPolicy.reserveRequirement,
+            policy.policyRate,
+            policy.reserveRequirement,
           )
         }
 
@@ -116,18 +116,18 @@ export const useGameStore = create<GameStore>()(
         })
       },
 
-      async syncInitialBkamPolicy() {
+      async syncInitialCentralBankPolicy() {
         const { currentState, history, status, scenario } = get()
         if (status !== 'playing' || currentState.quarter !== 0 || history.length > 0) return
-        if (!scenario || !shouldUseBkamPolicy(scenario, currentState)) return
+        if (!scenario || !shouldUseLivePolicy(scenario, currentState)) return
 
         const scenarioInitialState = SCENARIOS[scenario].initialState
-        const bkamPolicy = await fetchBkamPolicySettings(scenarioPolicyDate(scenarioInitialState))
+        const policy = await fetchCentralBankPolicySettings(scenarioPolicyDate(scenarioInitialState))
         set({
-          currentState: applyBkamInitialPolicy(
+          currentState: applyCentralBankInitialPolicy(
             scenarioInitialState,
-            bkamPolicy.policyRate,
-            bkamPolicy.reserveRequirement,
+            policy.policyRate,
+            policy.reserveRequirement,
           ),
         })
       },

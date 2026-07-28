@@ -61,11 +61,11 @@ export function NewsAlert({
   return (
     <>
       <style>{`
-        @keyframes bam-dot-pulse {
+        @keyframes cbs-dot-pulse {
           0%, 100% { opacity: 1; }
           50%       { opacity: 0.25; }
         }
-        @keyframes bam-ticker {
+        @keyframes cbs-ticker {
           from { background-position-x: 0; }
           to   { background-position-x: -200px; }
         }
@@ -116,7 +116,7 @@ export function NewsAlert({
                   borderRadius: '50%',
                   backgroundColor: '#fff',
                   flexShrink: 0,
-                  animation: 'bam-dot-pulse 1.1s ease-in-out infinite',
+                  animation: 'cbs-dot-pulse 1.1s ease-in-out infinite',
                 }}
               />
               <Radio size={10} style={{ color: '#fff', flexShrink: 0, opacity: 0.9 }} />

@@ -1021,7 +1021,7 @@ function CampaignView() {
                 style={{ cursor: isStarting ? 'wait' : 'pointer', opacity: isStarting ? 0.8 : 1 }}
               >
                 <Play size={12} fill="white" />
-                {isStarting ? 'Synchronisation BKAM...' : 'Accepter la Mission & Commencer'}
+                {isStarting ? 'Synchronisation Banque Centrale...' : 'Accepter la Mission & Commencer'}
               </button>
             </div>
 

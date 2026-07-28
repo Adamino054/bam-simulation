@@ -63,13 +63,13 @@ export default function PlayPage() {
   const history = useGameStore(s => s.history)
   const freeMode = useGameStore(s => s.freeMode)
   const difficultyLevel = useGameStore(s => s.difficultyLevel)
-  const syncInitialBkamPolicy = useGameStore(s => s.syncInitialBkamPolicy)
+  const syncInitialCentralBankPolicy = useGameStore(s => s.syncInitialCentralBankPolicy)
   const currentUser = useAuthStore(s => s.currentUser)
   const pendingPressConference = useGameStore(s => s.pendingPressConference)
 
   useEffect(() => {
     setMounted(true)
-    const completed = localStorage.getItem('bam_onboarding_completed')
+    const completed = localStorage.getItem('cbs_onboarding_completed')
     if (completed !== 'true') {
       setIsTourOpen(true)
     }
@@ -97,14 +97,14 @@ export default function PlayPage() {
 
     let cancelled = false
     setInitialPolicySynced(false)
-    syncInitialBkamPolicy().finally(() => {
+    syncInitialCentralBankPolicy().finally(() => {
       if (!cancelled) setInitialPolicySynced(true)
     })
 
     return () => {
       cancelled = true
     }
-  }, [mounted, status, scenario, syncInitialBkamPolicy])
+  }, [mounted, status, scenario, syncInitialCentralBankPolicy])
 
   const maxQuarters = freeMode ? FREE_MODE_QUARTERS : (difficultyLevel === 'beginner' ? 16 : difficultyLevel === 'intermediate' ? 20 : 25)
 

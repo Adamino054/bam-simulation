@@ -157,7 +157,7 @@ export default function LoginPage() {
                 type="text"
                 value={pseudo}
                 onChange={e => setPseudo(e.target.value)}
-                placeholder="Ex: gouverneur_bam"
+                placeholder="Ex: gouverneur_cbs"
                 autoComplete="username"
                 className="w-full px-3 py-2.5 rounded-md text-sm transition-colors"
                 style={{
