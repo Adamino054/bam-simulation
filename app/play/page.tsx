@@ -18,6 +18,7 @@ import { FREE_MODE_QUARTERS, INFLATION_TARGET } from '@/lib/constants'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 import { getSimulationTips } from '@/engine/botMessages'
 import type { ScenarioId } from '@/engine/state'
+import { historicalQuartersCount, isHistoricalScenario } from '@/engine/v5/historicalScenarios'
 import { OnboardingTour } from '@/components/game/OnboardingTour'
 import { PressConferenceModal } from '@/components/game/PressConferenceModal'
 
@@ -106,7 +107,9 @@ export default function PlayPage() {
     }
   }, [mounted, status, scenario, syncInitialCentralBankPolicy])
 
-  const maxQuarters = freeMode ? FREE_MODE_QUARTERS : (difficultyLevel === 'beginner' ? 16 : difficultyLevel === 'intermediate' ? 20 : 25)
+  const maxQuarters = scenario && isHistoricalScenario(scenario as ScenarioId)
+    ? historicalQuartersCount(scenario as ScenarioId)
+    : freeMode ? FREE_MODE_QUARTERS : (difficultyLevel === 'beginner' ? 16 : difficultyLevel === 'intermediate' ? 20 : 25)
 
   const allStates = useMemo(
     () => [...history.map(s => ({ inflation: s.inflation, quarter: s.quarter })), { inflation: currentState.inflation, quarter: currentState.quarter }],

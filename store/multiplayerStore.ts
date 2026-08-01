@@ -2,10 +2,14 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { EconomicState, PolicyAction, Shock, ScenarioId, DifficultyLevel } from '@/engine/state'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
-import { SCENARIOS } from '@/engine/scenarios'
-import { step } from '@/engine/simulator'
 import { computeScore, type ScoreResult } from '@/engine/scoring'
-import { getLevelConfig } from '@/engine/difficulty'
+import {
+  cloneEconomicState,
+  getScenarioInitialShocks,
+  getScenarioInitialState,
+  getScenarioMaxQuarters,
+  runScenarioStep,
+} from '@/engine/scenarioRunner'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -125,18 +129,19 @@ function generateSeed(): number {
 const PLAYER_AVATARS = ['🏛️', '🏦', '📊', '💹', '🎯', '🦁', '🦅', '⚡']
 
 function getDefaultDuelState(scenario: ScenarioId): DuelState {
-  const sc = SCENARIOS[scenario]
+  const initialState = getScenarioInitialState(scenario)
+  const initialShocks = getScenarioInitialShocks(scenario)
   return {
-    p1State: { ...sc.initialState },
+    p1State: cloneEconomicState(initialState),
     p1History: [],
-    p1ActiveShocks: [...sc.initialShocks],
+    p1ActiveShocks: initialShocks.map(shock => ({ ...shock })),
     p1PendingAction: { ...DEFAULT_POLICY_ACTION },
     p1PreviousRateChange: 0,
     p1FxHistory: [],
 
-    p2State: { ...sc.initialState },
+    p2State: cloneEconomicState(initialState),
     p2History: [],
-    p2ActiveShocks: [...sc.initialShocks],
+    p2ActiveShocks: initialShocks.map(shock => ({ ...shock })),
     p2PendingAction: { ...DEFAULT_POLICY_ACTION },
     p2PreviousRateChange: 0,
     p2FxHistory: [],
@@ -146,11 +151,11 @@ function getDefaultDuelState(scenario: ScenarioId): DuelState {
 }
 
 function getDefaultCoopState(scenario: ScenarioId): CoopState {
-  const sc = SCENARIOS[scenario]
+  const initialState = getScenarioInitialState(scenario)
   return {
-    sharedState: { ...sc.initialState },
+    sharedState: cloneEconomicState(initialState),
     sharedHistory: [],
-    sharedActiveShocks: [...sc.initialShocks],
+    sharedActiveShocks: getScenarioInitialShocks(scenario),
     sharedPendingAction: { ...DEFAULT_POLICY_ACTION },
     sharedPreviousRateChange: 0,
     sharedFxHistory: [],
@@ -220,19 +225,20 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
       submitDuelTurn() {
         const { duel, seed, scenario, difficultyLevel } = get()
         const ap = duel.activePlayer
-        const levelConfig = getLevelConfig(difficultyLevel)
-        const maxQ = levelConfig.quarters
+        const maxQ = getScenarioMaxQuarters(scenario, difficultyLevel)
 
         if (ap === 'p1') {
           // Simuler le tour de P1
-          const result = step(
-            duel.p1State, duel.p1PendingAction, duel.p1ActiveShocks, seed,
-            { scenarioId: scenario, previousPolicyRateChangeBp: duel.p1PreviousRateChange, fxInterventionHistory: duel.p1FxHistory }
-          )
-          const newShocks = [
-            ...duel.p1ActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),
-            ...result.triggeredShocks,
-          ]
+          const { result, activeShocks } = runScenarioStep({
+            state: duel.p1State,
+            action: duel.p1PendingAction,
+            activeShocks: duel.p1ActiveShocks,
+            seed,
+            scenario,
+            previousPolicyRateChangeBp: duel.p1PreviousRateChange,
+            fxInterventionHistory: duel.p1FxHistory,
+            history: duel.p1History,
+          })
           const newFxHistory = [...duel.p1FxHistory, duel.p1PendingAction.fxInterventionBnMad].slice(-4)
 
           set(s => ({
@@ -240,7 +246,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
               ...s.duel,
               p1History: [...s.duel.p1History, s.duel.p1State],
               p1State: result.newState,
-              p1ActiveShocks: newShocks,
+              p1ActiveShocks: activeShocks,
               p1PreviousRateChange: s.duel.p1PendingAction.policyRateChangeBp,
               p1FxHistory: newFxHistory,
               p1PendingAction: { ...DEFAULT_POLICY_ACTION },
@@ -249,14 +255,16 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
           }))
         } else {
           // Simuler le tour de P2
-          const result = step(
-            duel.p2State, duel.p2PendingAction, duel.p2ActiveShocks, seed,
-            { scenarioId: scenario, previousPolicyRateChangeBp: duel.p2PreviousRateChange, fxInterventionHistory: duel.p2FxHistory }
-          )
-          const newShocks = [
-            ...duel.p2ActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),
-            ...result.triggeredShocks,
-          ]
+          const { result, activeShocks } = runScenarioStep({
+            state: duel.p2State,
+            action: duel.p2PendingAction,
+            activeShocks: duel.p2ActiveShocks,
+            seed,
+            scenario,
+            previousPolicyRateChangeBp: duel.p2PreviousRateChange,
+            fxInterventionHistory: duel.p2FxHistory,
+            history: duel.p2History,
+          })
           const newFxHistory = [...duel.p2FxHistory, duel.p2PendingAction.fxInterventionBnMad].slice(-4)
 
           const nextQuarter = get().currentQuarterIndex + 1
@@ -267,7 +275,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
               ...s.duel,
               p2History: [...s.duel.p2History, s.duel.p2State],
               p2State: result.newState,
-              p2ActiveShocks: newShocks,
+              p2ActiveShocks: activeShocks,
               p2PreviousRateChange: s.duel.p2PendingAction.policyRateChangeBp,
               p2FxHistory: newFxHistory,
               p2PendingAction: { ...DEFAULT_POLICY_ACTION },
@@ -327,17 +335,18 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
         const { coop, seed, scenario, difficultyLevel, currentQuarterIndex } = get()
         if (!coop.p1Locked || !coop.p2Locked) return
 
-        const levelConfig = getLevelConfig(difficultyLevel)
-        const maxQ = levelConfig.quarters
+        const maxQ = getScenarioMaxQuarters(scenario, difficultyLevel)
 
-        const result = step(
-          coop.sharedState, coop.sharedPendingAction, coop.sharedActiveShocks, seed,
-          { scenarioId: scenario, previousPolicyRateChangeBp: coop.sharedPreviousRateChange, fxInterventionHistory: coop.sharedFxHistory }
-        )
-        const newShocks = [
-          ...coop.sharedActiveShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),
-          ...result.triggeredShocks,
-        ]
+        const { result, activeShocks } = runScenarioStep({
+          state: coop.sharedState,
+          action: coop.sharedPendingAction,
+          activeShocks: coop.sharedActiveShocks,
+          seed,
+          scenario,
+          previousPolicyRateChangeBp: coop.sharedPreviousRateChange,
+          fxInterventionHistory: coop.sharedFxHistory,
+          history: coop.sharedHistory,
+        })
         const newFxHistory = [...coop.sharedFxHistory, coop.sharedPendingAction.fxInterventionBnMad].slice(-4)
 
         const nextQuarter = currentQuarterIndex + 1
@@ -347,7 +356,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
           coop: {
             sharedHistory: [...s.coop.sharedHistory, s.coop.sharedState],
             sharedState: result.newState,
-            sharedActiveShocks: newShocks,
+            sharedActiveShocks: activeShocks,
             sharedPendingAction: { ...DEFAULT_POLICY_ACTION },
             sharedPreviousRateChange: s.coop.sharedPendingAction.policyRateChangeBp,
             sharedFxHistory: newFxHistory,

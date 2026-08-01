@@ -59,11 +59,12 @@ export default function AboutPage() {
             dans le contexte marocain.
           </p>
           <p>
-            Le moteur de simulation — entièrement isolé du code d'interface — implémente
-            une courbe de Phillips augmentée des anticipations, une courbe IS dynamique,
-            un canal du crédit avec ajustement partiel, et un marché monétaire stylisé.
-            Les paramètres sont calibrés à partir de la littérature sur les économies
-            émergentes à régime de change administré.
+            Le moteur de simulation — entièrement isolé du code d'interface — utilise
+            désormais le moteur mathématique v5 : courbe IS et Phillips estimées, loi
+            d'Okun trimestrielle, croissance par output gap annuel et résidus historiques.
+            Quand l'utilisateur reproduit les choix BAM d'un scénario historique, le site
+            retrouve les valeurs HCP validées pour l'inflation, l'output gap, la croissance
+            et le chômage.
           </p>
           <p>
             Cette version web servira de support pédagogique pour illustrer les mécanismes
@@ -79,14 +80,9 @@ export default function AboutPage() {
           <div className="grid gap-3">
             {[
               {
-                href: '/docs/presentation-modeles-mathematiques.html',
-                title: 'Présentation — Les modèles mathématiques',
-                desc: 'Les 8 modèles du moteur macroéconomique expliqués visuellement, sans prérequis.',
-              },
-              {
-                href: '/docs/dossier-theorique-modeles.html',
-                title: 'Dossier théorique des modèles',
-                desc: "D'où viennent les formules : fondements académiques, sources et calibration de chaque équation.",
+                href: '/docs/moteur-v5-validation.html',
+                title: 'Moteur mathématique v5 — validation historique',
+                desc: 'Équations actives, paramètres utilisés par le site et test de reproduction des scénarios BAM/HCP.',
               },
               {
                 href: '/docs/business-model-canvas.html',

@@ -1,7 +1,57 @@
 import type { EconomicState, PolicyAction, Shock } from './state'
-import { step } from './simulator'
+import { simulateN, step } from './simulator'
+import { stepV5 } from './v5'
+import {
+  historicalDate,
+  historicalGapLag4,
+  historicalPotentialGrowth,
+  historicalShocks,
+  isHistoricalScenario,
+} from './v5/historicalScenarios'
 import { DEFAULT_POLICY_ACTION } from './state'
 import { fmtQuarter } from '@/lib/format'
+
+export function projectStateFourQuarters(
+  currentState: EconomicState,
+  history: EconomicState[],
+  pendingAction: PolicyAction,
+  activeShocks: Shock[],
+  seed: number,
+  scenarioId?: string,
+): EconomicState {
+  if (!isHistoricalScenario(scenarioId as any)) {
+    return simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000, scenarioId as any)
+  }
+
+  let simState = { ...currentState }
+  let simHistory = [...history, currentState]
+
+  for (let h = 0; h < 4; h++) {
+    const actionForQuarter = h === 0
+      ? pendingAction
+      : {
+          ...DEFAULT_POLICY_ACTION,
+          policyRateChangeBp: 0,
+        }
+
+    const result = stepV5(simState, actionForQuarter, [], seed + 50000 + h * 100, {
+      scenarioId: scenarioId as any,
+      realShocks: historicalShocks(scenarioId as any, simState.quarter) ?? undefined,
+      outputGapLag4: historicalGapLag4(
+        scenarioId as any,
+        simState.quarter,
+        simHistory.map(s => s.outputGap),
+      ),
+      potentialGrowth: historicalPotentialGrowth(scenarioId as any, simState.quarter),
+    })
+
+    simState = result.newState
+    simState.date = historicalDate(scenarioId as any, simState.quarter)
+    simHistory = [...simHistory, simState]
+  }
+
+  return simState
+}
 
 export interface FanChartPoint {
   quarterLabel: string
@@ -41,6 +91,7 @@ export function generateInflationFanChart(
   // Standard deviations for stochastics (tuned for Moroccan economy volatility)
   const SIGMA_INFLATION = 0.4 // 0.4% std dev on inflation supply shock
   const SIGMA_OUTPUT_GAP = 0.5 // 0.5% std dev on output gap demand shock
+  const useHistoricalV5 = isHistoricalScenario(scenarioId as any)
 
   // 1. Run the simulations
   // We will store the inflation paths for each run: paths[runIndex][quarterIndex]
@@ -49,6 +100,7 @@ export function generateInflationFanChart(
   for (let run = 0; run < runsCount; run++) {
     let simState = { ...currentState }
     let simActiveShocks = [...activeShocks]
+    let simHistory = [...history, currentState]
     
     // For each future quarter:
     for (let h = 0; h < forecastHorizon; h++) {
@@ -96,14 +148,34 @@ export function generateInflationFanChart(
       // Combine current active shocks, decremented by timeline, with our stochastic noise
       const stepShocks = [...simActiveShocks, tempSupplyShock, tempDemandShock]
 
-      // Advance one step stochastically
-      // We pass a distinct seed for each step to ensure variety in baseline stochastic processes
+      // Advance one step stochastically.
+      // Historical scenarios use stepV5 plus the historical residuals for the quarter,
+      // then add Monte-Carlo noise around those residuals.
       const simSeed = seed + run * 79 + h * 997
-      const result = step(simState, actionForQuarter, stepShocks, simSeed, {
-        scenarioId: scenarioId as any,
-      })
+      const result = useHistoricalV5
+        ? stepV5(simState, actionForQuarter, [], simSeed, {
+            scenarioId: scenarioId as any,
+            realShocks: {
+              upi: (historicalShocks(scenarioId as any, simState.quarter)?.upi ?? 0) + supplyShockNoise,
+              uy: (historicalShocks(scenarioId as any, simState.quarter)?.uy ?? 0) + demandShockNoise,
+              uu: historicalShocks(scenarioId as any, simState.quarter)?.uu ?? 0,
+            },
+            outputGapLag4: historicalGapLag4(
+              scenarioId as any,
+              simState.quarter,
+              simHistory.map(s => s.outputGap),
+            ),
+            potentialGrowth: historicalPotentialGrowth(scenarioId as any, simState.quarter),
+          })
+        : step(simState, actionForQuarter, stepShocks, simSeed, {
+            scenarioId: scenarioId as any,
+          })
 
       simState = result.newState
+      if (useHistoricalV5) {
+        simState.date = historicalDate(scenarioId as any, simState.quarter)
+      }
+      simHistory = [...simHistory, simState]
       simActiveShocks = [
         ...simActiveShocks
           .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))

@@ -10,11 +10,10 @@ import { TurnButton } from './TurnButton'
 import { fmtPct, fmtBp } from '@/lib/format'
 import { POLICY_RATE_BOUNDS, FX_INTERVENTION_OPTIONS, EMERGENCY_LENDING_OPTIONS, MARKET_OPS_OPTIONS, CCYB_OPTIONS } from '@/lib/constants'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
-import { simulateN } from '@/engine/simulator'
 import type { CommunicationStance } from '@/engine/state'
 import { isInstrumentVisible, getLevelConfig } from '@/engine/difficulty'
 import { BotHelpPopover } from './BotHelpPopover'
-import { generateInflationFanChart } from '@/engine/monteCarlo'
+import { generateInflationFanChart, projectStateFourQuarters } from '@/engine/monteCarlo'
 import { FanChartModal } from './FanChartModal'
 
 const RATE_CHANGE_OPTIONS = [
@@ -176,8 +175,8 @@ export function DecisionPanel() {
     [currentState],
   )
   const preview = useMemo(
-    () => simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000, scenario ?? undefined),
-    [currentState, pendingAction, activeShocks, seed, scenario],
+    () => projectStateFourQuarters(currentState, history, pendingAction, activeShocks, seed, scenario ?? undefined),
+    [currentState, history, pendingAction, activeShocks, seed, scenario],
   )
 
   const fanChartData = useMemo(() => {

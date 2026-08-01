@@ -202,7 +202,7 @@ export function FanChartModal({ isOpen, onClose, data }: FanChartModalProps) {
                 Analyse Prédictive de Monte-Carlo
               </h3>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                Modèle de prévision dynamique CBS v3.0
+                Modèle de prévision dynamique aligné v5
               </p>
             </div>
 
@@ -213,11 +213,11 @@ export function FanChartModal({ isOpen, onClose, data }: FanChartModalProps) {
                 Ce graphique en éventail (<strong>Fan Chart</strong>) illustre le degré d&apos;incertitude entourant l&apos;inflation future sur les 4 prochains trimestres. 
               </p>
               <p>
-                L&apos;algorithme exécute <strong>100 scénarios asynchrones</strong> en appliquant un bruit gaussien de choc d&apos;offre ($u^\pi_t$) et de demande ($u^y_t$) à chaque étape de la courbe IS et de Phillips :
+                L&apos;algorithme exécute <strong>100 scénarios asynchrones</strong> en appliquant un bruit gaussien de choc d&apos;offre ($u^\pi_t$) et de demande ($u^y_t$) autour de la dynamique IS/Phillips du moteur :
               </p>
               
               <BlockKatex math="u^\pi_{t+h} \sim \mathcal{N}(0; \, 0.4^2) \quad u^y_{t+h} \sim \mathcal{N}(0; \, 0.5^2)" />
-              <BlockKatex math="\pi_{t+h} = \beta_{eff} \pi^e_{t+h} + \kappa \tilde{y}_{t+h} + \alpha \Delta p^{imp}_{t+h} + u^\pi_{t+h}" />
+              <BlockKatex math="\pi_{t+h} = c_\pi + a\pi_{t+h-1} + \kappa \tilde{y}_{t+h-1} + 0.20(\pi^e_{t+h-1}-2) + 0.12\Delta e_{t+h} + u^\pi_{t+h}" />
 
               <p>
                 La zone la plus sombre au centre (<strong>Intervalle 50%</strong>) correspond aux percentiles 25 à 75. Elle indique que l&apos;inflation a une probabilité de 1 sur 2 de s&apos;y stabiliser. La zone plus claire (<strong>90%</strong>) couvre un spectre quasi-total d&apos;occurrences.

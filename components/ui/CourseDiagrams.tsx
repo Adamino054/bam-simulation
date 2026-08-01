@@ -47,10 +47,9 @@ function DiagramFrame({ title, color, children }: { title: string; color: string
 export function ScoreBreakdown() {
   const items = [
     { label: 'Stabilité des prix',  sublabel: 'π proche de 2 %',    pct: 35, color: '#B41923' },
-    { label: 'Croissance du PIB',   sublabel: 'ỹ proche de 0 %',    pct: 25, color: '#4A9D7C' },
-    { label: 'Crédibilité Banque centrale',     sublabel: 'Anticipations ancrées', pct: 20, color: '#5C7E92' },
-    { label: 'Emploi',              sublabel: 'u proche de u*',      pct: 10, color: '#C9A86A' },
-    { label: 'Stabilité financière',sublabel: 'NPL < 10 %',          pct: 10, color: '#C25450' },
+    { label: 'Croissance du PIB',   sublabel: 'g moyen élevé',       pct: 25, color: '#4A9D7C' },
+    { label: 'Stabilité macro',     sublabel: 'π et ỹ peu volatils', pct: 20, color: '#C9A86A' },
+    { label: 'Crédibilité Banque centrale', sublabel: 'Anticipations ancrées', pct: 20, color: '#5C7E92' },
   ]
   return (
     <DiagramFrame title="Pondération du score" color="#B41923">
@@ -74,7 +73,7 @@ export function ScoreBreakdown() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        Un output gap de ±1 % pendant 4 trimestres coûte ~8 pts. Une inflation &gt; 4 % coûte 20+ pts.
+        En Expert, les NPL élevés pénalisent aussi la stabilité. Le total utilise les scores non arrondis puis arrondit une seule fois.
       </p>
     </DiagramFrame>
   )
@@ -115,7 +114,7 @@ export function TransmissionChain() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        λ = 0,35 : seulement 35 % d'une hausse de la Banque centrale est transmise au taux débiteur après 2 trimestres au Maroc. Anticipez toujours 2 trimestres en avance.
+        λ = 0,35 : à chaque trimestre, le taux débiteur absorbe 35 % de l'écart vers son taux cible. La transmission est donc progressive.
       </p>
     </DiagramFrame>
   )
@@ -136,7 +135,7 @@ const IS_DATA = [
 
 export function ISCurveDiagram() {
   return (
-    <DiagramFrame title="Courbe IS — Taux réel vs Output gap" color="#4A9D7C">
+    <DiagramFrame title="Courbe IS v5 — Taux directeur réel perçu vs Output gap" color="#4A9D7C">
       <ResponsiveContainer width="100%" height={200}>
         <ComposedChart data={IS_DATA} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
           <defs>
@@ -147,7 +146,7 @@ export function ISCurveDiagram() {
           </defs>
           <CartesianGrid stroke="rgba(240,240,234,0.05)" vertical={false} />
           <XAxis dataKey="rate" tick={AXIS} axisLine={false} tickLine={false}
-            label={{ value: 'Taux réel r (%)', position: 'insideBottomRight', offset: -6, style: { ...AXIS, fill: '#5E6066' } }}
+            label={{ value: 'Taux directeur réel perçu (%)', position: 'insideBottomRight', offset: -6, style: { ...AXIS, fill: '#5E6066' } }}
             tickFormatter={v => `${v}%`} />
           <YAxis tick={AXIS} axisLine={false} tickLine={false}
             label={{ value: 'Output gap ỹ', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }}
@@ -164,7 +163,7 @@ export function ISCurveDiagram() {
         </ComposedChart>
       </ResponsiveContainer>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-        La zone verte (ỹ ∈ [−1,5 %; +1,5 %]) est la "zone de confort". En dehors, risque inflationniste ou recessif.
+        Le v5 combine ρ=0,7308, σ_jeu=0,24, spread crédit=0,08 et résidus historiques. La zone verte reste ỹ ∈ [−1,5 %; +1,5 %].
       </p>
     </DiagramFrame>
   )
@@ -212,7 +211,7 @@ export function PhillipsCurveDiagram() {
         </ComposedChart>
       </ResponsiveContainer>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-        κ = 0,15 : chaque point d'output gap génère +0,15 pt d'inflation. La courbe s'aplatit près de la cible (zone verte).
+        Phillips v5 : π dépend de 0,5242·π(t−1), de κ_jeu=0,15 sur ỹ(t−1), des anticipations autour de 2 %, du change et du résidu historique.
       </p>
     </DiagramFrame>
   )
@@ -232,7 +231,7 @@ export function ChannelsDiagram() {
     {
       icon: AlertTriangle,
       title: 'Canal du crédit',
-      desc: 'i* ↑ → NPL ↑ → Banques rationnent → Crédit ↓ même si taux inchangé',
+      desc: 'NPL ↑ → prime bancaire ↑ → i^D ↑ → Crédit ↓ même si i* baisse',
       lag: '2–4 trimestres',
       color: '#C9A86A',
       strength: 'Modéré',
@@ -248,7 +247,7 @@ export function ChannelsDiagram() {
     {
       icon: MessageSquare,
       title: 'Canal des anticipations',
-      desc: 'Communication hawkish → π^e ↓ → π ↓ sans bouger i* (Forward Guidance)',
+      desc: 'Communication hawkish → taux perçu +25 pb et π^e ↓ → demande ↓ puis π ↓',
       lag: 'Immédiat',
       color: '#4A9D7C',
       strength: 'Puissant si crédible',
@@ -445,7 +444,7 @@ export function NplRiskZones() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '10px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        Maroc 2023 : NPL ≈ 8,9 % — zone de surveillance. Le simulateur déclenche l'alerte rouge à 12 % + π &lt; 0.
+        Maroc 2023 : NPL ≈ 8,9 % — zone de surveillance. Dans le moteur, les NPL au-dessus de 7 % ajoutent une prime au taux débiteur ; en Expert, ils pénalisent le score de stabilité.
       </p>
     </DiagramFrame>
   )

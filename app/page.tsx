@@ -230,6 +230,9 @@ export default function LandingPage() {
               <a href="/training" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Entraînement
               </a>
+              <a href="/decouverte" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
+                Découverte
+              </a>
               <a href="/dashboard" className="nav-link label-caps" style={{ color: 'var(--text-secondary)', textDecoration: 'none', fontSize: '13px' }}>
                 Simulation
               </a>
@@ -294,7 +297,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 mb-10 px-4 py-1.5 rounded-full" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-default)', animation: 'gradient-border 3s ease-in-out infinite' }}>
               <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse-soft" style={{ backgroundColor: 'var(--accent-primary)' }} />
-              <span className="label-caps" style={{ letterSpacing: '0.12em' }}>Serious Game · Politique Monétaire · Maroc 2025</span>
+              <span className="label-caps" style={{ letterSpacing: '0.12em' }}>Serious Game · Politique Monétaire · Maroc 2026</span>
             </div>
           </motion.div>
 
@@ -609,7 +612,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Landmark size={14} style={{ color: 'var(--accent-primary)' }} />
-              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2025 · Centrale Bank Simulateur</span>
+              <span className="label-caps" style={{ color: 'var(--text-tertiary)' }}>CBS · Projet de Fin d&apos;Année 2026 · Centrale Bank Simulateur</span>
             </div>
             <div className="flex items-center gap-6">
               {[

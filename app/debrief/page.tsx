@@ -11,6 +11,16 @@ import { Header } from '@/components/shell/Header'
 import { fmtPct } from '@/lib/format'
 import { SCENARIOS } from '@/engine/scenarios'
 import { step } from '@/engine/simulator'
+import { stepV5 } from '@/engine/v5'
+import {
+  isHistoricalScenario,
+  historicalQuartersCount,
+  historicalShocks,
+  historicalDate,
+  historicalGapLag4,
+  historicalPotentialGrowth,
+  historicalInitialState,
+} from '@/engine/v5/historicalScenarios'
 import { computeTaylorRate } from '@/engine/models/taylorRule'
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import type { ScenarioId, EconomicState, PolicyAction, Shock, DifficultyLevel } from '@/engine/state'
@@ -35,17 +45,32 @@ const GRADE_COLOR: Record<string, string> = {
 
 function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLevel: DifficultyLevel): number {
   const scenarioData = SCENARIOS[scenario]
-  let state: EconomicState = { ...scenarioData.initialState }
-  let activeShocks: Shock[] = [...scenarioData.initialShocks]
+  const historical = isHistoricalScenario(scenario)
+  let state: EconomicState = historical
+    ? historicalInitialState(scenario, { ...scenarioData.initialState })
+    : { ...scenarioData.initialState }
+  let activeShocks: Shock[] = historical ? [] : [...scenarioData.initialShocks]
   const allStates: EconomicState[] = [state]
   const levelConfig = getLevelConfig(difficultyLevel)
+  const maxQuarters = historical ? historicalQuartersCount(scenario) : levelConfig.quarters
 
-  for (let q = 0; q < levelConfig.quarters - 1; q++) {
+  for (let q = 0; q < maxQuarters - 1; q++) {
     const taylorRate = computeTaylorRate(state.inflation, state.outputGap)
     const rateChange = Math.round((taylorRate - state.policyRate) * 100 / 25) * 25
     const clampedChange = Math.max(-100, Math.min(100, rateChange))
     const action: PolicyAction = { ...DEFAULT_POLICY_ACTION, policyRateChangeBp: clampedChange }
-    const result = step(state, action, activeShocks, seed + q * 100, { scenarioId: scenario })
+    const historyGaps = allStates.slice(1).map(h => h.outputGap)
+    const result = historical
+      ? stepV5({ ...state, date: historicalDate(scenario, state.quarter) }, action, activeShocks, seed + q * 100, {
+          scenarioId: scenario,
+          realShocks: historicalShocks(scenario, q) ?? undefined,
+          outputGapLag4: historicalGapLag4(scenario, q, [...historyGaps, state.outputGap]),
+          potentialGrowth: historicalPotentialGrowth(scenario, q),
+        })
+      : step(state, action, activeShocks, seed + q * 100, { scenarioId: scenario })
+    if (historical) {
+      result.newState.date = historicalDate(scenario, result.newState.quarter)
+    }
     state = result.newState
     activeShocks = [
       ...activeShocks.map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 })).filter(s => s.remainingQuarters > 0),

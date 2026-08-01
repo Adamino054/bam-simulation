@@ -39,7 +39,7 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'intro-e1', question: "En 2022, à quel niveau l'inflation marocaine a-t-elle culminé ?", options: ['3,5%', '4,8%', '6,1%', '8,3%'], correctIndex: 2, explanation: "L'inflation a atteint 6,1% en 2022, son plus haut depuis 30 ans." },
         { id: 'intro-e2', question: "Quel mécanisme lie crédibilité et désinflation ?", options: ['Courbe IS', 'Canal des anticipations', 'Loi d\'Okun', 'Balance des paiements'], correctIndex: 1, explanation: "Une Banque centrale crédible ancre les anticipations, réduisant le coût en PIB de la désinflation." },
         { id: 'intro-e3', question: "Quel est le coût de la désinflation quand la crédibilité est faible ?", options: ['Aucun', 'Faible récession', 'Forte récession nécessaire', 'Déflation automatique'], correctIndex: 2, explanation: "Sans crédibilité, la désinflation nécessite un output gap négatif prolongé — un sacrifice de croissance." },
-        { id: 'intro-e4', question: "Que mesurent les 4 composantes du scoring ?", options: ['PIB, Emploi, Exports, Investissement', 'Inflation, Croissance, Stabilité, Crédibilité', 'Taux, Réserves, Liquidité, NPL', 'Prix, Change, Balance, Dette'], correctIndex: 1, explanation: "Le score évalue l'inflation (35pts), la croissance (25pts), la stabilité (20pts) et la crédibilité (20pts)." },
+        { id: 'intro-e4', question: "Que mesurent les 4 composantes du scoring ?", options: ['PIB, Emploi, Exports, Investissement', 'Inflation, Croissance, Stabilité, Crédibilité', 'Taux, Réserves, Liquidité, NPL', 'Prix, Change, Balance, Dette'], correctIndex: 1, explanation: "En niveau Intermédiaire, le score évalue l'inflation (35 pts), la croissance (25 pts), la stabilité des trajectoires (20 pts) et la crédibilité (20 pts)." },
         { id: 'intro-e5', question: "Qui préside le Conseil de la Banque centrale ?", options: ['Le Wali', 'Le Ministre de l\'Économie', 'Le Chef du Gouvernement', 'Un commissaire nommé par le parlement'], correctIndex: 0, explanation: "Le Conseil de la Banque est légalement présidé par le Wali de la banque centrale." }
       ],
     },
@@ -50,7 +50,7 @@ export const QUIZZES: ModuleQuiz[] = [
       beginner: [
         { id: 'pr-b1', question: "Que se passe-t-il quand le taux directeur monte ?", options: ['Les crédits deviennent moins chers', 'Les crédits deviennent plus chers', 'Le PIB augmente', "L'inflation augmente"], correctIndex: 1, explanation: "Un taux directeur plus élevé rend les emprunts plus coûteux, ce qui freine la demande." },
         { id: 'pr-b2', question: "De combien peut-on changer le taux à chaque trimestre ?", options: ['0,10%', '0,25%', '0,50%', '1,00%'], correctIndex: 1, explanation: "Dans le simulateur, les variations se font par pas de 25 points de base (0,25%)." },
-        { id: 'pr-b3', question: "En combien de trimestres l'effet se fait-il sentir ?", options: ['Immédiatement', '1 trimestre', '2-3 trimestres', '10 trimestres'], correctIndex: 2, explanation: "La transmission monétaire prend environ 2 à 3 trimestres pour impacter pleinement l'inflation." },
+        { id: 'pr-b3', question: "Comment l'effet d'un changement de taux se transmet-il ?", options: ['Tout est instantané', 'TMP immédiat puis taux débiteur progressif', 'Seulement après 10 trimestres', 'Uniquement par le chômage'], correctIndex: 1, explanation: "Dans le moteur, le TMP réagit au trimestre courant, puis le taux débiteur absorbe progressivement le signal avec λ = 0,35." },
         { id: 'pr-b4', question: "Si l'inflation est trop basse (ex. 0,5%), quelle action convient ?", options: ['Baisser le taux directeur', 'Augmenter le taux directeur', 'Ne rien changer', 'Fermer les banques'], correctIndex: 0, explanation: "Baisser le taux directeur stimule le crédit et relance l'activité et l'inflation." }
       ],
       intermediate: [
@@ -75,8 +75,8 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'is-b3', question: "Comment appelle-t-on une baisse du PIB sur plusieurs trimestres ?", options: ['Une récession', 'Une expansion', 'Une inflation', 'Une parité'], correctIndex: 0, explanation: "Une baisse durable de l'activité économique caractérise une récession." }
       ],
       intermediate: [
-        { id: 'is-i1', question: "Que signifie σ = 0,12 ?", options: ['Forte sensibilité aux taux', 'Faible sensibilité aux taux réels', 'Haute ouverture commerciale', 'Persistance cyclique'], correctIndex: 1, explanation: "σ = 0,12 est faible car au Maroc le capital est peu mobile et les entreprises dépendent peu du financement externe." },
-        { id: 'is-i2', question: "Que mesure le paramètre δ = 0,30 ?", options: ['Inflation core', "Degré d'ouverture commerciale", 'Taux de change', 'Liquidité bancaire'], correctIndex: 1, explanation: "δ = 0,30 capture la dépendance du Maroc à la demande européenne (tourisme, IDE, transferts)." },
+        { id: 'is-i1', question: "Pourquoi σ_jeu = 0,24 est-il supérieur à σ_estimé ≈ 0,071 ?", options: ['Pour rendre les décisions de taux visibles dans une partie courte', 'Pour supprimer le rôle du crédit', 'Pour augmenter mécaniquement l’inflation', 'Pour ignorer les données historiques'], correctIndex: 0, explanation: "Le v5 garde l'estimation historique, mais amplifie la sensibilité de jeu afin que les choix de politique monétaire aient un effet lisible trimestre après trimestre." },
+        { id: 'is-i2', question: "Que mesure σ_crédit = 0,08 dans l'IS v5 ?", options: ['Inflation core', "L'effet du spread entre taux débiteur et taux directeur", 'Taux de change', 'Liquidité bancaire'], correctIndex: 1, explanation: "σ_crédit capte le frein supplémentaire quand le taux débiteur bancaire reste au-dessus du taux directeur." },
         { id: 'is-i3', question: "En 2020, à combien l'output gap marocain a-t-il plongé ?", options: ['-1%', '-2%', '-4%', '-8%'], correctIndex: 2, explanation: "L'output gap a atteint -4% du PIB potentiel en raison de la fermeture du tourisme et de la récession européenne." }
       ],
       expert: [
@@ -94,11 +94,11 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'ph-b3', question: "Quel terme désigne une situation combinant inflation et chômage élevé ?", options: ['La stagflation', 'La déflation', 'La parité', 'La ZLB'], correctIndex: 0, explanation: "La stagflation associe une stagnation économique (récession/chômage) à une inflation élevée." }
       ],
       intermediate: [
-        { id: 'ph-i1', question: "Que vaut β (poids des anticipations) ?", options: ['0,50', '0,75', '0,95', '1,00'], correctIndex: 2, explanation: "β ≈ 0,95 signifie que les anticipations sont le facteur dominant dans la formation des prix (critique de Lucas)." },
+        { id: 'ph-i1', question: "Quel paramètre porte l'inertie de l'inflation dans le v5 ?", options: ['a = 0,5242', 'β = 0,95', 'δ = 0,30', 'λ = 0,35'], correctIndex: 0, explanation: "Dans le v5, l'inertie vient du terme a·π_{t-1}. Les anticipations agissent par leur écart à la cible via 0,20(πe−2)." },
         { id: 'ph-i2', question: "Face à un choc d'offre temporaire, faut-il resserrer fortement ?", options: ['Oui, toujours', 'Non, ça aggrave la récession', 'Ça dépend du taux de change', 'Seul le CCyB est utile'], correctIndex: 1, explanation: "Un resserrement agressif sur un choc temporaire coûte de la croissance sans réduire un choc qui disparaîtra seul." }
       ],
       expert: [
-        { id: 'ph-e1', question: "Quel est le pass-through taux de change → inflation au Maroc ?", options: ['α = 0,02', 'α = 0,08', 'α = 0,25', 'α = 0,50'], correctIndex: 1, explanation: "α = 0,08 : le pass-through est faible sous le régime de quasi-parité dirham/euro-dollar." },
+        { id: 'ph-e1', question: "Quel pass-through change → inflation utilise le moteur v5 ?", options: ['α = 0,02', 'α = 0,08', 'α = 0,12', 'α = 0,50'], correctIndex: 2, explanation: "Le v5 utilise un pass-through de change de 0,12 dans la courbe de Phillips active." },
         { id: 'ph-e2', question: "En 2022, quelles étaient les sources de l'inflation de 6,1% ?", options: ['Uniquement la demande', 'Pétrole + imports + sécheresse + demande post-COVID', 'Seulement le taux de change', 'Politique budgétaire expansionniste'], correctIndex: 1, explanation: "L'inflation de 2022 combinait choc pétrolier, pass-through imports, sécheresse agricole et reprise post-COVID." }
       ],
     },
@@ -115,7 +115,7 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'ch-i2', question: "Pourquoi le canal du crédit peut-il être bloqué ?", options: ['Le taux est trop bas', 'Les NPL élevés poussent les banques à rationner le crédit', 'Le change est fixe', "L'inflation is trop basse"], correctIndex: 1, explanation: "Quand les NPL sont élevés, les banques deviennent averses au risque et rationnent le crédit indépendamment du taux directeur." }
       ],
       expert: [
-        { id: 'ch-e1', question: "Pourquoi λ = 0,35 est problématique pour la transmission ?", options: ['Trop rapide', 'Trop lent — 3 trimestres pour transmettre', 'Trop volatile', "N'existe pas"], correctIndex: 1, explanation: "Les banques marocaines tardent à répercuter les variations — seuls 35% de la variation sont transmis par trimestre." },
+        { id: 'ch-e1', question: "Pourquoi λ = 0,35 ralentit-il la transmission ?", options: ['Trop rapide', "Le taux débiteur n'absorbe que 35% de l'écart vers sa cible par trimestre", 'Trop volatile', "N'existe pas"], correctIndex: 1, explanation: "Le moteur applique un ajustement partiel : le taux débiteur garde 65% de son niveau précédent et ne prend que 35% du taux cible du trimestre." },
         { id: 'ch-e2', question: "Comment le canal du change fonctionne-t-il ?", options: ['Hausse i* → fuite de capitaux → dépréciation', 'Hausse i* → entrées de capitaux → appréciation → imports moins chers', 'Le change est fixe donc ce canal est nul', 'Le canal ne fonctionne que dans les pays développés'], correctIndex: 1, explanation: "Une hausse du taux attire les capitaux, apprécie le dirham et réduit le coût des importations." }
       ],
     },

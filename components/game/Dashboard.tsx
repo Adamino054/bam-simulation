@@ -205,7 +205,7 @@ export function Dashboard() {
               <div className="space-y-1.5">
                 <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Inflation (π)</p>
                 <p>Variation générale des prix à la consommation, en glissement annuel.</p>
-                <InlineKatex>{'\\pi_t = \\beta\\pi^e + \\kappa\\tilde{y} + \\alpha\\Delta p^{imp}'}</InlineKatex>
+                <InlineKatex>{'\\pi_t = c_\\pi + a\\pi_{t-1} + \\kappa\\tilde{y}_{t-1} + 0.20(\\pi^e_{t-1}-2) + 0.12\\Delta e_t + u^\\pi_t'}</InlineKatex>
                 <p>La cible de la Banque centrale est de 2 %. Au-delà, un resserrement est justifié.</p>
               </div>
             }
@@ -237,7 +237,7 @@ export function Dashboard() {
               <div className="space-y-1.5">
                 <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Taux de chômage</p>
                 <p>Part de la population active sans emploi. NAIRU marocain ≈ 9,5 %.</p>
-                <InlineKatex>{'u_t = u^* - \\delta_{okun}\\cdot\\tilde{y}_t'}</InlineKatex>
+                <InlineKatex>{'u_t = u_{t-1} + s_q + c\\Delta\\tilde{y}_t - \\psi s^{agri}_t + u^u_t'}</InlineKatex>
               </div>
             }
           />
@@ -252,7 +252,7 @@ export function Dashboard() {
               <div className="space-y-1.5">
                 <p style={{ color: '#F0F0EA', fontWeight: 600, fontSize: '11px' }}>Output gap (ỹ)</p>
                 <p>Écart entre production observée et potentielle. Positif = surchauffe.</p>
-                <InlineKatex>{'\\tilde{y}_t = \\rho\\tilde{y}_{t-1} - \\sigma(i^D - \\pi^e) + \\delta\\tilde{y}^*'}</InlineKatex>
+                <InlineKatex>{'\\tilde{y}_t = c_y + \\rho\\tilde{y}_{t-1} - \\sigma(i^*_{t-1}-\\pi_{t-1}) - 0.08(i^D_{t-1}-i^*_{t-1}) + u^y_t'}</InlineKatex>
               </div>
             }
           />

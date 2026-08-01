@@ -21,24 +21,20 @@ export const PRESS_CONFERENCES: Record<number, PressConferenceQuestion> = {
     year: 1,
     reporter: 'Nadia El Fassi',
     media: "L'Économiste",
-    question: "Monsieur le Gouverneur, l'inflation s'éloigne de sa cible et le public commence à douter de votre rigueur monétaire. Allez-vous resserrer agressivement vos taux directeur au prochain trimestre, ou préférez-vous temporiser pour préserver l'économie réelle ?",
+    question: "Monsieur le Gouverneur, après cette première année de décisions monétaires, comment souhaitez-vous orienter votre communication pour maintenir la confiance du public et l'ancrage des anticipations autour de la cible ?",
     options: [
       {
-        text: "Notre mandat de stabilité des prix est inconditionnel. S'il le faut, nous relèverons nos taux sans hésiter pour casser les anticipations.",
-        effectsDescription: "Crédibilité +10 · Anticipations d'inflation −1.0% · Taux débiteur +0.3% (resserrement anticipé)",
+        text: "Notre mandat de stabilité des prix reste inconditionnel. Si des pressions apparaissent, nous agirons sans hésiter pour préserver l'ancrage des anticipations.",
+        effectsDescription: "Crédibilité +10 · Signal anti-inflation fort",
         apply: (state) => ({
           centralBankCredibility: Math.min(100, state.centralBankCredibility + 10),
-          inflationExpected: Math.max(0, state.inflationExpected - 1.0),
-          lendingRate: state.lendingRate + 0.3
         })
       },
       {
-        text: "We privilégions une approche mesurée. Une hausse brutale étoufferait l'investissement des PME marocaines.",
-        effectsDescription: "Crédibilité −8 · Anticipations d'inflation +0.8% · Output gap +0.4% (relance)",
+        text: "Nous privilégions une approche mesurée. La stabilité des prix doit rester compatible avec une lecture attentive de l'économie réelle.",
+        effectsDescription: "Crédibilité −8 · Signal perçu comme moins ferme",
         apply: (state) => ({
           centralBankCredibility: Math.max(20, state.centralBankCredibility - 8),
-          inflationExpected: state.inflationExpected + 0.8,
-          outputGap: state.outputGap + 0.4
         })
       },
       {
@@ -55,23 +51,20 @@ export const PRESS_CONFERENCES: Record<number, PressConferenceQuestion> = {
     year: 2,
     reporter: 'Karim Bennani',
     media: 'Médias24',
-    question: "Le système bancaire fait face à des tensions de refinancement sur le marché monétaire. Certaines banques commerciales demandent une baisse massive de la réserve obligatoire pour libérer de la liquidité. Allez-vous céder à leur demande ?",
+    question: "Le marché monétaire reste au centre de l'attention des banques et des entreprises. Quelle ligne de communication souhaitez-vous adopter sur la gestion de la liquidité et des réserves obligatoires ?",
     options: [
       {
-        text: "La stabilité du Dirham exige de la discipline. Nous préférons injecter de la liquidité de manière ciblée via nos opérations d'open market plutôt que de toucher aux réserves obligatoires.",
-        effectsDescription: "Crédibilité +5 · Besoin de liquidité −15 mds MAD · Pas d'inflation additionnelle",
+        text: "La stabilité monétaire exige de la discipline. Nous privilégierons des interventions ciblées et lisibles plutôt que des annonces trop brusques sur les réserves.",
+        effectsDescription: "Crédibilité +5 · Communication disciplinée sur la liquidité",
         apply: (state) => ({
           centralBankCredibility: Math.min(100, state.centralBankCredibility + 5),
-          liquidityNeed: Math.max(0, state.liquidityNeed - 15)
         })
       },
       {
-        text: "Nous allons assouplir le taux de réserve obligatoire pour redonner de l'air aux bilans bancaires.",
-        effectsDescription: "Créances douteuses (NPL) −0.5% · Taux débiteur −0.3% · Inflation +0.6% (effet stimulant)",
+        text: "Nous restons ouverts à une orientation plus accommodante si les conditions de financement l'exigent, sans perdre de vue notre mandat de stabilité.",
+        effectsDescription: "Crédibilité −4 · Signal perçu comme accommodant",
         apply: (state) => ({
-          nplRatio: Math.max(2.0, state.nplRatio - 0.5),
-          lendingRate: Math.max(1.0, state.lendingRate - 0.3),
-          inflation: state.inflation + 0.6
+          centralBankCredibility: Math.max(20, state.centralBankCredibility - 4),
         })
       }
     ]
@@ -81,24 +74,20 @@ export const PRESS_CONFERENCES: Record<number, PressConferenceQuestion> = {
     year: 3,
     reporter: 'Sofia Alami',
     media: 'Le Matin',
-    question: "Le ratio de créances en souffrance (NPL) est préoccupant, ce qui pousse les banques à restreindre le crédit aux ménages. Envisagez-vous de baisser le coussin de capital contrecyclique (CCyB) pour stimuler les prêts ?",
+    question: "Les observateurs suivent de près la qualité du crédit et la solidité bancaire. Quel message souhaitez-vous envoyer sur l'équilibre entre soutien au crédit et prudence macroprudentielle ?",
     options: [
       {
-        text: "Oui. Nous réduisons temporairement le coussin contracyclique pour inciter les banques à prêter et éviter un Credit Crunch.",
-        effectsDescription: "Croissance du crédit +2.0% · Taux débiteur −0.2% · Crédibilité macroprudentielle −5",
+        text: "Nous voulons préserver le financement de l'économie. Les outils macroprudentiels doivent rester suffisamment souples pour éviter un blocage du crédit.",
+        effectsDescription: "Crédibilité −5 · Signal de tolérance au risque bancaire",
         apply: (state) => ({
-          creditGrowth: Math.min(30, state.creditGrowth + 2.0),
-          lendingRate: Math.max(1.0, state.lendingRate - 0.2),
           centralBankCredibility: Math.max(20, state.centralBankCredibility - 5)
         })
       },
       {
-        text: "Absolument pas. La solidité des banques est notre priorité. Elles doivent conserver leurs coussins de fonds propres face aux risques.",
-        effectsDescription: "Crédibilité macroprudentielle +8 · NPL −0.6% (sécurisation) · Croissance du crédit −1.5% (gel)",
+        text: "La solidité des banques demeure prioritaire. Des coussins prudents renforcent la confiance et protègent l'économie en cas de choc.",
+        effectsDescription: "Crédibilité +8 · Signal de prudence macroprudentielle",
         apply: (state) => ({
           centralBankCredibility: Math.min(100, state.centralBankCredibility + 8),
-          nplRatio: Math.max(2.0, state.nplRatio - 0.6),
-          creditGrowth: Math.max(-10, state.creditGrowth - 1.5)
         })
       }
     ]
@@ -108,23 +97,20 @@ export const PRESS_CONFERENCES: Record<number, PressConferenceQuestion> = {
     year: 4,
     reporter: 'Tarik Mansouri',
     media: 'Boursenews',
-    question: "Le solde courant est en déficit persistant et les réserves de change diminuent. Certains spéculateurs parient sur une dévaluation forcée du Dirham. Comment allez-vous défendre notre monnaie ?",
+    question: "Dans un environnement externe incertain, les marchés surveillent le change, les réserves et le solde courant. Quelle orientation souhaitez-vous donner à votre communication sur la stabilité extérieure ?",
     options: [
       {
-        text: "Nous défendrons l'ancrage fixe du Dirham avec une fermeté absolue, en utilisant nos réserves et en ajustant nos taux d'intérêt si nécessaire.",
-        effectsDescription: "Crédibilité du change +12 · Réserves de change stabilisées · Output gap −0.5% (frein d'activité)",
+        text: "Nous réaffirmons notre engagement pour une stabilité extérieure ordonnée, avec une communication ferme et prévisible envers les marchés.",
+        effectsDescription: "Crédibilité +12 · Signal ferme de stabilité externe",
         apply: (state) => ({
           centralBankCredibility: Math.min(100, state.centralBankCredibility + 12),
-          outputGap: Math.max(-10, state.outputGap - 0.5)
         })
       },
       {
-        text: "Le moment est venu d'accélérer la transition vers un régime de change plus flexible pour laisser le marché absorber naturellement ce choc.",
-        effectsDescription: "Dépréciation ordonnée de 4% · Inflation importée +1.0% · Solde courant amélioré (+0.8%)",
+        text: "Nous assumons une communication plus flexible : l'économie doit pouvoir absorber les chocs externes progressivement, sans signal de panique.",
+        effectsDescription: "Crédibilité −6 · Signal de flexibilité plus risqué",
         apply: (state) => ({
-          exchangeRate: state.exchangeRate * 0.96,
-          inflation: state.inflation + 1.0,
-          currentAccountBalance: Math.min(10, state.currentAccountBalance + 0.8)
+          centralBankCredibility: Math.max(20, state.centralBankCredibility - 6),
         })
       }
     ]

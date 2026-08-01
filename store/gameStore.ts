@@ -4,6 +4,16 @@ import type { EconomicState, PolicyAction, Shock, ScenarioId, DifficultyLevel } 
 import { DEFAULT_POLICY_ACTION } from '@/engine/state'
 import { INITIAL_STATE } from '@/engine/parameters'
 import { step } from '@/engine/simulator'
+import { stepV5 } from '@/engine/v5'
+import {
+  isHistoricalScenario,
+  historicalQuartersCount,
+  historicalShocks,
+  historicalDate,
+  historicalGapLag4,
+  historicalPotentialGrowth,
+  historicalInitialState,
+} from '@/engine/v5/historicalScenarios'
 import { SCENARIOS } from '@/engine/scenarios'
 import { fetchCentralBankPolicySettings } from '@/engine/centralBankPolicy'
 import { getLevelConfig } from '@/engine/difficulty'
@@ -90,7 +100,9 @@ export const useGameStore = create<GameStore>()(
         const chosenLevel = level ?? get().difficultyLevel
         let initialState = { ...scenario.initialState }
 
-        if (shouldUseLivePolicy(scenarioId, scenario.initialState)) {
+        if (isHistoricalScenario(scenarioId)) {
+          initialState = historicalInitialState(scenarioId, initialState)
+        } else if (shouldUseLivePolicy(scenarioId, scenario.initialState)) {
           const policy = await fetchCentralBankPolicySettings(scenarioPolicyDate(scenario.initialState))
           initialState = applyCentralBankInitialPolicy(
             scenario.initialState,
@@ -105,7 +117,7 @@ export const useGameStore = create<GameStore>()(
           currentState: initialState,
           history: [],
           actionHistory: [],
-          activeShocks: [...scenario.initialShocks],
+          activeShocks: isHistoricalScenario(scenarioId) ? [] : [...scenario.initialShocks],
           pendingAction: { ...DEFAULT_POLICY_ACTION },
           status: 'playing',
           seed: generateSeed(),
@@ -119,6 +131,7 @@ export const useGameStore = create<GameStore>()(
       async syncInitialCentralBankPolicy() {
         const { currentState, history, status, scenario } = get()
         if (status !== 'playing' || currentState.quarter !== 0 || history.length > 0) return
+        if (scenario && isHistoricalScenario(scenario)) return
         if (!scenario || !shouldUseLivePolicy(scenario, currentState)) return
 
         const scenarioInitialState = SCENARIOS[scenario].initialState
@@ -148,8 +161,11 @@ export const useGameStore = create<GameStore>()(
         const { difficultyLevel } = get()
         const levelConfig = getLevelConfig(difficultyLevel)
         
-        const isCampaign = scenario === 'volcker1979' || scenario === 'crisis2008'
-        const maxQuarters = isCampaign ? 8 : (freeMode ? FREE_MODE_QUARTERS : levelConfig.quarters)
+        const isHistorical = isHistoricalScenario(scenario)
+        const isCampaign = scenario === 'volcker1979' || (scenario === 'crisis2008' && !isHistorical)
+        const maxQuarters = isHistorical && scenario
+          ? historicalQuartersCount(scenario)
+          : (isCampaign ? 8 : (freeMode ? FREE_MODE_QUARTERS : levelConfig.quarters))
 
         if (currentState.quarter >= maxQuarters - 1) {
           if (isCampaign) {
@@ -169,11 +185,43 @@ export const useGameStore = create<GameStore>()(
           return
         }
 
-        const result = step(currentState, pendingAction, activeShocks, seed, {
-          scenarioId: scenario ?? undefined,
-          previousPolicyRateChangeBp,
-          fxInterventionHistory,
-        })
+        const historicalScenario = isHistorical && scenario ? scenario : null
+        const historicalStateForStep = historicalScenario
+          ? { ...currentState, date: historicalDate(historicalScenario, currentState.quarter) }
+          : currentState
+
+        const historicalOptions = historicalScenario
+          ? (() => {
+              const realShocks = historicalShocks(historicalScenario, currentState.quarter)
+              if (!realShocks) return {}
+              const historyGaps = [
+                ...history.slice(1).map(h => h.outputGap),
+                currentState.outputGap,
+              ]
+              return {
+                realShocks,
+                outputGapLag4: historicalGapLag4(historicalScenario, currentState.quarter, historyGaps),
+                potentialGrowth: historicalPotentialGrowth(historicalScenario, currentState.quarter),
+              }
+            })()
+          : {}
+
+        const result = historicalScenario
+          ? stepV5(historicalStateForStep, pendingAction, activeShocks, seed, {
+              scenarioId: scenario ?? undefined,
+              previousPolicyRateChangeBp,
+              fxInterventionHistory,
+              ...historicalOptions,
+            })
+          : step(currentState, pendingAction, activeShocks, seed, {
+              scenarioId: scenario ?? undefined,
+              previousPolicyRateChangeBp,
+              fxInterventionHistory,
+            })
+
+        if (historicalScenario) {
+          result.newState.date = historicalDate(historicalScenario, result.newState.quarter)
+        }
         const newActiveShocks = [
           ...activeShocks
             .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))

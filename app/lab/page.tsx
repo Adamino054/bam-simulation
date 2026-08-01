@@ -16,7 +16,7 @@ import { InlineKatex, BlockKatex, LatexText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 import { sound } from '@/lib/audio'
-import { PARAMS } from '@/engine/parameters'
+import { PARAMS_V5 } from '@/engine/v5/paramsV5'
 
 const AXIS_STYLE = { fontSize: 10, fill: 'var(--text-tertiary)', fontFamily: 'monospace' }
 
@@ -79,11 +79,11 @@ export default function LabPage() {
   const router = useRouter()
   const [viewMode, setViewMode] = useState<'curves' | 'fanchart'>('curves')
 
-  // ── Structural Parameters (Synchronized with engine calibration PARAMS) ──
-  const [kappa, setKappa] = useState<number>(PARAMS.kappa) // Phillips sensitivity
-  const [sigma, setSigma] = useState<number>(PARAMS.sigma) // IS elasticity
-  const [delta, setDelta] = useState<number>(PARAMS.delta) // openness degree
-  const [beta, setBeta] = useState<number>(PARAMS.beta)   // expectations weight
+  // ── Structural Parameters (Synchronized with engine v5 calibration) ──
+  const [kappa, setKappa] = useState<number>(PARAMS_V5.phillips.kappaGame) // Phillips game sensitivity
+  const [sigma, setSigma] = useState<number>(PARAMS_V5.is.sigmaGame) // IS game elasticity
+  const [delta, setDelta] = useState<number>(PARAMS_V5.fiscalImpact) // demand/fiscal impulse
+  const [beta, setBeta] = useState<number>(PARAMS_V5.phillips.a)   // inflation inertia
 
   // ── Policy Instruments ──
   const [policyRate, setPolicyRate] = useState(2.75) // Central bank TMP
@@ -99,45 +99,41 @@ export default function LabPage() {
 
   // ── Math Calculations (Real-Time State) ──
   const lendingRate = useMemo(() => policyRate + 2.45, [policyRate])
-  const realRate = useMemo(() => lendingRate - inflationExpected, [lendingRate, inflationExpected])
+  const realRate = useMemo(() => policyRate - inflationPrev, [policyRate, inflationPrev])
 
   const outputGap = useMemo(() => {
-    return 0.70 * outputGapPrev - sigma * realRate + delta * externalDemand + demandShock
-  }, [outputGapPrev, sigma, realRate, delta, externalDemand, demandShock])
+    return PARAMS_V5.is.const + PARAMS_V5.is.rho * outputGapPrev - sigma * realRate - PARAMS_V5.is.sigmaCredit * (lendingRate - policyRate) + delta * externalDemand + demandShock
+  }, [outputGapPrev, sigma, realRate, lendingRate, policyRate, delta, externalDemand, demandShock])
 
   const inflation = useMemo(() => {
-    return beta * inflationExpected + kappa * outputGap + 0.20 * agriShock + supplyShock
-  }, [beta, inflationExpected, kappa, outputGap, agriShock, supplyShock])
+    return PARAMS_V5.phillips.const + beta * inflationPrev + kappa * outputGapPrev + PARAMS_V5.expectationsWeight * (inflationExpected - 2) + PARAMS_V5.fx.passThrough * agriShock + supplyShock
+  }, [beta, inflationPrev, kappa, outputGapPrev, inflationExpected, agriShock, supplyShock])
 
   // ── Curves coordinates generation ──
   const isCurveData = useMemo(() => {
     const pts = []
     // Compute lending rate required for each output gap value on the IS Curve:
-    // y = 0.7*y_prev - sigma*(iD - pi_e) + delta*y_ext + u_y
-    // iD = pi_e + (0.7*y_prev + delta*y_ext + u_y - y) / sigma
     for (let y = -4; y <= 4; y += 0.5) {
-      const iD = inflationExpected + (0.7 * outputGapPrev + delta * externalDemand + demandShock - y) / sigma
+      const iD = inflationPrev + (PARAMS_V5.is.const + PARAMS_V5.is.rho * outputGapPrev - PARAMS_V5.is.sigmaCredit * 2.45 + delta * externalDemand + demandShock - y) / sigma
       pts.push({
         outputGap: y,
         lendingRate: Math.max(0, Math.min(15, iD)),
       })
     }
     return pts
-  }, [inflationExpected, outputGapPrev, delta, externalDemand, demandShock, sigma])
+  }, [inflationPrev, outputGapPrev, delta, externalDemand, demandShock, sigma])
 
   const pcCurveData = useMemo(() => {
     const pts = []
-    // Compute inflation for each output gap value on the Phillips Curve:
-    // pi = beta*pi_e + kappa*y + 0.20*agri + u_pi
     for (let y = -4; y <= 4; y += 0.5) {
-      const pi = beta * inflationExpected + kappa * y + 0.20 * agriShock + supplyShock
+      const pi = PARAMS_V5.phillips.const + beta * inflationPrev + kappa * y + PARAMS_V5.expectationsWeight * (inflationExpected - 2) + PARAMS_V5.fx.passThrough * agriShock + supplyShock
       pts.push({
         outputGap: y,
         inflation: pi,
       })
     }
     return pts
-  }, [beta, inflationExpected, kappa, agriShock, supplyShock])
+  }, [beta, inflationPrev, inflationExpected, kappa, agriShock, supplyShock])
 
   const fanChartData = useMemo(() => {
     const runsCount = 100
@@ -162,11 +158,10 @@ export default function LabPage() {
         const totalSupplyShock = simSupplyShock * 0.6 + supplyNoise
         const totalAgriShock = simAgriShock * 0.5
 
-        const simLendingRate = policyRate + 2.45
-        const simRealRate = simLendingRate - simInflationExpected
+        const simRealRate = policyRate - inflationPrev
 
-        const simOutputGap = 0.70 * simOutputGapPrev - sigma * simRealRate + delta * externalDemand + totalDemandShock
-        const simInflation = beta * simInflationExpected + kappa * simOutputGap + 0.20 * totalAgriShock + totalSupplyShock
+        const simOutputGap = PARAMS_V5.is.const + PARAMS_V5.is.rho * simOutputGapPrev - sigma * simRealRate - PARAMS_V5.is.sigmaCredit * 2.45 + delta * externalDemand + totalDemandShock
+        const simInflation = PARAMS_V5.phillips.const + beta * inflationPrev + kappa * simOutputGapPrev + PARAMS_V5.expectationsWeight * (simInflationExpected - 2) + PARAMS_V5.fx.passThrough * totalAgriShock + totalSupplyShock
 
         paths[run].push(simInflation)
 
@@ -249,9 +244,9 @@ export default function LabPage() {
 
   const handleReset = () => {
     setKappa(0.15)
-    setSigma(0.12)
-    setDelta(0.30)
-    setBeta(0.95)
+    setSigma(PARAMS_V5.is.sigmaGame)
+    setDelta(PARAMS_V5.fiscalImpact)
+    setBeta(PARAMS_V5.phillips.a)
     setPolicyRate(2.75)
     setInflationExpected(2.0)
     setOutputGapPrev(0.0)
@@ -343,7 +338,7 @@ export default function LabPage() {
               LABORATOIRE MACROÉCONOMIQUE
             </h1>
             <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--text-tertiary)]">
-              Simulation Sandbox · Analyse IS-Phillips CBS v3.0
+              Simulation Sandbox · Analyse IS-Phillips v5
             </p>
           </div>
         </div>
@@ -433,7 +428,7 @@ export default function LabPage() {
             {/* Beta slider */}
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-[var(--text-secondary)]">Expectations (β)</span>
+                <span className="text-[var(--text-secondary)]">Inertie inflation (a)</span>
                 <span className="text-[var(--text-primary)] font-bold">{beta.toFixed(2)}</span>
               </div>
               <input
@@ -979,7 +974,7 @@ export default function LabPage() {
                 <p className="mb-3">
                   <LatexText text="La courbe IS (Investment-Savings) traduit la demande de biens et services. La relation liant l'output gap $\tilde{y}_t$ aux taux d'intérêt s'écrit :" />
                 </p>
-                <BlockKatex math="\tilde{y}_t = 0.70 \tilde{y}_{t-1} - \sigma (i^D_t - \pi^e_t) + \delta \tilde{y}^*_t + u^y_t" />
+                <BlockKatex math="\tilde{y}_t = c_y + \rho\tilde{y}_{t-1} - \sigma(i^*_{t-1}-\pi_{t-1}) - 0.08(i^D_{t-1}-i^*_{t-1}) + u^y_t" />
                 <p className="mt-3">
                   <LatexText text="En augmentant le curseur $\sigma$, vous observez que la droite de demande s'aplatit, illustrant une économie extrêmement sensible au coût de financement. À l'inverse, un $\sigma$ très bas caractérise un canal de transmission du crédit rigide." />
                 </p>
@@ -990,7 +985,7 @@ export default function LabPage() {
                 <p className="mb-3">
                   <LatexText text="La courbe de Phillips traduit la dynamique de l'offre. L'inflation observée $\pi_t$ dépend positivement des anticipations de prix et des tensions productives :" />
                 </p>
-                <BlockKatex math="\pi_t = \beta \pi^e_t + \kappa \tilde{y}_t + 0.20 s^{agri}_t + u^\pi_t" />
+                <BlockKatex math="\pi_t = c_\pi + a\pi_{t-1} + \kappa\tilde{y}_{t-1} + 0.20(\pi^e_{t-1}-2) + 0.12\Delta e_t + u^\pi_t" />
                 <p className="mt-3">
                   <LatexText text="Le coefficient $\kappa$ représente la rigidité nominale des salaires et des prix. Si $\kappa$ est élevé (pente forte), le moindre écart de production positif déclenchera une spirale inflationniste (cas des économies en surchauffe)." />
                 </p>
