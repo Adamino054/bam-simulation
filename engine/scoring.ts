@@ -1,16 +1,20 @@
 /**
  * Calcul du score de fin de partie.
  *
- * — Inflation (35 pts) : déviation absolue moyenne à la cible 2 %
- * — Croissance (25 pts) : croissance PIB moyenne
- * — Stabilité (20 pts) : faible variance de l'inflation et de l'output gap
- * — Crédibilité (20 pts) : crédibilité moyenne CBS sur le mandat
+ * Scénarios non historiques : score macro absolu (inflation, croissance,
+ * stabilité, crédibilité). Scénarios historiques : score de reproduction du
+ * repère BAM/HCP, pour que les mêmes choix BAM donnent le meilleur score.
  */
 
-import type { EconomicState } from './state'
-import { SCORE_THRESHOLDS } from '../lib/constants'
+import type { EconomicState, PolicyAction, ScenarioId } from './state'
 import { getLevelConfig } from './difficulty'
 import type { DifficultyLevel } from './difficulty'
+import {
+  historicalBamRate,
+  historicalBamReserve,
+  historicalHcp,
+  isHistoricalScenario,
+} from './v5/historicalScenarios'
 
 export interface ScoreResult {
   total: number
@@ -20,6 +24,7 @@ export interface ScoreResult {
   credibility: number  // sur 20
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
   commentary: string
+  scoringMode?: 'macro' | 'historical-benchmark'
   details: {
     avgInflationDeviation: number
     avgGdpGrowth: number
@@ -27,18 +32,41 @@ export interface ScoreResult {
     outputGapVariance: number
     avgCredibility: number
     avgNplRatio: number
+    avgRateDeviationBp?: number
+    avgReserveDeviationBp?: number
+    avgHistoricalTrajectoryDeviation?: number
   }
 }
 
 const INFLATION_TARGET = 2.0
+const HISTORICAL_WEIGHTS = {
+  rate: 50,
+  reserve: 15,
+  trajectory: 20,
+  consistency: 15,
+}
 
-export function computeScore(history: EconomicState[], level: DifficultyLevel = 'intermediate'): ScoreResult {
+interface ComputeScoreOptions {
+  scenario?: ScenarioId | null
+  actionHistory?: PolicyAction[]
+}
+
+export function computeScore(
+  history: EconomicState[],
+  level: DifficultyLevel = 'intermediate',
+  options?: ComputeScoreOptions,
+): ScoreResult {
   if (history.length === 0) {
     return {
       total: 0, inflation: 0, growth: 0, stability: 0, credibility: 0,
       grade: 'F', commentary: 'Aucune donnée disponible.',
+      scoringMode: 'macro',
       details: { avgInflationDeviation: 0, avgGdpGrowth: 0, inflationVariance: 0, outputGapVariance: 0, avgCredibility: 70, avgNplRatio: 7.0 },
     }
+  }
+
+  if (options?.scenario && isHistoricalScenario(options.scenario) && options.actionHistory?.length) {
+    return computeHistoricalBenchmarkScore(history, options.actionHistory, options.scenario, level)
   }
 
   const n = history.length
@@ -103,6 +131,7 @@ export function computeScore(history: EconomicState[], level: DifficultyLevel = 
     credibility: Math.round(credibilityScore),
     grade,
     commentary,
+    scoringMode: 'macro',
     details: {
       avgInflationDeviation: avgDeviation,
       avgGdpGrowth: avgGrowth,
@@ -112,6 +141,131 @@ export function computeScore(history: EconomicState[], level: DifficultyLevel = 
       avgNplRatio,
     },
   }
+}
+
+function levelPenaltyScale(level: DifficultyLevel) {
+  if (level === 'beginner') {
+    return { rateZeroAtBp: 200, reserveZeroAtBp: 600, trajectoryZeroAt: 6, consistencyZeroAtBp: 220 }
+  }
+  if (level === 'expert') {
+    return { rateZeroAtBp: 100, reserveZeroAtBp: 250, trajectoryZeroAt: 3, consistencyZeroAtBp: 90 }
+  }
+  return { rateZeroAtBp: 150, reserveZeroAtBp: 400, trajectoryZeroAt: 4, consistencyZeroAtBp: 150 }
+}
+
+function linearScore(max: number, value: number, zeroAt: number) {
+  if (zeroAt <= 0) return value <= 0 ? max : 0
+  return Math.max(0, Math.min(max, max * (1 - value / zeroAt)))
+}
+
+function computeHistoricalBenchmarkScore(
+  states: EconomicState[],
+  actions: PolicyAction[],
+  scenario: ScenarioId,
+  level: DifficultyLevel,
+): ScoreResult {
+  const scale = levelPenaltyScale(level)
+  const periods = Math.min(actions.length, Math.max(0, states.length - 1))
+  const rateDiffs: number[] = []
+  const reserveDiffs: number[] = []
+  const trajectoryDiffs: number[] = []
+  let lastBamRate = states[0]?.policyRate ?? 0
+  let lastBamReserve = states[0]?.reserveRequirement ?? 0
+
+  for (let i = 0; i < periods; i++) {
+    const before = states[i]
+    const after = states[i + 1]
+    const action = actions[i]
+    if (!before || !after || !action) continue
+
+    const bamRate = historicalBamRate(scenario, i) ?? lastBamRate
+    const bamReserve = historicalBamReserve(scenario, i) ?? lastBamReserve
+    lastBamRate = bamRate
+    lastBamReserve = bamReserve
+
+    const chosenRate = before.policyRate + action.policyRateChangeBp / 100
+    const chosenReserve = before.reserveRequirement + action.reserveRequirementChangeBp / 100
+    rateDiffs.push(Math.abs(chosenRate - bamRate) * 100)
+    reserveDiffs.push(Math.abs(chosenReserve - bamReserve) * 100)
+
+    const hcp = historicalHcp(scenario, i)
+    if (hcp) {
+      const diffs = [
+        typeof hcp.inflation === 'number' ? Math.abs(after.inflation - hcp.inflation) : null,
+        typeof hcp.outputGap === 'number' ? Math.abs(after.outputGap - hcp.outputGap) : null,
+        typeof hcp.gdpGrowth === 'number' ? Math.abs(after.gdpGrowth - hcp.gdpGrowth) : null,
+        typeof hcp.unemployment === 'number' ? Math.abs(after.unemployment - hcp.unemployment) : null,
+      ].filter((v): v is number => typeof v === 'number')
+      if (diffs.length) trajectoryDiffs.push(diffs.reduce((a, b) => a + b, 0) / diffs.length)
+    }
+  }
+
+  const avg = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+  const avgRateDeviationBp = avg(rateDiffs)
+  const avgReserveDeviationBp = avg(reserveDiffs)
+  const avgHistoricalTrajectoryDeviation = avg(trajectoryDiffs)
+  const combinedPolicyDeviation = avgRateDeviationBp + avgReserveDeviationBp * 0.25
+
+  const rateScore = linearScore(HISTORICAL_WEIGHTS.rate, avgRateDeviationBp, scale.rateZeroAtBp)
+  const reserveScore = linearScore(HISTORICAL_WEIGHTS.reserve, avgReserveDeviationBp, scale.reserveZeroAtBp)
+  const trajectoryScore = linearScore(HISTORICAL_WEIGHTS.trajectory, avgHistoricalTrajectoryDeviation, scale.trajectoryZeroAt)
+  const consistencyScore = linearScore(HISTORICAL_WEIGHTS.consistency, combinedPolicyDeviation, scale.consistencyZeroAtBp)
+  const total = Math.round(rateScore + reserveScore + trajectoryScore + consistencyScore)
+
+  let grade: ScoreResult['grade'] = 'F'
+  if (total >= 90) grade = 'A'
+  else if (total >= 80) grade = 'B'
+  else if (total >= 65) grade = 'C'
+  else if (total >= 50) grade = 'D'
+
+  const n = states.length
+  const avgInflation = states.reduce((a, s) => a + s.inflation, 0) / n
+  const avgGrowth = states.reduce((a, s) => a + s.gdpGrowth, 0) / n
+  const avgCredibility = states.reduce((a, s) => a + (s.centralBankCredibility ?? 70), 0) / n
+  const avgNplRatio = states.reduce((a, s) => a + (s.nplRatio ?? 7), 0) / n
+  const inflVariance = states.map(s => (s.inflation - avgInflation) ** 2).reduce((a, b) => a + b, 0) / n
+  const gapMean = states.reduce((a, s) => a + s.outputGap, 0) / n
+  const gapVariance = states.map(s => (s.outputGap - gapMean) ** 2).reduce((a, b) => a + b, 0) / n
+
+  return {
+    total,
+    inflation: Math.round(rateScore),
+    growth: Math.round(reserveScore),
+    stability: Math.round(trajectoryScore),
+    credibility: Math.round(consistencyScore),
+    grade,
+    commentary: generateHistoricalBenchmarkCommentary(total, avgRateDeviationBp, avgReserveDeviationBp, avgHistoricalTrajectoryDeviation),
+    scoringMode: 'historical-benchmark',
+    details: {
+      avgInflationDeviation: Math.abs(avgInflation - INFLATION_TARGET),
+      avgGdpGrowth: avgGrowth,
+      inflationVariance: inflVariance,
+      outputGapVariance: gapVariance,
+      avgCredibility,
+      avgNplRatio,
+      avgRateDeviationBp,
+      avgReserveDeviationBp,
+      avgHistoricalTrajectoryDeviation,
+    },
+  }
+}
+
+function generateHistoricalBenchmarkCommentary(
+  total: number,
+  avgRateDeviationBp: number,
+  avgReserveDeviationBp: number,
+  avgHistoricalTrajectoryDeviation: number,
+): string {
+  if (total >= 95) {
+    return "Reproduction historique excellente : vos décisions suivent le repère BAM et la trajectoire reste alignée sur les valeurs HCP du scénario."
+  }
+  if (total >= 80) {
+    return `Reproduction solide : l'écart moyen au taux BAM reste contenu (${avgRateDeviationBp.toFixed(0)} pb), avec une trajectoire proche du repère historique.`
+  }
+  if (total >= 65) {
+    return `Reproduction partielle : plusieurs décisions s'écartent du repère BAM, notamment sur le taux (${avgRateDeviationBp.toFixed(0)} pb en moyenne) ou la réserve (${avgReserveDeviationBp.toFixed(0)} pb).`
+  }
+  return `Reproduction faible : les choix s'éloignent nettement du repère BAM et la trajectoire macro diverge du scénario historique (${avgHistoricalTrajectoryDeviation.toFixed(2)} pt d'écart moyen).`
 }
 
 /** Generate "Rapport de Gouverneur" analysis from history */

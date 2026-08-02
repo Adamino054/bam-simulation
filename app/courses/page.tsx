@@ -67,7 +67,7 @@ const MODULES: Module[] = [
     moroccanExample:
       "En 2022, face à une inflation de 6,1 % — son plus haut niveau depuis 30 ans — la Banque centrale a relevé son taux directeur de 1,5 % à 3,0 % en deux étapes (septembre 2022 et mars 2023). Cette décision tardive, après des années de politique accommodante, a eu un coût en crédibilité.",
     gameTip:
-      "En niveau Intermédiaire, votre score final suit exactement le moteur : 35 pts inflation, 25 pts croissance, 20 pts stabilité des trajectoires et 20 pts crédibilité. En Débutant et Expert, ces poids changent légèrement avec le niveau de difficulté.",
+      "Dans Standard et Volcker, le score évalue la stabilité macro : inflation, croissance, trajectoire et crédibilité. Dans les scénarios historiques v5, le score devient un score de reproduction : suivre les choix de Bank Al-Maghrib donne 100/100.",
     diagram: ScoreBreakdown,
   },
   {
@@ -80,9 +80,9 @@ const MODULES: Module[] = [
     readTime: '6 min',
     icon: Percent,
     overview:
-      "Le taux directeur (i*) est le principal levier de la politique monétaire. C'est le taux auquel la banque centrale prête aux banques commerciales pour leurs besoins de liquidité au jour le jour. Il influence en cascade tous les autres taux de l'économie : du taux interbancaire (TMP) aux crédits immobiliers, en passant par les obligations d'État.",
+      "Le taux directeur est le principal levier de la politique monétaire. C'est le taux auquel la banque centrale prête aux banques commerciales pour leurs besoins de liquidité au jour le jour. Il influence en cascade tous les autres taux de l'économie : du taux interbancaire (TMP) aux crédits immobiliers, en passant par les obligations d'État.",
     keyPoints: [
-      "La chaîne de transmission : i* → TMP (taux interbancaire) → i^D (taux débiteur) → Crédit → Investissement → Output gap → Inflation.",
+      "La chaîne de transmission : taux directeur, puis TMP, puis taux débiteur, puis crédit, investissement, activité et enfin inflation.",
       "La transmission est graduelle : le TMP réagit au trimestre courant, le taux débiteur n'intègre que 35 % du signal par trimestre, puis l'output gap et l'inflation se recalculent dans la boucle suivante. Il faut anticiper.",
       "La Borne Zéro (Zero Lower Bound) : le taux directeur ne peut pas descendre en dessous de ~0,5 %. En-dessous, les banques préfèrent stocker du cash.",
       "Des changements trop fréquents et contradictoires nuisent à la crédibilité (signal de confusion dans la stratégie).",
@@ -111,12 +111,12 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: TrendingUp,
     overview:
-      "L'output gap ($ỹ_t$) mesure l'écart entre le PIB réel observé et le PIB potentiel de l'économie. Dans le moteur v5, la courbe IS est estimée sur données marocaines puis ajustée pour le jeu : elle relie l'inertie du cycle, le taux directeur réel perçu, le spread de crédit et les résidus historiques.",
+      "L'output gap mesure l'écart entre le PIB réellement produit et ce que l'économie pourrait produire sans surchauffe. Le site utilise deux logiques de calcul : le moteur général du jeu pour les scénarios libres comme Standard et Volcker, et le moteur v5 pour les scénarios historiques validés. Dans ces scénarios historiques, la courbe IS relie l'inertie du cycle, le taux directeur réel perçu, le spread de crédit et les résidus historiques.",
     keyPoints: [
-      "$\\rho = 0{,}7308$ : persistance du cycle — l'économie ne retourne pas immédiatement à son potentiel après un choc.",
-      "$\\sigma_{estimé}=0{,}0709$ mais $\\sigma_{jeu}=0{,}24$ : l'estimation historique est amplifiée pour rendre les choix de taux lisibles dans une partie courte.",
-      "$\\sigma_{crédit}=0{,}08$ : si le taux débiteur s'écarte du taux directeur, le spread bancaire freine directement l'output gap.",
-      "Dans les scénarios COVID 2020, crise 2008, inflation 2022 et flexibilité du change, le terme $u^y_t$ reprend les résidus historiques pour reproduire les trajectoires HCP avec les choix BAM correspondants.",
+      "Persistance du cycle : l'économie ne retourne pas immédiatement à son potentiel après un choc.",
+      "Sensibilité au taux : l'effet estimé dans les données est renforcé dans le jeu pour que vos décisions soient visibles pendant une partie courte.",
+      "Spread de crédit : si le taux débiteur s'écarte du taux directeur, les conditions bancaires freinent directement l'activité.",
+      "Dans les scénarios COVID 2020, crise 2008, inflation 2022 et flexibilité du change, les résidus historiques permettent de retrouver les trajectoires HCP lorsque le joueur reproduit les choix BAM.",
     ],
     formula: {
       latex: '\\tilde{y}_t = c_y + \\rho\\tilde{y}_{t-1} - \\sigma(i^*_{t-1}-\\pi_{t-1}) - \\sigma_c(i^D_{t-1}-i^*_{t-1}) + u^y_t',
@@ -144,12 +144,12 @@ const MODULES: Module[] = [
     readTime: '7 min',
     icon: Activity,
     overview:
-      "La courbe de Phillips v5 relie l'inflation à son inertie, au cycle réel retardé, aux anticipations autour de la cible de 2 %, au change et aux résidus historiques. Elle est volontairement cohérente avec les scénarios marocains rejoués dans le simulateur.",
+      "La courbe de Phillips explique comment l'inflation évolue. Dans les scénarios historiques validés, sa version v5 tient compte de l'inertie des prix, du cycle économique, des anticipations autour de la cible de 2 %, du taux de change et des résidus historiques utilisés pour rejouer les scénarios marocains. Dans Standard et Volcker, le moteur général garde la même logique pédagogique sans ancrage HCP trimestre par trimestre.",
     keyPoints: [
-      "$a = 0{,}5242$ : l'inflation garde une inertie importante, mais ne dépend plus d'un poids $\\beta=0{,}95$ comme dans l'ancien moteur.",
-      "$\\kappa_{estimé}=0$ et $\\kappa_{jeu}=0{,}15$ : le lien output gap-inflation est renforcé pour que l'arbitrage soit visible en simulation.",
-      "$0{,}20(\\pi^e-2)$ : les anticipations jouent par leur écart à la cible, pas comme un remplacement complet de l'inflation.",
-      "$\\alpha_{change}=0{,}12$ : le pass-through du taux de change est celui utilisé par le moteur v5, avec résidus historiques $u^\\pi_t$ dans les scénarios BAM.",
+      "Inertie : l'inflation garde une mémoire importante du trimestre précédent.",
+      "Lien activité-prix : le lien entre output gap et inflation est renforcé dans le jeu pour rendre l'arbitrage visible.",
+      "Anticipations : elles comptent surtout quand elles s'éloignent de la cible de 2 %.",
+      "Taux de change : une dépréciation du dirham peut renchérir les importations et pousser l'inflation à la hausse.",
     ],
     formula: {
       latex: '\\pi_t = c_\\pi + a\\pi_{t-1} + \\kappa\\tilde{y}_{t-1} + 0{,}20(\\pi^e_{t-1}-2) + 0{,}12\\Delta e_t + u^\\pi_t',
@@ -180,13 +180,13 @@ const MODULES: Module[] = [
     overview:
       "La politique monétaire ne touche pas directement les prix — elle agit via 4 canaux de transmission distincts. Comprendre ces canaux permet d'utiliser les bons instruments au bon moment et d'anticiper les effets secondaires de chaque décision.",
     keyPoints: [
-      "Canal des taux d'intérêt : $i^*_t \\uparrow \\implies TMP \\uparrow \\implies i^D_t \\uparrow \\implies$ Crédit plus cher $\\implies$ Investissement $\\downarrow \\implies$ Output gap $ỹ_t \\downarrow \\implies$ Inflation $\\pi_t \\downarrow$. C'est le canal principal.",
-      "Canal du crédit : des taux élevés augmentent les $NPL$ (créances douteuses), ce qui pousse les banques à rationner le crédit indépendamment du taux directeur. C'est le canal Mishkin.",
-      "Canal des anticipations : si la Banque centrale est crédible, une communication hawkish réduit immédiatement les anticipations d'inflation dans le moteur ($-0{,}15$ pt sur $\\pi^e$) et pèse légèrement sur l'output gap ($-0{,}06$ pt). C'est le canal de Forward Guidance.",
-      "Canal du taux de change : hausse de $i^*_t \\implies$ entrées de capitaux étrangers $\\implies$ appréciation du dirham $\\implies$ importations moins chères $\\implies$ inflation importée $\\downarrow$. Pertinent au Maroc avec sa politique de change géré.",
+      "Canal des taux d'intérêt : quand le taux directeur monte, le TMP puis le taux débiteur montent aussi ; le crédit devient plus cher, l'investissement ralentit, l'activité baisse et l'inflation se calme.",
+      "Canal du crédit : des taux élevés peuvent augmenter les créances douteuses, ce qui pousse les banques à rationner le crédit même si le taux directeur baisse ensuite.",
+      "Canal des anticipations : si la Banque centrale est crédible, un discours restrictif peut calmer immédiatement les anticipations d'inflation.",
+      "Canal du taux de change : une hausse du taux directeur peut soutenir le dirham ; des importations moins chères réduisent alors l'inflation importée.",
     ],
     moroccanExample:
-      "L'expérience 2022-2023 a montré les limites du canal des taux au Maroc : les banques ont tardé à répercuter les hausses de la Banque centrale sur les taux débiteurs. Le moteur reprend cette inertie avec $\\lambda = 0{,}35$ : seuls 35 % de l'écart vers le taux cible sont transmis à chaque trimestre.",
+      "L'expérience 2022-2023 a montré les limites du canal des taux au Maroc : les banques ont tardé à répercuter les hausses de la Banque centrale sur les taux débiteurs. Le moteur reprend cette inertie : seuls 35 % de l'écart vers le taux cible sont transmis à chaque trimestre.",
     gameTip:
       "La Communication (Forward Guidance) est disponible dès le niveau Intermédiaire. Un signal hawkish baisse les anticipations d'inflation mais freine un peu l'activité ; un signal dovish soutient l'output gap mais peut relever les anticipations. Ce n'est pas gratuit en effets macro, seulement en liquidité.",
     diagram: ChannelsDiagram,
@@ -203,9 +203,9 @@ const MODULES: Module[] = [
     overview:
       "Proposée par John Taylor en 1993, cette règle donne le taux directeur 'optimal' en fonction de l'écart d'inflation à la cible et de l'output gap. Elle sert de référence normative pour évaluer si une banque centrale est trop accommodante (taux trop bas) ou trop restrictive (taux trop haut). Dans le simulateur, votre performance est comparée à ce taux de Taylor calculé à chaque trimestre.",
     keyPoints: [
-      "$r^* = 1{,}5 \\%$ : taux réel neutre estimé pour le Maroc (ni stimulant ni restrictif).",
-      "$\\phi_\\pi = 1{,}5$ : coefficient sur l'écart d'inflation. Il doit être $> 1$ (principe de Taylor) pour que le taux réel monte effectivement quand l'inflation augmente.",
-      "$\\phi_y = 0{,}5$ : réponse à l'output gap — plus faible que la réponse à l'inflation, reflétant la priorité à la stabilité des prix.",
+      "Taux réel neutre : c'est le taux qui ne stimule pas excessivement l'économie et ne la freine pas trop.",
+      "Réaction à l'inflation : la règle de Taylor recommande de monter fortement le taux quand l'inflation dépasse la cible.",
+      "Réaction à l'output gap : la règle tient aussi compte de l'activité, mais avec un poids plus faible que l'inflation.",
       "Le 'Coin de Taylor' : si votre taux diverge trop du taux de Taylor (> 1,5 pp), vous risquez soit une surchauffe, soit une récession inutile.",
     ],
     formula: {
@@ -218,7 +218,7 @@ const MODULES: Module[] = [
       ],
     },
     moroccanExample:
-      "En 2022, avec π = 6,1 % et ỹ ≈ 0,5 %, la règle de Taylor prescrivait : i* = 1,5 + 2,0 + 1,5×(6,1−2,0) + 0,5×0,5 ≈ 9,9 %. La Banque centrale n'est montée qu'à 3 % — justifié par la structure de financement des entreprises marocaines (très sensibles aux taux) et la faiblesse du marché obligataire.",
+      "En 2022, avec une inflation de 6,1 % et une activité légèrement au-dessus de son potentiel, la règle de Taylor indiquait un taux proche de 9,9 %. La Banque centrale n'est montée qu'à 3 %, un choix généralement justifié par la sensibilité des entreprises marocaines aux taux et par la structure du financement bancaire.",
     gameTip:
       "Dans l'écran de débrief, vous voyez votre taux moyen vs le taux de Taylor. Un écart négatif persistant (trop accommodant) génère presque toujours une inflation au-dessus de la cible. Utilisez la règle de Taylor comme boussole, pas comme contrainte stricte.",
     diagram: TaylorRuleChart,
@@ -235,9 +235,9 @@ const MODULES: Module[] = [
     overview:
       "L'économie marocaine est particulièrement exposée aux chocs exogènes en raison de sa dépendance aux importations d'énergie, à l'agriculture pluviale et à la demande européenne. Ces chocs perturbent simultanément l'offre, la demande et l'inflation — créant des dilemmes complexes pour le banquier central qui ne peut généralement agir que sur un côté à la fois.",
     keyPoints: [
-      "Choc d'offre négatif (pétrole, sécheresse) : inflation $\\pi_t \\uparrow$ ET croissance $g_t \\downarrow$ — le pire des cas. Faut-il resserrer (inflation) ou assouplir (croissance) ? Réponse : mesure, pas sur-réaction.",
-      "Choc de demande négatif (récession zone euro, COVID) : inflation $\\pi_t \\downarrow$ ET croissance $g_t \\downarrow$ — réponse dovish claire. Baissez les taux et activez l'emergency lending.",
-      "Choc financier (fuite des capitaux, prime de risque) : hausse des taux débiteurs indépendamment de $i^*_t$ — utilisez les réserves de change et l'intervention FX.",
+      "Choc d'offre négatif, comme pétrole ou sécheresse : l'inflation monte pendant que la croissance baisse. C'est le pire dilemme pour une banque centrale.",
+      "Choc de demande négatif, comme récession européenne ou COVID : inflation et croissance baissent ensemble ; la réponse accommodante est plus claire.",
+      "Choc financier, comme fuite des capitaux ou prime de risque : les taux débiteurs peuvent monter indépendamment du taux directeur.",
       "Les chocs durent 2 à 6 trimestres dans le simulateur. L'inflation core (hors volatile) est votre meilleur indicateur de la tendance fondamentale.",
     ],
     moroccanExample:
@@ -256,12 +256,12 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: Shield,
     overview:
-      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. Dans le moteur, la Banque centrale surveille les créances en souffrance ($NPL$), la croissance du crédit, la liquidité bancaire et peut activer le coussin contracyclique ($CCyB$) en mode Expert.",
+      "La politique macroprudentielle vise à prévenir les risques systémiques — ceux qui menacent l'ensemble du système financier, pas seulement une banque isolée. Dans le moteur, la Banque centrale surveille les créances en souffrance, la croissance du crédit, la liquidité bancaire et peut activer le coussin contracyclique en mode Expert.",
     keyPoints: [
-      "$NPL$ (Non-Performing Loans) : au-delà d'environ $10\\%$, le débrief signale un risque d'instabilité financière ; dans les équations, chaque point de NPL au-dessus du niveau naturel ($7\\%$) ajoute une prime au taux débiteur.",
-      "$CCyB$ (Coussin Contracyclique) : constituer des réserves en période de boom (quand le crédit croît trop vite) pour les libérer en période de crise.",
-      "Piège de la Dette-Déflation (Irving Fisher, 1933) : déflation ($\\pi_t < 0$) + $NPL$ élevés $\\implies$ dette réelle s'alourdit $\\implies$ crédit se contracte $\\implies$ récession $\\implies$ déflation.",
-      "La Borne Zéro (ZLB) : quand le taux est à $0{,}5 \\%$ et l'inflation est négative, le taux réel monte automatiquement — paradoxe déflationniste. En mode Expert, l'Emergency Lending réduit le besoin de liquidité et le taux débiteur, avec un petit risque inflationniste.",
+      "Créances douteuses : au-delà d'environ 10 %, le débrief signale un risque d'instabilité financière.",
+      "Coussin contracyclique : constituer des réserves en période de boom, puis les libérer en période de crise.",
+      "Piège dette-déflation : si les prix baissent et que les créances douteuses sont élevées, la dette réelle devient plus lourde, le crédit se contracte et la récession s'aggrave.",
+      "Borne zéro : quand le taux directeur est déjà très bas, la banque centrale dispose de moins de marge ; en mode Expert, l'Emergency Lending peut alors soutenir la liquidité.",
     ],
     moroccanExample:
       "Le ratio NPL marocain a atteint 8,9 % en 2023 (vs 7,5 % en 2019), principalement dans le segment PME post-COVID. La Banque centrale a activé des moratoires et des garanties de l'État pour éviter que les NPL ne dépassent le seuil critique de 12 % qui aurait déclenché un credit crunch.",
@@ -617,6 +617,27 @@ export default function CoursesPage() {
             Chaque module contient les concepts théoriques, les formules du moteur de jeu et des exemples réels.
           </p>
 
+          <div
+            className="mt-5 max-w-2xl rounded-lg border p-4"
+            style={{
+              borderColor: 'rgba(92,126,146,0.22)',
+              backgroundColor: 'rgba(92,126,146,0.08)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FlaskConical size={13} style={{ color: 'var(--accent-cool)' }} />
+              <span className="label-caps" style={{ color: 'var(--accent-cool)', fontSize: '9px' }}>
+                Deux moteurs, sans ambiguïté
+              </span>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Le site utilise deux logiques de calcul. Le moteur général pilote les scénarios libres comme
+              Standard et Volcker. Le moteur v5 pilote les scénarios historiques validés : COVID 2020,
+              crise 2008, inflation 2022 et flexibilité du dirham. Son rôle est de retrouver les valeurs HCP
+              quand le joueur reproduit les choix de Bank Al-Maghrib.
+            </p>
+          </div>
+
           {/* Progress bar */}
           {completed.size > 0 && (
             <motion.div
@@ -760,20 +781,20 @@ export default function CoursesPage() {
                 </h2>
               </div>
               <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                Les documents du simulateur : le moteur v5 validé décrit le calcul actif, tandis que l'ancien support mathématique reste disponible comme archive pédagogique.
+                Les documents du simulateur : le moteur v5 validé décrit le calcul des scénarios historiques, tandis que le support mathématique général reste disponible comme base pédagogique.
               </p>
               <div className="grid sm:grid-cols-3 gap-3">
                 {[
                   {
                     href: '/docs/presentation-modeles-mathematiques.html',
-                    title: 'Les modèles mathématiques — ancien moteur',
-                    desc: "Archive pédagogique de l'ancien moteur : utile pour comprendre les mécanismes, mais différente du moteur v5 actif.",
-                    tag: 'Ancien moteur',
+                    title: 'Les modèles mathématiques — moteur général',
+                    desc: 'Support pédagogique du moteur général : utile pour comprendre les mécanismes de base, mais différent du moteur v5 utilisé pour les scénarios historiques validés.',
+                    tag: 'Moteur général',
                   },
                   {
                     href: '/docs/moteur-v5-validation.html',
                     title: 'Moteur v5 validé',
-                    desc: 'Équations actives, paramètres et validation historique des scénarios BAM/HCP.',
+                    desc: 'Équations, paramètres et validation historique des scénarios BAM/HCP calculés avec le moteur v5.',
                     tag: 'v5',
                   },
                   {

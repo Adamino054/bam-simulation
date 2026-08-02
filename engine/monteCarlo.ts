@@ -1,5 +1,5 @@
 import type { EconomicState, PolicyAction, Shock } from './state'
-import { simulateN, step } from './simulator'
+import { step } from './simulator'
 import { stepV5 } from './v5'
 import {
   historicalDate,
@@ -20,7 +20,31 @@ export function projectStateFourQuarters(
   scenarioId?: string,
 ): EconomicState {
   if (!isHistoricalScenario(scenarioId as any)) {
-    return simulateN(currentState, pendingAction, activeShocks, 4, seed + 50000, scenarioId as any)
+    let simState = { ...currentState }
+    let simActiveShocks = [...activeShocks]
+
+    for (let h = 0; h < 4; h++) {
+      const actionForQuarter = h === 0
+        ? pendingAction
+        : {
+            ...DEFAULT_POLICY_ACTION,
+            policyRateChangeBp: 0,
+          }
+
+      const result = step(simState, actionForQuarter, simActiveShocks, seed + 50000 + h * 100, {
+        scenarioId: scenarioId as any,
+      })
+
+      simState = result.newState
+      simActiveShocks = [
+        ...simActiveShocks
+          .map(s => ({ ...s, remainingQuarters: s.remainingQuarters - 1 }))
+          .filter(s => s.remainingQuarters > 0),
+        ...result.triggeredShocks,
+      ]
+    }
+
+    return simState
   }
 
   let simState = { ...currentState }

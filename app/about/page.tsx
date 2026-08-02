@@ -59,10 +59,10 @@ export default function AboutPage() {
             dans le contexte marocain.
           </p>
           <p>
-            Le moteur de simulation — entièrement isolé du code d'interface — utilise
-            désormais le moteur mathématique v5 : courbe IS et Phillips estimées, loi
-            d'Okun trimestrielle, croissance par output gap annuel et résidus historiques.
-            Quand l'utilisateur reproduit les choix BAM d'un scénario historique, le site
+            Le moteur de simulation — entièrement isolé du code d'interface — combine
+            deux logiques : le moteur général du jeu pour les scénarios libres, et le
+            moteur mathématique v5 pour les scénarios historiques validés. Dans ces
+            scénarios historiques, quand l'utilisateur reproduit les choix BAM, le site
             retrouve les valeurs HCP validées pour l'inflation, l'output gap, la croissance
             et le chômage.
           </p>
@@ -82,7 +82,7 @@ export default function AboutPage() {
               {
                 href: '/docs/moteur-v5-validation.html',
                 title: 'Moteur mathématique v5 — validation historique',
-                desc: 'Équations actives, paramètres utilisés par le site et test de reproduction des scénarios BAM/HCP.',
+                desc: 'Équations et paramètres utilisés par les scénarios historiques validés, avec test de reproduction des scénarios BAM/HCP.',
               },
               {
                 href: '/docs/business-model-canvas.html',

@@ -35,10 +35,28 @@ function DiagramFrame({ title, color, children }: { title: string; color: string
       backgroundColor: 'var(--bg-elevated)', border: `1px solid ${color}22`,
       borderLeft: `3px solid ${color}`, borderRadius: '8px', padding: '14px', marginTop: '4px',
     }}>
-      <p style={{ fontFamily: 'monospace', fontSize: '8px', color, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '12px' }}>
-        ▸ Visualisation
-      </p>
+      <div style={{ marginBottom: '12px' }}>
+        <p style={{ fontFamily: 'monospace', fontSize: '8px', color, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '4px' }}>
+          ▸ Visualisation
+        </p>
+        <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '13px', fontWeight: 700, lineHeight: 1.35 }}>
+          {title}
+        </h4>
+      </div>
       {children}
+    </div>
+  )
+}
+
+function ChartLabels({ x, y }: { x: string; y: string }) {
+  return (
+    <div style={{
+      display: 'grid', gridTemplateColumns: '1fr', gap: '4px',
+      marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)',
+      fontSize: '9px', color: 'var(--text-tertiary)', fontFamily: 'monospace',
+    }}>
+      <span><strong style={{ color: 'var(--text-secondary)' }}>Axe horizontal :</strong> {x}</span>
+      <span><strong style={{ color: 'var(--text-secondary)' }}>Axe vertical :</strong> {y}</span>
     </div>
   )
 }
@@ -46,9 +64,9 @@ function DiagramFrame({ title, color, children }: { title: string; color: string
 /* ── MODULE 01 : Score Breakdown ─────────────────────────────────────────── */
 export function ScoreBreakdown() {
   const items = [
-    { label: 'Stabilité des prix',  sublabel: 'π proche de 2 %',    pct: 35, color: '#B41923' },
+    { label: 'Stabilité des prix',  sublabel: 'inflation proche de 2 %', pct: 35, color: '#B41923' },
     { label: 'Croissance du PIB',   sublabel: 'g moyen élevé',       pct: 25, color: '#4A9D7C' },
-    { label: 'Stabilité macro',     sublabel: 'π et ỹ peu volatils', pct: 20, color: '#C9A86A' },
+    { label: 'Stabilité macro',     sublabel: 'inflation et activité peu volatiles', pct: 20, color: '#C9A86A' },
     { label: 'Crédibilité Banque centrale', sublabel: 'Anticipations ancrées', pct: 20, color: '#5C7E92' },
   ]
   return (
@@ -73,7 +91,7 @@ export function ScoreBreakdown() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        En Expert, les NPL élevés pénalisent aussi la stabilité. Le total utilise les scores non arrondis puis arrondit une seule fois.
+        Pour les scénarios historiques, le score bascule vers un benchmark BAM : taux directeur, réserve obligatoire et trajectoire HCP.
       </p>
     </DiagramFrame>
   )
@@ -82,12 +100,12 @@ export function ScoreBreakdown() {
 /* ── MODULE 02 : Transmission Chain ─────────────────────────────────────── */
 export function TransmissionChain() {
   const steps = [
-    { label: 'i*', sublabel: 'Décision Banque centrale', color: '#B41923', delay: 'T+0' },
+    { label: 'Taux dir.', sublabel: 'Décision Banque centrale', color: '#B41923', delay: 'T+0' },
     { label: 'TMP', sublabel: 'Marché interbancaire', color: '#C25450', delay: '+1T' },
-    { label: 'i^D', sublabel: 'Taux débiteur', color: '#C9A86A', delay: '+2T' },
+    { label: 'Taux prêt', sublabel: 'Taux débiteur', color: '#C9A86A', delay: '+2T' },
     { label: 'Crédit', sublabel: 'Volume bancaire', color: '#A68A4F', delay: '+3T' },
     { label: 'Demande', sublabel: 'Output gap', color: '#5C7E92', delay: '+4T' },
-    { label: 'π', sublabel: 'Inflation', color: '#4A9D7C', delay: '+5T' },
+    { label: 'Inflation', sublabel: 'Prix à la consommation', color: '#4A9D7C', delay: '+5T' },
   ]
   return (
     <DiagramFrame title="Canal des taux — délais de transmission" color="#B41923">
@@ -135,9 +153,9 @@ const IS_DATA = [
 
 export function ISCurveDiagram() {
   return (
-    <DiagramFrame title="Courbe IS v5 — Taux directeur réel perçu vs Output gap" color="#4A9D7C">
+    <DiagramFrame title="Courbe IS : effet du taux sur l'activité" color="#4A9D7C">
       <ResponsiveContainer width="100%" height={200}>
-        <ComposedChart data={IS_DATA} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
+        <ComposedChart data={IS_DATA} margin={{ top: 8, right: 18, left: 8, bottom: 18 }}>
           <defs>
             <linearGradient id="isGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#4A9D7C" stopOpacity={0.18} />
@@ -146,15 +164,15 @@ export function ISCurveDiagram() {
           </defs>
           <CartesianGrid stroke="rgba(240,240,234,0.05)" vertical={false} />
           <XAxis dataKey="rate" tick={AXIS} axisLine={false} tickLine={false}
-            label={{ value: 'Taux directeur réel perçu (%)', position: 'insideBottomRight', offset: -6, style: { ...AXIS, fill: '#5E6066' } }}
+            label={{ value: 'Taux directeur réel perçu (%)', position: 'insideBottom', offset: -10, style: { ...AXIS, fill: '#5E6066' } }}
             tickFormatter={v => `${v}%`} />
           <YAxis tick={AXIS} axisLine={false} tickLine={false}
-            label={{ value: 'Output gap ỹ', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }}
+            label={{ value: 'Output gap (%)', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }}
             tickFormatter={v => `${v}%`} />
           <Tooltip content={<MiniTooltip />} />
           <ReferenceArea y1={-1.5} y2={1.5} fill="#4A9D7C" fillOpacity={0.05} strokeOpacity={0} />
           <ReferenceLine y={0} stroke="rgba(240,240,234,0.12)" strokeDasharray="3 3"
-            label={{ value: 'ỹ=0', position: 'insideRight', style: AXIS }} />
+            label={{ value: 'activité normale', position: 'insideRight', style: AXIS }} />
           <ReferenceLine x={2.5} stroke="rgba(201,168,106,0.3)" strokeDasharray="3 3"
             label={{ value: 'r*=2,5%', position: 'insideTop', style: { ...AXIS, fill: '#C9A86A' } }} />
           <Area type="monotone" dataKey="gap" name="Output gap" stroke="#4A9D7C" strokeWidth={2.5}
@@ -162,8 +180,12 @@ export function ISCurveDiagram() {
             activeDot={{ r: 4, fill: '#4A9D7C', stroke: 'rgba(74,157,124,0.3)', strokeWidth: 4 }} />
         </ComposedChart>
       </ResponsiveContainer>
+      <ChartLabels
+        x="le taux directeur réel perçu par l'économie, en pourcentage"
+        y="l'écart de production : positif = surchauffe, négatif = ralentissement"
+      />
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-        Le v5 combine ρ=0,7308, σ_jeu=0,24, spread crédit=0,08 et résidus historiques. La zone verte reste ỹ ∈ [−1,5 %; +1,5 %].
+        Lecture : quand le taux réel perçu augmente, l'activité ralentit. La zone verte correspond à une économie proche de son potentiel.
       </p>
     </DiagramFrame>
   )
@@ -184,9 +206,9 @@ const PHILLIPS_DATA = [
 
 export function PhillipsCurveDiagram() {
   return (
-    <DiagramFrame title="Courbe de Phillips — Output gap vs Inflation" color="#4A9D7C">
+    <DiagramFrame title="Courbe de Phillips : activité et inflation" color="#4A9D7C">
       <ResponsiveContainer width="100%" height={200}>
-        <ComposedChart data={PHILLIPS_DATA} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
+        <ComposedChart data={PHILLIPS_DATA} margin={{ top: 8, right: 18, left: 8, bottom: 18 }}>
           <defs>
             <linearGradient id="phiGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#B41923" stopOpacity={0.18} />
@@ -196,22 +218,26 @@ export function PhillipsCurveDiagram() {
           <CartesianGrid stroke="rgba(240,240,234,0.05)" vertical={false} />
           <XAxis dataKey="gap" tick={AXIS} axisLine={false} tickLine={false}
             tickFormatter={v => `${v}%`}
-            label={{ value: 'Output gap ỹ (%)', position: 'insideBottomRight', offset: -6, style: { ...AXIS, fill: '#5E6066' } }} />
+            label={{ value: 'Output gap (%)', position: 'insideBottom', offset: -10, style: { ...AXIS, fill: '#5E6066' } }} />
           <YAxis tick={AXIS} axisLine={false} tickLine={false}
             tickFormatter={v => `${v}%`}
-            label={{ value: 'Inflation π', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }} />
+            label={{ value: 'Inflation (%)', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }} />
           <Tooltip content={<MiniTooltip />} />
           <ReferenceArea y1={1.5} y2={2.5} fill="#4A9D7C" fillOpacity={0.08} strokeOpacity={0} />
           <ReferenceLine y={2} stroke="#4A9D7C" strokeDasharray="4 4" strokeOpacity={0.5}
-            label={{ value: 'π* = 2%', position: 'insideTopRight', style: { ...AXIS, fill: '#4A9D7C' } }} />
+            label={{ value: 'cible 2%', position: 'insideTopRight', style: { ...AXIS, fill: '#4A9D7C' } }} />
           <ReferenceLine x={0} stroke="rgba(240,240,234,0.10)" strokeDasharray="3 3" />
           <Area type="monotone" dataKey="inflation" name="Inflation" stroke="#B41923" strokeWidth={2.5}
             fill="url(#phiGrad)" dot={false}
             activeDot={{ r: 4, fill: '#B41923', stroke: 'rgba(180,25,35,0.3)', strokeWidth: 4 }} />
         </ComposedChart>
       </ResponsiveContainer>
+      <ChartLabels
+        x="l'écart de production : positif = demande forte, négatif = demande faible"
+        y="le taux d'inflation annuel, en pourcentage"
+      />
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '8px' }}>
-        Phillips v5 : π dépend de 0,5242·π(t−1), de κ_jeu=0,15 sur ỹ(t−1), des anticipations autour de 2 %, du change et du résidu historique.
+        Lecture : une économie en surchauffe pousse les prix à la hausse ; une économie ralentie réduit la pression inflationniste.
       </p>
     </DiagramFrame>
   )
@@ -223,7 +249,7 @@ export function ChannelsDiagram() {
     {
       icon: Percent,
       title: 'Canal des taux',
-      desc: 'i* ↑ → i^D ↑ → Crédit cher → Investissement ↓ → Demande ↓ → π ↓',
+      desc: 'Taux directeur ↑ → crédit plus cher → investissement ↓ → demande ↓ → inflation ↓',
       lag: '4–6 trimestres',
       color: '#B41923',
       strength: 'Principal',
@@ -231,7 +257,7 @@ export function ChannelsDiagram() {
     {
       icon: AlertTriangle,
       title: 'Canal du crédit',
-      desc: 'NPL ↑ → prime bancaire ↑ → i^D ↑ → Crédit ↓ même si i* baisse',
+      desc: 'Créances douteuses ↑ → prime bancaire ↑ → crédit ↓ même si le taux directeur baisse',
       lag: '2–4 trimestres',
       color: '#C9A86A',
       strength: 'Modéré',
@@ -239,7 +265,7 @@ export function ChannelsDiagram() {
     {
       icon: Globe,
       title: 'Canal du change',
-      desc: "i* ↑ → Entrées capitaux → MAD s'apprécie → Import < chers → π ↓",
+      desc: "Taux directeur ↑ → entrées de capitaux → dirham plus fort → importations moins chères → inflation ↓",
       lag: '2–3 trimestres',
       color: '#5C7E92',
       strength: 'Limité (MAD géré)',
@@ -247,7 +273,7 @@ export function ChannelsDiagram() {
     {
       icon: MessageSquare,
       title: 'Canal des anticipations',
-      desc: 'Communication hawkish → taux perçu +25 pb et π^e ↓ → demande ↓ puis π ↓',
+      desc: 'Discours restrictif → anticipations plus calmes → demande ↓ puis inflation ↓',
       lag: 'Immédiat',
       color: '#4A9D7C',
       strength: 'Puissant si crédible',
@@ -299,9 +325,9 @@ const TAYLOR_POINTS = [
 
 export function TaylorRuleChart() {
   return (
-    <DiagramFrame title="Règle de Taylor — Taux optimal vs inflation" color="#C9A86A">
+    <DiagramFrame title="Règle de Taylor : taux conseillé selon l'inflation" color="#C9A86A">
       <ResponsiveContainer width="100%" height={200}>
-        <ComposedChart data={TAYLOR_DATA} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
+        <ComposedChart data={TAYLOR_DATA} margin={{ top: 8, right: 18, left: 8, bottom: 18 }}>
           <defs>
             <linearGradient id="taylorGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#C9A86A" stopOpacity={0.22} />
@@ -311,10 +337,10 @@ export function TaylorRuleChart() {
           <CartesianGrid stroke="rgba(240,240,234,0.05)" vertical={false} />
           <XAxis dataKey="inflation" tick={AXIS} axisLine={false} tickLine={false}
             tickFormatter={v => `${v}%`}
-            label={{ value: 'Inflation π (%)', position: 'insideBottomRight', offset: -6, style: { ...AXIS, fill: '#5E6066' } }} />
+            label={{ value: 'Inflation observée (%)', position: 'insideBottom', offset: -10, style: { ...AXIS, fill: '#5E6066' } }} />
           <YAxis tick={AXIS} axisLine={false} tickLine={false}
             tickFormatter={v => `${v}%`}
-            label={{ value: 'Taux Taylor i*', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }} />
+            label={{ value: 'Taux directeur conseillé (%)', angle: -90, position: 'insideLeft', style: { ...AXIS, fill: '#5E6066' } }} />
           <Tooltip content={<MiniTooltip />} />
           {/* ZLB */}
           <ReferenceLine y={0.5} stroke="rgba(92,126,146,0.4)" strokeDasharray="4 4"
@@ -327,6 +353,10 @@ export function TaylorRuleChart() {
             activeDot={{ r: 4, fill: '#C9A86A', stroke: 'rgba(201,168,106,0.3)', strokeWidth: 4 }} />
         </ComposedChart>
       </ResponsiveContainer>
+      <ChartLabels
+        x="l'inflation observée dans l'économie"
+        y="le taux directeur suggéré par la règle de Taylor"
+      />
       <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
         {TAYLOR_POINTS.map(pt => (
           <div key={pt.label} style={{
@@ -334,7 +364,7 @@ export function TaylorRuleChart() {
             backgroundColor: 'var(--bg-base)', border: '1px solid var(--border-subtle)',
           }}>
             <span style={{ fontFamily: 'monospace', fontSize: '8px', color: 'var(--text-tertiary)' }}>
-              {pt.label} : π={pt.inflation}% →{' '}
+              {pt.label} : inflation={pt.inflation}% →{' '}
               <span style={{ color: '#C9A86A', fontWeight: 700 }}>Taylor={((0.5 + 1.5 * pt.inflation)).toFixed(1)}%</span>
               {' '}vs Banque centrale={pt.bc}%
             </span>
@@ -351,7 +381,7 @@ export function ShockMatrix() {
     {
       label: "Choc d'offre positif",
       example: 'Bonne récolte agricole, tech',
-      effect: 'π ↓ · ỹ ↑',
+      effect: 'Inflation ↓ · activité ↑',
       response: 'Assouplir légèrement',
       color: '#4A9D7C',
       bg: 'rgba(74,157,124,0.08)',
@@ -359,7 +389,7 @@ export function ShockMatrix() {
     {
       label: 'Choc de demande positif',
       example: 'Boom zone euro, IDE',
-      effect: 'π ↑ · ỹ ↑',
+      effect: 'Inflation ↑ · activité ↑',
       response: 'Resserrer prudemment',
       color: '#C9A86A',
       bg: 'rgba(201,168,106,0.08)',
@@ -367,7 +397,7 @@ export function ShockMatrix() {
     {
       label: "Choc d'offre négatif ⚠",
       example: 'Pétrole, sécheresse, COVID',
-      effect: 'π ↑ · ỹ ↓  →  Dilemme',
+      effect: 'Inflation ↑ · activité ↓  →  Dilemme',
       response: 'Mesure — ne pas sur-réagir',
       color: '#C25450',
       bg: 'rgba(194,84,80,0.10)',
@@ -375,7 +405,7 @@ export function ShockMatrix() {
     {
       label: 'Choc de demande négatif',
       example: 'Récession UE, COVID 2020',
-      effect: 'π ↓ · ỹ ↓',
+      effect: 'Inflation ↓ · activité ↓',
       response: 'Assouplir nettement',
       color: '#5C7E92',
       bg: 'rgba(92,126,146,0.08)',

@@ -43,6 +43,7 @@ export interface MultiplayerBadge {
 interface DuelState {
   p1State: EconomicState
   p1History: EconomicState[]
+  p1ActionHistory: PolicyAction[]
   p1ActiveShocks: Shock[]
   p1PendingAction: PolicyAction
   p1PreviousRateChange: number
@@ -50,6 +51,7 @@ interface DuelState {
 
   p2State: EconomicState
   p2History: EconomicState[]
+  p2ActionHistory: PolicyAction[]
   p2ActiveShocks: Shock[]
   p2PendingAction: PolicyAction
   p2PreviousRateChange: number
@@ -63,6 +65,7 @@ interface DuelState {
 interface CoopState {
   sharedState: EconomicState
   sharedHistory: EconomicState[]
+  sharedActionHistory: PolicyAction[]
   sharedActiveShocks: Shock[]
   sharedPendingAction: PolicyAction
   sharedPreviousRateChange: number
@@ -134,6 +137,7 @@ function getDefaultDuelState(scenario: ScenarioId): DuelState {
   return {
     p1State: cloneEconomicState(initialState),
     p1History: [],
+    p1ActionHistory: [],
     p1ActiveShocks: initialShocks.map(shock => ({ ...shock })),
     p1PendingAction: { ...DEFAULT_POLICY_ACTION },
     p1PreviousRateChange: 0,
@@ -141,6 +145,7 @@ function getDefaultDuelState(scenario: ScenarioId): DuelState {
 
     p2State: cloneEconomicState(initialState),
     p2History: [],
+    p2ActionHistory: [],
     p2ActiveShocks: initialShocks.map(shock => ({ ...shock })),
     p2PendingAction: { ...DEFAULT_POLICY_ACTION },
     p2PreviousRateChange: 0,
@@ -155,6 +160,7 @@ function getDefaultCoopState(scenario: ScenarioId): CoopState {
   return {
     sharedState: cloneEconomicState(initialState),
     sharedHistory: [],
+    sharedActionHistory: [],
     sharedActiveShocks: getScenarioInitialShocks(scenario),
     sharedPendingAction: { ...DEFAULT_POLICY_ACTION },
     sharedPreviousRateChange: 0,
@@ -245,6 +251,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
             duel: {
               ...s.duel,
               p1History: [...s.duel.p1History, s.duel.p1State],
+              p1ActionHistory: [...(s.duel.p1ActionHistory ?? []), s.duel.p1PendingAction],
               p1State: result.newState,
               p1ActiveShocks: activeShocks,
               p1PreviousRateChange: s.duel.p1PendingAction.policyRateChangeBp,
@@ -274,6 +281,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
             duel: {
               ...s.duel,
               p2History: [...s.duel.p2History, s.duel.p2State],
+              p2ActionHistory: [...(s.duel.p2ActionHistory ?? []), s.duel.p2PendingAction],
               p2State: result.newState,
               p2ActiveShocks: activeShocks,
               p2PreviousRateChange: s.duel.p2PendingAction.policyRateChangeBp,
@@ -355,6 +363,7 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
         set(s => ({
           coop: {
             sharedHistory: [...s.coop.sharedHistory, s.coop.sharedState],
+            sharedActionHistory: [...(s.coop.sharedActionHistory ?? []), s.coop.sharedPendingAction],
             sharedState: result.newState,
             sharedActiveShocks: activeShocks,
             sharedPendingAction: { ...DEFAULT_POLICY_ACTION },
@@ -371,21 +380,21 @@ export const useMultiplayerStore = create<MultiplayerStore>()(
       // ── Scoring ────────────────────────────────────────────────────────
 
       getScores() {
-        const { duel, difficultyLevel } = get()
+        const { duel, difficultyLevel, scenario } = get()
         const p1All = [...duel.p1History, duel.p1State]
         const p2All = [...duel.p2History, duel.p2State]
         if (p1All.length < 2 || p2All.length < 2) return null
         return {
-          p1: computeScore(p1All, difficultyLevel),
-          p2: computeScore(p2All, difficultyLevel),
+          p1: computeScore(p1All, difficultyLevel, { scenario, actionHistory: duel.p1ActionHistory ?? [] }),
+          p2: computeScore(p2All, difficultyLevel, { scenario, actionHistory: duel.p2ActionHistory ?? [] }),
         }
       },
 
       getCoopScore() {
-        const { coop, difficultyLevel } = get()
+        const { coop, difficultyLevel, scenario } = get()
         const all = [...coop.sharedHistory, coop.sharedState]
         if (all.length < 2) return null
-        return computeScore(all, difficultyLevel)
+        return computeScore(all, difficultyLevel, { scenario, actionHistory: coop.sharedActionHistory ?? [] })
       },
 
       getBadges() {

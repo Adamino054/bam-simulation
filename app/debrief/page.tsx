@@ -51,6 +51,7 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLeve
     : { ...scenarioData.initialState }
   let activeShocks: Shock[] = historical ? [] : [...scenarioData.initialShocks]
   const allStates: EconomicState[] = [state]
+  const actions: PolicyAction[] = []
   const levelConfig = getLevelConfig(difficultyLevel)
   const maxQuarters = historical ? historicalQuartersCount(scenario) : levelConfig.quarters
 
@@ -59,6 +60,7 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLeve
     const rateChange = Math.round((taylorRate - state.policyRate) * 100 / 25) * 25
     const clampedChange = Math.max(-100, Math.min(100, rateChange))
     const action: PolicyAction = { ...DEFAULT_POLICY_ACTION, policyRateChangeBp: clampedChange }
+    actions.push(action)
     const historyGaps = allStates.slice(1).map(h => h.outputGap)
     const result = historical
       ? stepV5({ ...state, date: historicalDate(scenario, state.quarter) }, action, activeShocks, seed + q * 100, {
@@ -78,7 +80,7 @@ function computeTaylorOptimal(scenario: ScenarioId, seed: number, difficultyLeve
     ]
     allStates.push(state)
   }
-  return computeScore(allStates, difficultyLevel).total
+  return computeScore(allStates, difficultyLevel, { scenario, actionHistory: actions }).total
 }
 
 export default function DebriefPage() {
@@ -90,10 +92,11 @@ export default function DebriefPage() {
   const savedRef = useRef(false)
 
 
-  const { history, currentState, scenario, status, seed, reset, startGame, difficultyLevel } = useGameStore(
+  const { history, currentState, actionHistory, scenario, status, seed, reset, startGame, difficultyLevel } = useGameStore(
     useShallow(s => ({
       history:      s.history,
       currentState: s.currentState,
+      actionHistory: s.actionHistory,
       scenario:     s.scenario,
       status:       s.status,
       seed:         s.seed,
@@ -118,13 +121,17 @@ export default function DebriefPage() {
   }, [])
 
   const levelConfig = useMemo(() => getLevelConfig(difficultyLevel), [difficultyLevel])
+  const allStates = useMemo(() => [...history, currentState], [history, currentState])
+  const score = useMemo(
+    () => computeScore(allStates, difficultyLevel, { scenario: scenario as ScenarioId | null, actionHistory }),
+    [allStates, difficultyLevel, scenario, actionHistory],
+  )
   const maxTotal = useMemo(() => {
+    if (score?.scoringMode === 'historical-benchmark') return 100
     const w = levelConfig.scoringWeights
     return w.inflation + w.growth + w.stability + w.credibility
-  }, [levelConfig])
+  }, [levelConfig, score?.scoringMode])
 
-  const allStates = useMemo(() => [...history, currentState], [history, currentState])
-  const score = useMemo(() => computeScore(allStates, difficultyLevel), [allStates, difficultyLevel])
   const report = useMemo(() => generateGovernorReport(allStates), [allStates])
   const taylorScore = useMemo(
     () => scenario ? computeTaylorOptimal(scenario as ScenarioId, seed, difficultyLevel) : 0,
@@ -321,12 +328,19 @@ export default function DebriefPage() {
 
         {/* ── Score détaillé ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {[
-            { label: 'Stabilité des prix',    score: score.inflation,   max: levelConfig.scoringWeights.inflation, detail: `Déviation moy. : ${score.details.avgInflationDeviation.toFixed(2)} pt` },
-            { label: 'Croissance',            score: score.growth,      max: levelConfig.scoringWeights.growth, detail: `Croissance moy. : ${fmtPct(score.details.avgGdpGrowth)}` },
-            { label: 'Stabilité trajectoire', score: score.stability,   max: levelConfig.scoringWeights.stability, detail: `Variance inflation : ${score.details.inflationVariance.toFixed(2)}` },
-            { label: 'Crédibilité',           score: score.credibility, max: levelConfig.scoringWeights.credibility, detail: `Crédibilité moy. : ${score.details.avgCredibility.toFixed(0)}` },
-          ].map(item => (
+          {(score.scoringMode === 'historical-benchmark'
+            ? [
+                { label: 'Taux directeur BAM', score: score.inflation, max: 50, detail: `Écart moyen : ${(score.details.avgRateDeviationBp ?? 0).toFixed(0)} pb` },
+                { label: 'Réserve BAM', score: score.growth, max: 15, detail: `Écart moyen : ${(score.details.avgReserveDeviationBp ?? 0).toFixed(0)} pb` },
+                { label: 'Trajectoire HCP', score: score.stability, max: 20, detail: `Écart macro moyen : ${(score.details.avgHistoricalTrajectoryDeviation ?? 0).toFixed(2)} pt` },
+                { label: 'Cohérence historique', score: score.credibility, max: 15, detail: 'Même repère appliqué trimestre par trimestre' },
+              ]
+            : [
+                { label: 'Stabilité des prix', score: score.inflation, max: levelConfig.scoringWeights.inflation, detail: `Déviation moy. : ${score.details.avgInflationDeviation.toFixed(2)} pt` },
+                { label: 'Croissance', score: score.growth, max: levelConfig.scoringWeights.growth, detail: `Croissance moy. : ${fmtPct(score.details.avgGdpGrowth)}` },
+                { label: 'Stabilité trajectoire', score: score.stability, max: levelConfig.scoringWeights.stability, detail: `Variance inflation : ${score.details.inflationVariance.toFixed(2)}` },
+                { label: 'Crédibilité', score: score.credibility, max: levelConfig.scoringWeights.credibility, detail: `Crédibilité moy. : ${score.details.avgCredibility.toFixed(0)}` },
+              ]).map(item => (
             <div key={item.label} className="rounded p-5" style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}>
               <p className="label-caps mb-3">{item.label}</p>
               <div className="flex items-baseline gap-2 mb-2">

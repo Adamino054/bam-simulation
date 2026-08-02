@@ -36,6 +36,10 @@ const GRADE_COLORS: Record<string, string> = {
   A: '#4A9D7C', B: '#5C7E92', C: '#C9A86A', D: '#C9A86A', F: '#C25450',
 }
 
+function supportsFreeMode(scenarioId: ScenarioId): boolean {
+  return scenarioId === 'standard' || scenarioId === 'volcker1979'
+}
+
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -58,8 +62,15 @@ export default function DashboardPage() {
   const setFreeMode = useGameStore(s => s.setFreeMode)
   const difficultyLevel = useGameStore(s => s.difficultyLevel)
   const setDifficultyLevel = useGameStore(s => s.setDifficultyLevel)
+  const selectedSupportsFreeMode = supportsFreeMode(selected)
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (!selectedSupportsFreeMode && freeMode) {
+      setFreeMode(false)
+    }
+  }, [freeMode, selectedSupportsFreeMode, setFreeMode])
 
   useEffect(() => {
     if (mounted && !currentUser) {
@@ -598,25 +609,44 @@ export default function DashboardPage() {
                 {/* Mode Libre */}
                 <div
                   className="flex items-center justify-between mb-4 px-4 py-2.5 rounded-md"
-                  style={{ backgroundColor: 'var(--bg-panel)', border: '1px solid var(--border-subtle)' }}
+                  style={{
+                    backgroundColor: 'var(--bg-panel)',
+                    border: `1px solid ${selectedSupportsFreeMode ? 'var(--border-subtle)' : 'rgba(201,168,106,0.28)'}`,
+                    opacity: selectedSupportsFreeMode ? 1 : 0.82,
+                  }}
                 >
                   <div>
                     <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>Mode Libre</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>25 trimestres · +50 % de probabilité de chocs</p>
+                    <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                      25 trimestres · +50 % de probabilité de chocs · actif uniquement pour Standard et Volcker
+                    </p>
+                    {!selectedSupportsFreeMode && (
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--accent-warm)' }}>
+                        Scénario historique : chocs déjà calibrés dans le moteur v5.
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
-                    onClick={() => setFreeMode(!freeMode)}
+                    onClick={() => {
+                      if (!selectedSupportsFreeMode) return
+                      setFreeMode(!freeMode)
+                    }}
                     className="relative w-9 h-5 rounded-full transition-colors duration-200"
-                    style={{ backgroundColor: freeMode ? 'var(--accent-primary)' : 'var(--bg-hover)' }}
+                    style={{
+                      backgroundColor: selectedSupportsFreeMode && freeMode ? 'var(--accent-primary)' : 'var(--bg-hover)',
+                      cursor: selectedSupportsFreeMode ? 'pointer' : 'not-allowed',
+                    }}
                     role="switch"
-                    aria-checked={freeMode}
+                    aria-checked={selectedSupportsFreeMode && freeMode}
+                    aria-disabled={!selectedSupportsFreeMode}
+                    disabled={!selectedSupportsFreeMode}
                   >
                     <span
                       className="absolute top-0.5 w-4 h-4 rounded-full transition-transform duration-200"
                       style={{
                         backgroundColor: '#fff', left: '2px',
-                        transform: freeMode ? 'translateX(16px)' : 'translateX(0)',
+                        transform: selectedSupportsFreeMode && freeMode ? 'translateX(16px)' : 'translateX(0)',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                       }}
                     />

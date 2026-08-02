@@ -18,12 +18,13 @@ interface HeaderProps {
 export function Header({ variant }: HeaderProps) {
   const router = useRouter()
 
-  const { scenario, status, history, currentState, difficultyLevel } = useGameStore(
+  const { scenario, status, history, currentState, actionHistory, difficultyLevel } = useGameStore(
     useShallow(s => ({
       scenario:     s.scenario,
       status:       s.status,
       history:      s.history,
       currentState: s.currentState,
+      actionHistory: s.actionHistory,
       difficultyLevel: s.difficultyLevel,
     }))
   )
@@ -37,8 +38,8 @@ export function Header({ variant }: HeaderProps) {
 
   const partialScore = useMemo(() => {
     if (history.length < 2) return null
-    return computeScore([...history, currentState], difficultyLevel).total
-  }, [history, currentState, difficultyLevel])
+    return computeScore([...history, currentState], difficultyLevel, { scenario, actionHistory }).total
+  }, [history, currentState, difficultyLevel, scenario, actionHistory])
 
   const handleLogout = () => {
     logout()

@@ -76,6 +76,10 @@ function shouldUseLivePolicy(scenarioId: ScenarioId, state: EconomicState): bool
   return scenarioId !== 'volcker1979' && state.date.year >= 2008
 }
 
+function supportsFreeMode(scenarioId: ScenarioId | null): boolean {
+  return scenarioId === 'standard' || scenarioId === 'volcker1979'
+}
+
 export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
@@ -122,6 +126,7 @@ export const useGameStore = create<GameStore>()(
           status: 'playing',
           seed: generateSeed(),
           isTransitioning: false,
+          freeMode: supportsFreeMode(scenarioId) ? get().freeMode : false,
           previousPolicyRateChangeBp: 0,
           fxInterventionHistory: [],
           campaignStatus: null,
@@ -162,10 +167,11 @@ export const useGameStore = create<GameStore>()(
         const levelConfig = getLevelConfig(difficultyLevel)
         
         const isHistorical = isHistoricalScenario(scenario)
-        const isCampaign = scenario === 'volcker1979' || (scenario === 'crisis2008' && !isHistorical)
+        const effectiveFreeMode = freeMode && supportsFreeMode(scenario)
+        const isCampaign = !effectiveFreeMode && (scenario === 'volcker1979' || (scenario === 'crisis2008' && !isHistorical))
         const maxQuarters = isHistorical && scenario
           ? historicalQuartersCount(scenario)
-          : (isCampaign ? 8 : (freeMode ? FREE_MODE_QUARTERS : levelConfig.quarters))
+          : (isCampaign ? 8 : (effectiveFreeMode ? FREE_MODE_QUARTERS : levelConfig.quarters))
 
         if (currentState.quarter >= maxQuarters - 1) {
           if (isCampaign) {

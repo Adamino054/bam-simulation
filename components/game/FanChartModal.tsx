@@ -202,7 +202,7 @@ export function FanChartModal({ isOpen, onClose, data }: FanChartModalProps) {
                 Analyse Prédictive de Monte-Carlo
               </h3>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                Modèle de prévision dynamique aligné v5
+                Prévision dynamique selon le moteur du scénario
               </p>
             </div>
 
@@ -213,7 +213,7 @@ export function FanChartModal({ isOpen, onClose, data }: FanChartModalProps) {
                 Ce graphique en éventail (<strong>Fan Chart</strong>) illustre le degré d&apos;incertitude entourant l&apos;inflation future sur les 4 prochains trimestres. 
               </p>
               <p>
-                L&apos;algorithme exécute <strong>100 scénarios asynchrones</strong> en appliquant un bruit gaussien de choc d&apos;offre ($u^\pi_t$) et de demande ($u^y_t$) autour de la dynamique IS/Phillips du moteur :
+                L&apos;algorithme exécute <strong>100 scénarios asynchrones</strong>{' '}en appliquant de petits chocs aléatoires d&apos;offre et de demande autour du moteur utilisé par le scénario courant :
               </p>
               
               <BlockKatex math="u^\pi_{t+h} \sim \mathcal{N}(0; \, 0.4^2) \quad u^y_{t+h} \sim \mathcal{N}(0; \, 0.5^2)" />
