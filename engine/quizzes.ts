@@ -75,8 +75,8 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'is-b3', question: "Comment appelle-t-on une baisse du PIB sur plusieurs trimestres ?", options: ['Une récession', 'Une expansion', 'Une inflation', 'Une parité'], correctIndex: 0, explanation: "Une baisse durable de l'activité économique caractérise une récession." }
       ],
       intermediate: [
-        { id: 'is-i1', question: "Pourquoi σ_jeu = 0,24 est-il supérieur à σ_estimé ≈ 0,071 ?", options: ['Pour rendre les décisions de taux visibles dans une partie courte', 'Pour supprimer le rôle du crédit', 'Pour augmenter mécaniquement l’inflation', 'Pour ignorer les données historiques'], correctIndex: 0, explanation: "Le v5 garde l'estimation historique, mais amplifie la sensibilité de jeu afin que les choix de politique monétaire aient un effet lisible trimestre après trimestre." },
-        { id: 'is-i2', question: "Que mesure σ_crédit = 0,08 dans l'IS v5 ?", options: ['Inflation core', "L'effet du spread entre taux débiteur et taux directeur", 'Taux de change', 'Liquidité bancaire'], correctIndex: 1, explanation: "σ_crédit capte le frein supplémentaire quand le taux débiteur bancaire reste au-dessus du taux directeur." },
+        { id: 'is-i1', question: "Pourquoi σ_jeu = 0,24 est-il supérieur à σ_estimé ≈ 0,071 ?", options: ['Pour rendre les décisions de taux visibles dans une partie courte', 'Pour supprimer le rôle du crédit', 'Pour augmenter mécaniquement l’inflation', 'Pour ignorer les données historiques'], correctIndex: 0, explanation: "Le moteur historique garde l'estimation historique, mais amplifie la sensibilité de jeu afin que les choix de politique monétaire aient un effet lisible trimestre après trimestre." },
+        { id: 'is-i2', question: "Que mesure σ_crédit = 0,08 dans l'IS du moteur historique ?", options: ['Inflation core', "L'effet du spread entre taux débiteur et taux directeur", 'Taux de change', 'Liquidité bancaire'], correctIndex: 1, explanation: "σ_crédit capte le frein supplémentaire quand le taux débiteur bancaire reste au-dessus du taux directeur." },
         { id: 'is-i3', question: "En 2020, à combien l'output gap marocain a-t-il plongé ?", options: ['-1%', '-2%', '-4%', '-8%'], correctIndex: 2, explanation: "L'output gap a atteint -4% du PIB potentiel en raison de la fermeture du tourisme et de la récession européenne." }
       ],
       expert: [
@@ -94,11 +94,11 @@ export const QUIZZES: ModuleQuiz[] = [
         { id: 'ph-b3', question: "Quel terme désigne une situation combinant inflation et chômage élevé ?", options: ['La stagflation', 'La déflation', 'La parité', 'La ZLB'], correctIndex: 0, explanation: "La stagflation associe une stagnation économique (récession/chômage) à une inflation élevée." }
       ],
       intermediate: [
-        { id: 'ph-i1', question: "Quel paramètre porte l'inertie de l'inflation dans le v5 ?", options: ['a = 0,5242', 'β = 0,95', 'δ = 0,30', 'λ = 0,35'], correctIndex: 0, explanation: "Dans le v5, l'inertie vient du terme a·π_{t-1}. Les anticipations agissent par leur écart à la cible via 0,20(πe−2)." },
+        { id: 'ph-i1', question: "Quel paramètre porte l'inertie de l'inflation dans le moteur historique ?", options: ['a = 0,5242', 'β = 0,95', 'δ = 0,30', 'λ = 0,35'], correctIndex: 0, explanation: "Dans le moteur historique, l'inertie vient du terme a·π_{t-1}. Les anticipations agissent par leur écart à la cible via 0,20(πe−2)." },
         { id: 'ph-i2', question: "Face à un choc d'offre temporaire, faut-il resserrer fortement ?", options: ['Oui, toujours', 'Non, ça aggrave la récession', 'Ça dépend du taux de change', 'Seul le CCyB est utile'], correctIndex: 1, explanation: "Un resserrement agressif sur un choc temporaire coûte de la croissance sans réduire un choc qui disparaîtra seul." }
       ],
       expert: [
-        { id: 'ph-e1', question: "Quel pass-through change → inflation utilise le moteur v5 ?", options: ['α = 0,02', 'α = 0,08', 'α = 0,12', 'α = 0,50'], correctIndex: 2, explanation: "Le v5 utilise un pass-through de change de 0,12 dans la courbe de Phillips active." },
+        { id: 'ph-e1', question: "Quel pass-through change → inflation utilise le moteur historique ?", options: ['α = 0,02', 'α = 0,08', 'α = 0,12', 'α = 0,50'], correctIndex: 2, explanation: "Le moteur historique utilise un pass-through de change de 0,12 dans la courbe de Phillips active." },
         { id: 'ph-e2', question: "En 2022, quelles étaient les sources de l'inflation de 6,1% ?", options: ['Uniquement la demande', 'Pétrole + imports + sécheresse + demande post-COVID', 'Seulement le taux de change', 'Politique budgétaire expansionniste'], correctIndex: 1, explanation: "L'inflation de 2022 combinait choc pétrolier, pass-through imports, sécheresse agricole et reprise post-COVID." }
       ],
     },

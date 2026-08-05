@@ -245,13 +245,13 @@ export const SCENARIOS: Record<ScenarioId, Scenario> = {
     description:
       'Inspiré de la grande crise de 2008 : les créances en souffrance (NPL) des banques atteignent un niveau critique de 18 %, le crédit se contracte à -4 % et la liquidité interbancaire gèle.',
     descriptionByLevel: {
-      beginner: "Les banques font faillite ! Le ratio NPL est à 18% et le crédit recule de -4%. Votre mission : assainir le système (NPL < 10% et crédit > 2%) en injectant massivement de la liquidité sous 8 trimestres.",
-      intermediate: "Objectif de stabilité financière 2008 : ramener les créances en souffrance (NPL) sous 10% et restaurer la croissance du crédit au-delà de 2% en moins de 8 trimestres.",
+      beginner: "Le système bancaire est sous tension : le ratio NPL est à 18% et le crédit recule de -4%. Votre mission : stabiliser le canal du crédit et éviter une contraction durable du financement.",
+      intermediate: "Crise financière 2008 : les créances en souffrance sont élevées, le crédit se contracte et la liquidité bancaire devient fragile. Surveillez les NPL, la croissance du crédit et les besoins de liquidité sur l'ensemble du mandat historique.",
       expert: "Gérez le gel de liquidité bancaire de 2008. Utilisez les prêts d'urgence (Emergency Lending), les opérations de marché et baissez le coussin contracyclique CCyB pour restaurer le canal du crédit.",
     },
     hintsByLevel: {
-      beginner: ['Injectez des dizaines de milliards en opérations de marché', 'Utilisez la facilité de prêt d\'urgence', 'Baissez le coussin CCyB à 0%'],
-      intermediate: ['La baisse du CCyB libère des fonds propres et stimule le crédit', 'Combinez baisse des taux et opérations de refinancement massif'],
+      beginner: ['Surveillez le duo NPL élevés + crédit négatif', 'Utilisez les instruments de base sans créer de mouvements brusques', 'La liquidité bancaire est le principal signal d\'alerte'],
+      intermediate: ['Combinez taux, réserves et opérations de marché pour soutenir la transmission', 'Surveillez les NPL, le crédit et la liquidité avant chaque décision'],
       expert: [],
     },
     difficulty: 'crisis',

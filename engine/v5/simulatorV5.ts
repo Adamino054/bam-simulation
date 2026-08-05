@@ -1,10 +1,10 @@
 /**
- * Pas de simulation du MOTEUR v5 — équations estimées sur données réelles.
+ * Pas de simulation du moteur historique — équations estimées sur données réelles.
  *
  * Même signature que le step() du v1 (interface EconomicState inchangée), mais le
  * cœur macro (activité, prix, chômage, croissance) passe par les équations OLS
  * estimées pré-COVID (voir engine/v5/modelsV5.ts). Le bloc bancaire (TMP, taux
- * débiteur, NPL, crédit) est conservé du v1 : le v5 ne le ré-estime pas.
+ * débiteur, NPL, crédit) est conservé du moteur général : le moteur historique ne le ré-estime pas.
  *
  * Deux modes :
  *  - mode 'jeu' (défaut) : le joueur fixe le taux directeur ; les chocs u^π/u^y
@@ -53,7 +53,7 @@ export interface StepV5Options {
   useGameSensitivity?: boolean
 }
 
-/** Avance la simulation d'un trimestre — moteur v5 */
+/** Avance la simulation d'un trimestre — moteur historique */
 export function stepV5(
   current: EconomicState,
   action: PolicyAction,
@@ -134,7 +134,7 @@ export function stepV5(
   const gameSens = options?.useGameSensitivity !== false
   const outputGap = isCurveV5({
     outputGapPrev: current.outputGap,
-    policyRatePrev: current.policyRate,   // le taux directeur pilote le taux réel (v5 : σ sur i*)
+    policyRatePrev: current.policyRate,   // le taux directeur pilote le taux réel (moteur historique : σ sur i*)
     inflationPrev: current.inflation,
     demandShock,
     // Canal du crédit : le spread bancaire transmet à l'activité l'effet du CCyB,
@@ -287,7 +287,7 @@ export function stepV5(
   const trace: SimulationResult['trace'] = {
     inflation_expectations: {
       value: PARAMS_V5.phillips.a * current.inflation,
-      explanation: `v5 — inertie estimée : a·π_{t-1} = ${PARAMS_V5.phillips.a}×${current.inflation.toFixed(2)} = ${(PARAMS_V5.phillips.a * current.inflation).toFixed(2)} %`,
+      explanation: `moteur historique — inertie estimée : a·π_{t-1} = ${PARAMS_V5.phillips.a}×${current.inflation.toFixed(2)} = ${(PARAMS_V5.phillips.a * current.inflation).toFixed(2)} %`,
     },
     inflation_supply: {
       value: supplyShock,
@@ -295,11 +295,11 @@ export function stepV5(
     },
     output_gap_real_rate: {
       value: -PARAMS_V5.is.sigma * (current.policyRate - current.inflation),
-      explanation: `v5 — effet taux réel estimé : −σ·(i*−π) = −${PARAMS_V5.is.sigma}×${(current.policyRate - current.inflation).toFixed(2)} (σ non significatif : effet faible)`,
+      explanation: `moteur historique — effet taux réel estimé : −σ·(i*−π) = −${PARAMS_V5.is.sigma}×${(current.policyRate - current.inflation).toFixed(2)} (σ non significatif : effet faible)`,
     },
     unemployment_okun: {
       value: unemployment - current.unemployment,
-      explanation: `v5 — Δu = saison(T${current.date.q}) + c·Δgap − ψ·agri. Hystérèse : pas de retour vers un NAIRU.`,
+      explanation: `moteur historique — Δu = saison(T${current.date.q}) + c·Δgap − ψ·agri. Hystérèse : pas de retour vers un NAIRU.`,
     },
   }
 

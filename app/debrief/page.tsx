@@ -330,10 +330,10 @@ export default function DebriefPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {(score.scoringMode === 'historical-benchmark'
             ? [
-                { label: 'Taux directeur BAM', score: score.inflation, max: 50, detail: `Écart moyen : ${(score.details.avgRateDeviationBp ?? 0).toFixed(0)} pb` },
-                { label: 'Réserve BAM', score: score.growth, max: 15, detail: `Écart moyen : ${(score.details.avgReserveDeviationBp ?? 0).toFixed(0)} pb` },
-                { label: 'Trajectoire HCP', score: score.stability, max: 20, detail: `Écart macro moyen : ${(score.details.avgHistoricalTrajectoryDeviation ?? 0).toFixed(2)} pt` },
-                { label: 'Cohérence historique', score: score.credibility, max: 15, detail: 'Même repère appliqué trimestre par trimestre' },
+                { label: 'Orientation du taux', score: score.inflation, max: 50, detail: `Écart moyen : ${(score.details.avgRateDeviationBp ?? 0).toFixed(0)} pb` },
+                { label: 'Réserve obligatoire', score: score.growth, max: 15, detail: `Écart moyen : ${(score.details.avgReserveDeviationBp ?? 0).toFixed(0)} pb` },
+                { label: 'Trajectoire macro', score: score.stability, max: 20, detail: `Écart macro moyen : ${(score.details.avgHistoricalTrajectoryDeviation ?? 0).toFixed(2)} pt` },
+                { label: 'Cohérence historique', score: score.credibility, max: 15, detail: 'Cohérence des décisions trimestre par trimestre' },
               ]
             : [
                 { label: 'Stabilité des prix', score: score.inflation, max: levelConfig.scoringWeights.inflation, detail: `Déviation moy. : ${score.details.avgInflationDeviation.toFixed(2)} pt` },

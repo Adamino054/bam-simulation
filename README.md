@@ -1,131 +1,158 @@
-# CBS — Centrale Bank Simulateur
+# CBS - Centrale Bank Simulateur
 
-Jeu sérieux web éducatif dans lequel le joueur incarne le gouverneur de la banque centrale **Centrale Bank Simulateur (CBS)** et pilote l'économie marocaine fictive sur 5 ans (20 trimestres) en prenant des décisions stratégiques de politique monétaire.
+CBS est un serious game web pedagogique consacre aux mecanismes de politique monetaire. Le joueur incarne un gouverneur de banque centrale et prend des decisions de politique monetaire dans plusieurs contextes macroeconomiques.
 
-**Serious game développé dans le cadre d'un Projet de Fin d'Année commandité académiquement pour modéliser la politique monétaire.**
+Le projet sert de support d'apprentissage pour illustrer, de maniere interactive, les arbitrages entre inflation, activite economique, stabilite financiere, credibilite et transmission monetaire.
 
----
+## Fonctionnalites principales
 
-## 🏛️ Contexte Académique & Moteur
+- Simulation de politique monetaire avec plusieurs scenarios.
+- Modes de difficulte : debutant, intermediaire et expert.
+- Scenarios standards, scenarios de crise et scenarios historiques calibres.
+- Espace de decouverte avec contenus interactifs.
+- Section cours avec modules pedagogiques, quiz et visualisations.
+- Section entrainement pour tester des situations ciblees.
+- Laboratoire de simulation et analyses Monte-Carlo.
+- Mode multijoueur.
+- Debriefing final avec score, trajectoires et certificat.
+- Assistant CBS integre.
 
-Ce projet est la composante web interactive d'un moteur de simulation macroéconomique dynamique. Le dossier `engine/` contient la logique de simulation en TypeScript strict pur, conçue pour être portable (sans adhérence à un framework) :
-*   **Loi d'Okun dynamique** : Δu_t = −λ · Δỹ_t (calibrée à λ = 0,40 pour les économies MENA).
-*   **TMP (Taux interbancaire)** : spread calibré basé sur le risque NPL et les réserves obligatoires.
-*   **Canal du crédit (Bernanke & Gertler)** : contraction bancaire incrémentale liée aux taux directeurs et NPL.
-*   **Courbe IS & Phillips** : transmission monétaire complète avec anticipations ancrées.
+## Technologies
 
----
+| Couche | Technologie |
+| --- | --- |
+| Framework | Next.js 16.2.5, App Router, Turbopack |
+| Langage | TypeScript |
+| Interface | React 18 |
+| Style | Tailwind CSS et CSS global |
+| Etat | Zustand avec persistance locale |
+| Animations | Framer Motion |
+| Graphiques | Recharts |
+| Formules | KaTeX et react-katex |
+| Icones | Lucide React |
 
-## 💻 Technologies & Dépendances
+## Lancement local
 
-| Couche       | Technologie                    |
-|--------------|-------------------------------|
-| Framework    | **Next.js 15 (App Router)** & Turbopack |
-| Langage      | TypeScript strict              |
-| Styling      | Tailwind CSS / Vanilla CSS     |
-| State        | Zustand v5 (+ localStorage)   |
-| Animations   | Framer Motion                  |
-| Charts       | Recharts                       |
-| Math         | KaTeX via react-katex          |
-| Icônes       | Lucide React                   |
-
----
-
-## 🚀 Guide d'Installation et Lancement (Pour l'Encadrant)
-
-Voici la procédure pas-à-pas pour lancer le simulateur en local depuis l'archive ZIP sur votre machine.
-
-### Étape 1 : Décompression
-1. Décompressez le fichier **ZIP** dans le dossier de votre choix.
-2. Ouvrez votre éditeur de code préféré (ex: **VS Code**).
-3. Cliquez sur `Fichier > Ouvrir le dossier...` et sélectionnez le dossier décompressé.
-
-### Étape 2 : Manipulation du Terminal
-1. Ouvrez le terminal intégré de votre éditeur (Sur VS Code : `Ctrl + ~` ou `Terminal > Nouveau Terminal`).
-2. Saisissez la commande suivante pour installer automatiquement l'intégralité des dépendances du projet :
-   ```bash
-   npm install
-   ```
-3. Une fois l'installation terminée, lancez le serveur de développement local avec le moteur de rendu rapide Turbopack :
-   ```bash
-   npm run dev
-   ```
-4. Ouvrez votre navigateur internet et naviguez sur : **[http://localhost:3000](http://localhost:3000)**.
-
----
-
-## 🛠️ Commandes Disponibles dans le Terminal
-
-Dans le terminal de votre projet, vous pouvez exécuter les scripts suivants :
-*   `npm run dev` : Démarre le serveur de développement rapide Next.js (port 3000).
-*   `npm run build` : Compile et optimise l'application pour la production (vérifie les types TS strict).
-*   `npm run start` : Démarre le serveur en mode production (après un `npm run build`).
-*   `npm run lint` : Lance l'analyseur de code ESLint pour vérifier la propreté du code.
-*   `npm run typecheck` : Exécute le compilateur TypeScript sans build pour valider la conformité des types.
-
----
-
-## 🔌 Extensions VS Code Recommandées
-
-Pour explorer le code source et le modifier dans les meilleures conditions, nous recommandons fortement d'installer les extensions suivantes dans **VS Code** (recherchables dans l'onglet Extensions `Ctrl + Shift + X`) :
-
-1.  **Tailwind CSS IntelliSense** : Indispensable pour l'autocomplétion des classes utilitaires modernes de styling.
-2.  **ESLint** : Pour afficher en temps réel les avertissements ou recommandations sur la qualité du code TypeScript/React.
-3.  **Prettier - Code Formatter** : Permet de formater automatiquement le code lors de la sauvegarde (`Ctrl + S`) pour une lecture parfaite.
-4.  **KaTeX / Markdown Preview** : Pour visualiser et éditer les formules mathématiques en LaTeX rédigées dans le guide et les cours.
-
----
-
-## 📁 Architecture du Projet
-
-```
-├── engine/            # Moteur macroéconomique — TypeScript strict pur (isolé)
-│   ├── state.ts       # Types de données : EconomicState, PolicyAction, Shock
-│   ├── parameters.ts  # Paramètres calibrés (Okun, Phillips, Taylor, CCyB...)
-│   ├── simulator.ts   # Fonction step() — boucle de transition principale
-│   ├── scoring.ts     # Calcul des scores académiques finaux
-│   ├── scenarios.ts   # Configuration des scénarios de mandat
-│   └── models/        # Équations et blocs macroéconomiques individuels
-├── store/             # Zustand — Gestion de l'état global du jeu (localStorage)
-├── components/        # Composants d'interface React réutilisables
-│   ├── game/          # Composants spécifiques (panneau de décision, left HUD...)
-│   ├── ui/            # Éléments atomiques (AssistantBot, metric cards...)
-│   └── shell/         # Enveloppe système (headers, toggle thème...)
-├── app/               # Pages de l'application Next.js (App Router)
-│   ├── page.tsx       # Landing page interactive
-│   ├── login/         # Connexion locale
-│   ├── dashboard/     # Simulation principale
-│   ├── training/      # Espace d'entraînement (Laboratoire Sandbox / Crises)
-│   ├── players/       # Palmarès public des gouverneurs
-│   └── about/         # À propos (persistance de thèmes intégrée)
-```
-
----
-
-## 🧪 Test d'Isolation du Moteur de Simulation
-
-Le moteur macroéconomique est **strictement découplé** de l'interface graphique (0% d'adhérence à React ou Next.js). Vous pouvez le tester et l'exécuter directement en ligne de commande Node.js depuis le dossier racine :
+Depuis le dossier du projet :
 
 ```bash
-node -e "
-const { step } = require('./engine/simulator');
-const { INITIAL_STATE } = require('./engine/parameters');
-const state = INITIAL_STATE;
-const action = { policyRateChangeBp: 0, reserveRequirementChangeBp: 0, marketOperationsBnMad: 0 };
-const result = step(state, action, [], 42);
-console.log('Simulation Q1 réussie. Inflation T1 :', result.newState.inflation.toFixed(2), '%');
-"
+npm install
+npm run dev
 ```
 
----
+Puis ouvrir :
 
-## 🎓 Évaluation Académique & Score
+```text
+http://localhost:3000
+```
 
-Le joueur est évalué à la fin de son mandat de 20 trimestres sur 3 grands axes institutionnels via un score sur **100 points** :
-1.  **Stabilité des prix** (Cible stricte d'inflation de 2,0 %).
-2.  **Stabilité de l'économie** (Volatilité de l'écart de production / Output gap).
-3.  **Crédibilité de la Banque Centrale** (Confiance des marchés et du public).
+Sous PowerShell, si `npm` est bloque par la politique d'execution, utiliser :
 
----
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
 
-Projet de Fin d'Année · Centrale Bank Simulateur (CBS) · 2024-2025.
+## Commandes utiles
+
+```bash
+npm run dev
+```
+
+Lance le serveur de developpement.
+
+```bash
+npm run build
+```
+
+Compile l'application pour la production.
+
+```bash
+npm run start
+```
+
+Lance l'application compilee apres `npm run build`.
+
+```bash
+npm run lint
+```
+
+Verifie la qualite du code avec ESLint.
+
+```bash
+npm run typecheck
+```
+
+Verifie les types TypeScript sans generer de build.
+
+## Architecture du projet
+
+```text
+app/                  Pages Next.js et routes applicatives
+components/           Composants React reutilisables
+engine/               Moteurs de simulation, scenarios, scoring et donnees
+engine/models/        Blocs macroeconomiques du moteur standard
+engine/v5/            Moteur historique et donnees calibrees
+engine/shocks/        Definitions et gestion des chocs
+lib/                  Fonctions utilitaires
+store/                Etat global et persistance locale
+public/fonts/         Polices locales utilisees par le theme graphique
+```
+
+## Pages principales
+
+```text
+/                     Accueil
+/choix                Choix du mode
+/dashboard            Simulation principale
+/play                 Simulation rapide
+/courses              Cours et quiz
+/training             Entrainement
+/lab                  Laboratoire et Monte-Carlo
+/campaign             Campagne
+/decouverte           Decouverte pedagogique
+/multiplayer          Multijoueur
+/debrief              Debriefing et certificat
+/history              Historique local
+/players              Classement local
+/about                A propos du projet
+/videos               Videos pedagogiques
+```
+
+## Moteur de simulation
+
+Le dossier `engine/` contient la logique de simulation en TypeScript. Il regroupe les scenarios, les etats economiques, les decisions de politique monetaire, les chocs, les calculs de score, les projections et les modules de simulation historique.
+
+Les scenarios historiques utilisent un moteur calibre separe dans `engine/v5/`. Les autres scenarios utilisent le moteur standard du site.
+
+## Scoring
+
+Le score final est calcule sur 100 points. Il tient compte de la stabilite des prix, de l'activite economique, de la credibilite et de la coherence des decisions selon le type de scenario joue.
+
+Le score sert d'indicateur pedagogique : il aide l'utilisateur a comprendre les consequences de ses decisions, sans remplacer une evaluation economique reelle.
+
+## Polices et theme graphique
+
+Les polices du site sont integrees localement dans `public/fonts/` afin de conserver le meme rendu graphique sans dependre d'un telechargement externe au moment du build.
+
+Ne pas supprimer `public/fonts/`, car ce dossier est necessaire au theme d'ecriture du site.
+
+## Variables d'environnement
+
+Le fichier `.env.example` donne les variables attendues. Certaines fonctionnalites, comme l'assistant, peuvent utiliser une cle API si elle est configuree dans l'environnement local.
+
+## Verification avant envoi
+
+Avant de transmettre ou deployer le projet, executer :
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+Ces trois commandes doivent passer sans erreur bloquante.
+
+## Projet
+
+Projet de stage 2026 - Centrale Bank Simulateur.

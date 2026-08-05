@@ -1,26 +1,7 @@
 import type { Metadata } from 'next'
-import { Fraunces, Inter, JetBrains_Mono } from 'next/font/google'
 import 'katex/dist/katex.min.css'
+import './local-fonts.css'
 import './globals.css'
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  display: 'swap',
-  axes: ['opsz', 'SOFT', 'WONK'],
-})
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://central-bank-simulator.vercel.app'),
@@ -44,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} font-inter antialiased`}
+        className="font-inter antialiased"
         suppressHydrationWarning
       >
         {children}

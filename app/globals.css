@@ -10,6 +10,10 @@
 
 /* ── Dark Mode (default) ───────────────────────────────────── */
 :root {
+  --font-fraunces: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-inter: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-jetbrains: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+
   /* Background */
   --bg-base:        #0E0F12;
   --bg-panel:       #14161A;

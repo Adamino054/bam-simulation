@@ -21,13 +21,13 @@ export const CAMPAIGNS: Record<string, CampaignConfig> = {
     duration: 8, // 8 Quarters
     description: 'Resserrement monétaire historique pour mater une hyperinflation de 15 % avec une crédibilité initiale effondrée.',
     contextMarkdown: `
-1979 : La flambée des prix de l'énergie et la faiblesse passée de la banque centrale ont provoqué un désancrage sévère des anticipations d'inflation ($\\\\pi^e = 12 \\\\%$) entraînant l'économie marocaine fictive dans une spirale stagflationniste. 
+1979 : La flambée des prix de l'énergie et la faiblesse passée de la banque centrale ont provoqué un désancrage sévère des anticipations d'inflation ($\\pi^e = 12 \\%$) entraînant l'économie marocaine fictive dans une spirale stagflationniste. 
 
 Votre nomination s'accompagne d'une directive d'une fermeté historique : briser l'inflation par tous les moyens monétaires à votre disposition.
 `,
     winConditionsMarkdown: `
-*   **Stabilisation** : Ramener l'inflation observée ($\\\\pi_t$) sous **3,0 %** à la fin du 8e trimestre.
-*   **Crédibilité** : Conserver une banque centrale légitime (crédibilité $> 0 \\\\%$) à chaque trimestre.
+*   **Stabilisation** : Ramener l'inflation observée ($\\pi_t$) sous **3,0 %** à la fin du 8e trimestre.
+*   **Crédibilité** : Conserver une banque centrale légitime (crédibilité $> 0 \\%$) à chaque trimestre.
 `,
     lossConditionsMarkdown: `
 *   **Désancrage Fatal** : Si la crédibilité tombe à **0 %**, vous serez immédiatement démis de vos fonctions.
@@ -51,19 +51,19 @@ Votre nomination s'accompagne d'une directive d'une fermeté historique : briser
     title: 'Crise Systémique 2008',
     subtitle: 'Le spectre du gel bancaire et de la récession',
     difficulty: 'Niveau Institutionnel — Expert',
-    duration: 8, // 8 Quarters
+    duration: 20, // 20 quarters in the historical simulation
     description: 'Une explosion des créances douteuses (NPL) paralyse le canal du crédit bancaire, menaçant l\'économie réelle de dépression.',
     contextMarkdown: `
-2008 : À la suite de la crise des subprimes mondiale, le système bancaire marocain fait face à une détérioration critique de ses portefeuilles d'actifs. Les créances douteuses (NPL) bondissent à **18 %**, poussant les banques à couper drastiquement le crédit ($\\\\Delta Credit = -4 \\\\%$) pour préserver leurs ratios de fonds propres.
+2008 : À la suite de la crise des subprimes mondiale, le système bancaire marocain fait face à une détérioration critique de ses portefeuilles d'actifs. Les créances douteuses (NPL) bondissent à **18 %**, poussant les banques à couper drastiquement le crédit ($\\Delta Credit = -4 \\%$) pour préserver leurs ratios de fonds propres.
 
 La liquidité s'est évaporée (besoin de liquidité critique de **220 milliards MAD**). Le canal de transmission est totalement bloqué.
 `,
     winConditionsMarkdown: `
-*   **Assainissement des actifs** : Ramener le ratio de NPL bancaires ($NPL_t$) sous **10,0 %** avant la fin des 8 trimestres.
-*   **Relance du canal du crédit** : Redresser la croissance annuelle des encours de crédit ($Credit\\\\_Growth_t$) au-dessus de **+2,0 %**.
+*   **Assainissement progressif** : Réduire durablement le ratio de NPL bancaires ($NPL_t$) pendant le mandat historique.
+*   **Relance du canal du crédit** : Restaurer une croissance positive des encours de crédit sans provoquer d'instabilité macroéconomique.
 `,
     lossConditionsMarkdown: `
-*   **Faillite Systémique** : Si l'un des deux objectifs n'est pas rempli au terme des 8 trimestres.
+*   **Fragilité persistante** : Si le canal du crédit reste durablement bloqué et que les tensions bancaires dominent la trajectoire finale.
 `,
     startingKpi: [
       { label: 'Ratio de NPL bancaires', value: '18,00 %', hint: 'Seuil critique d\'insolvabilité' },
@@ -74,7 +74,7 @@ La liquidité s'est évaporée (besoin de liquidité critique de **220 milliards
     goals: [
       { label: 'Ratio NPL cible', value: '< 10.0 %', formula: 'NPL_t < 10.0' },
       { label: 'Croissance crédit', value: '> +2.0 %', formula: 'Credit\\_Growth_t > 2.0' },
-      { label: 'Horizon temporel', value: '8 trimestres (2 ans)', formula: 'T \\le 8' },
+      { label: 'Horizon temporel', value: '20 trimestres (mandat historique)', formula: 'T = 20' },
     ]
   }
 }

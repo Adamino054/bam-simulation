@@ -81,7 +81,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 function LabView() {
   const [viewMode, setViewMode] = useState<'curves' | 'fanchart'>('curves')
 
-  // Structural Parameters (Synchronized with engine v5 calibration)
+  // Structural Parameters (Synchronized with historical engine calibration)
   const [kappa, setKappa] = useState<number>(PARAMS_V5.phillips.kappaGame) // Phillips game sensitivity
   const [sigma, setSigma] = useState<number>(PARAMS_V5.is.sigmaGame) // IS game elasticity
   const [delta, setDelta] = useState<number>(PARAMS_V5.fiscalImpact) // demand/fiscal impulse

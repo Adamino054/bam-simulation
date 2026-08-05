@@ -3,7 +3,7 @@
  *
  * Fournit, pour chaque trimestre du scénario covid2020 (index 0 = 2020Q3),
  * les chocs historiques identifiés (u^π offre importée, u^y demande) et les
- * données HCP observées, pour que le moteur v5 rejoue l'histoire quand le
+ * données HCP observées, pour que le moteur historique rejoue l'histoire quand le
  * joueur reproduit les taux de BAM.
  */
 

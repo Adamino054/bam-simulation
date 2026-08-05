@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Play, ShieldAlert, Award, Calendar, HelpCircle, FileText } from 'lucide-react'
 import { CAMPAIGNS, type CampaignConfig } from '@/engine/campaigns'
 import { useGameStore } from '@/store/gameStore'
-import { BlockKatex, MarkdownText } from '@/components/ui/InlineKatex'
+import { BlockKatex, MarkdownText, LatexText } from '@/components/ui/InlineKatex'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { AssistantBot } from '@/components/ui/AssistantBot'
 
@@ -154,7 +154,7 @@ export default function CampaignPage() {
                         if (paragraph.trim().startsWith('$$\\')) {
                           return <BlockKatex key={i} math={paragraph.replace(/\$\$/g, '').trim()} />
                         }
-                        return <p key={i}>{paragraph}</p>
+                        return <p key={i}><LatexText text={paragraph} /></p>
                       })}
                     </div>
                   </div>

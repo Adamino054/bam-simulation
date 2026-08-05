@@ -1,5 +1,5 @@
 /**
- * Équations estimées du moteur v5, isolées et pures (testables une par une).
+ * Équations estimées du moteur historique, isolées et pures (testables une par une).
  * Chaque fonction reproduit EXACTEMENT le code Python d'estimation (v5b.py).
  */
 

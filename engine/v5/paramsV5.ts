@@ -1,5 +1,5 @@
 /**
- * Paramètres du moteur v5 — ESTIMÉS par OLS sur données trimestrielles HCP/BAM.
+ * Paramètres du moteur historique — ESTIMÉS par OLS sur données trimestrielles HCP/BAM.
  *
  * Contrairement au v1 (calibré à la main), chaque coefficient ici est le résultat
  * d'une régression sur la période PRÉ-COVID (2008-2019), puis le moteur est

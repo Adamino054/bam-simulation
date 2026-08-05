@@ -8,7 +8,7 @@ import {
   Calculator, Zap, Shield, ChevronDown, ChevronRight,
   BookOpen, CheckCircle2, Circle, ArrowLeft, Lightbulb,
   FlaskConical, Gamepad2, GraduationCap, BarChart2,
-  Award, Sparkles, FileText, Check, ExternalLink
+  Award, Sparkles, Check
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { BlockKatex, LatexText } from '@/components/ui/InlineKatex'
@@ -67,7 +67,7 @@ const MODULES: Module[] = [
     moroccanExample:
       "En 2022, face à une inflation de 6,1 % — son plus haut niveau depuis 30 ans — la Banque centrale a relevé son taux directeur de 1,5 % à 3,0 % en deux étapes (septembre 2022 et mars 2023). Cette décision tardive, après des années de politique accommodante, a eu un coût en crédibilité.",
     gameTip:
-      "Dans Standard et Volcker, le score évalue la stabilité macro : inflation, croissance, trajectoire et crédibilité. Dans les scénarios historiques v5, le score devient un score de reproduction : suivre les choix de Bank Al-Maghrib donne 100/100.",
+      "Dans Standard et Volcker, le score évalue la stabilité macro : inflation, croissance, trajectoire et crédibilité. Dans les scénarios historiques, le score compare les décisions du joueur à un repère historique.",
     diagram: ScoreBreakdown,
   },
   {
@@ -111,12 +111,12 @@ const MODULES: Module[] = [
     readTime: '8 min',
     icon: TrendingUp,
     overview:
-      "L'output gap mesure l'écart entre le PIB réellement produit et ce que l'économie pourrait produire sans surchauffe. Le site utilise deux logiques de calcul : le moteur général du jeu pour les scénarios libres comme Standard et Volcker, et le moteur v5 pour les scénarios historiques validés. Dans ces scénarios historiques, la courbe IS relie l'inertie du cycle, le taux directeur réel perçu, le spread de crédit et les résidus historiques.",
+      "L'output gap mesure l'écart entre le PIB réellement produit et ce que l'économie pourrait produire sans surchauffe. Le site utilise deux logiques de calcul : le moteur général du jeu pour les scénarios libres comme Standard et Volcker, et le moteur historique pour les scénarios historiques validés. Dans ces scénarios historiques, la courbe IS relie l'inertie du cycle, le taux directeur réel perçu, le spread de crédit et les résidus historiques.",
     keyPoints: [
       "Persistance du cycle : l'économie ne retourne pas immédiatement à son potentiel après un choc.",
       "Sensibilité au taux : l'effet estimé dans les données est renforcé dans le jeu pour que vos décisions soient visibles pendant une partie courte.",
       "Spread de crédit : si le taux débiteur s'écarte du taux directeur, les conditions bancaires freinent directement l'activité.",
-      "Dans les scénarios COVID 2020, crise 2008, inflation 2022 et flexibilité du change, les résidus historiques permettent de retrouver les trajectoires HCP lorsque le joueur reproduit les choix BAM.",
+      "Dans les scénarios COVID 2020, crise 2008, inflation 2022 et flexibilité du change, les résidus historiques servent à représenter les conditions propres à chaque période réelle.",
     ],
     formula: {
       latex: '\\tilde{y}_t = c_y + \\rho\\tilde{y}_{t-1} - \\sigma(i^*_{t-1}-\\pi_{t-1}) - \\sigma_c(i^D_{t-1}-i^*_{t-1}) + u^y_t',
@@ -144,7 +144,7 @@ const MODULES: Module[] = [
     readTime: '7 min',
     icon: Activity,
     overview:
-      "La courbe de Phillips explique comment l'inflation évolue. Dans les scénarios historiques validés, sa version v5 tient compte de l'inertie des prix, du cycle économique, des anticipations autour de la cible de 2 %, du taux de change et des résidus historiques utilisés pour rejouer les scénarios marocains. Dans Standard et Volcker, le moteur général garde la même logique pédagogique sans ancrage HCP trimestre par trimestre.",
+      "La courbe de Phillips explique comment l'inflation évolue. Dans les scénarios historiques validés, la version du moteur historique tient compte de l'inertie des prix, du cycle économique, des anticipations autour de la cible de 2 %, du taux de change et des résidus historiques utilisés pour rejouer les scénarios marocains. Dans Standard et Volcker, le moteur général garde la même logique pédagogique sans ancrage historique trimestre par trimestre.",
     keyPoints: [
       "Inertie : l'inflation garde une mémoire importante du trimestre précédent.",
       "Lien activité-prix : le lien entre output gap et inflation est renforcé dans le jeu pour rendre l'arbitrage visible.",
@@ -632,9 +632,8 @@ export default function CoursesPage() {
             </div>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               Le site utilise deux logiques de calcul. Le moteur général pilote les scénarios libres comme
-              Standard et Volcker. Le moteur v5 pilote les scénarios historiques validés : COVID 2020,
-              crise 2008, inflation 2022 et flexibilité du dirham. Son rôle est de retrouver les valeurs HCP
-              quand le joueur reproduit les choix de Bank Al-Maghrib.
+              Standard et Volcker. Le moteur historique pilote les scénarios historiques validés : COVID 2020,
+              crise 2008, inflation 2022 et flexibilité du dirham.
             </p>
           </div>
 
@@ -767,74 +766,6 @@ export default function CoursesPage() {
               ))}
             </div>
 
-            {/* ── Documents de référence ─────────────────────────────── */}
-            <motion.div
-              className="mt-12"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <FileText size={15} style={{ color: 'var(--accent-warm)' }} />
-                <h2 className="font-editorial text-lg" style={{ color: 'var(--text-primary)' }}>
-                  Aller plus loin — documents de référence
-                </h2>
-              </div>
-              <p className="text-xs mb-4" style={{ color: 'var(--text-tertiary)' }}>
-                Les documents du simulateur : le moteur v5 validé décrit le calcul des scénarios historiques, tandis que le support mathématique général reste disponible comme base pédagogique.
-              </p>
-              <div className="grid sm:grid-cols-3 gap-3">
-                {[
-                  {
-                    href: '/docs/presentation-modeles-mathematiques.html',
-                    title: 'Les modèles mathématiques — moteur général',
-                    desc: 'Support pédagogique du moteur général : utile pour comprendre les mécanismes de base, mais différent du moteur v5 utilisé pour les scénarios historiques validés.',
-                    tag: 'Moteur général',
-                  },
-                  {
-                    href: '/docs/moteur-v5-validation.html',
-                    title: 'Moteur v5 validé',
-                    desc: 'Équations, paramètres et validation historique des scénarios BAM/HCP calculés avec le moteur v5.',
-                    tag: 'v5',
-                  },
-                  {
-                    href: '/docs/guide-fonctionnalites-cbs.pdf',
-                    title: 'Guide des fonctionnalités',
-                    desc: "L'application expliquée écran par écran, du login au débrief.",
-                    tag: 'PDF',
-                  },
-                ].map(doc => (
-                  <a
-                    key={doc.href}
-                    href={doc.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col gap-2 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5"
-                    style={{
-                      borderColor: 'var(--border-subtle)',
-                      backgroundColor: 'var(--bg-panel)',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className="label-caps px-2 py-0.5 rounded-full"
-                        style={{ fontSize: '8px', color: 'var(--accent-warm)', backgroundColor: 'rgba(201,168,106,0.12)' }}
-                      >
-                        {doc.tag}
-                      </span>
-                      <ExternalLink size={11} className="opacity-40 transition-opacity duration-200 group-hover:opacity-100" style={{ color: 'var(--text-tertiary)' }} />
-                    </div>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      {doc.title}
-                    </span>
-                    <span className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                      {doc.desc}
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </motion.div>
           </>
         ) : (
           <motion.div

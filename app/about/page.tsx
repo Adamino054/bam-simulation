@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, FileText, ExternalLink } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 
 export default function AboutPage() {
@@ -49,86 +49,9 @@ export default function AboutPage() {
 
         <div className="space-y-4 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
           <p>
-            Ce serious game est développé dans le cadre d'un Projet de Fin d'Année
-            commandité par <strong style={{ color: 'var(--text-primary)' }}>la Banque centrale</strong>{' '}
-            du Royaume du Maroc.
+            Ce serious game servira de support pédagogique pour illustrer les mécanismes de
+            politique monétaire au grand public et aux étudiants.
           </p>
-          <p>
-            Il constitue la composante jouable d'un moteur de simulation macroéconomique
-            destiné à modéliser les mécanismes de transmission de la politique monétaire
-            dans le contexte marocain.
-          </p>
-          <p>
-            Le moteur de simulation — entièrement isolé du code d'interface — combine
-            deux logiques : le moteur général du jeu pour les scénarios libres, et le
-            moteur mathématique v5 pour les scénarios historiques validés. Dans ces
-            scénarios historiques, quand l'utilisateur reproduit les choix BAM, le site
-            retrouve les valeurs HCP validées pour l'inflation, l'output gap, la croissance
-            et le chômage.
-          </p>
-          <p>
-            Cette version web servira de support pédagogique pour illustrer les mécanismes
-            de politique monétaire au grand public et aux étudiants.
-          </p>
-        </div>
-
-        {/* ── Documents du projet ── */}
-        <div className="mt-12">
-          <p className="label-caps mb-4" style={{ color: 'var(--accent-primary)' }}>
-            Documents du projet
-          </p>
-          <div className="grid gap-3">
-            {[
-              {
-                href: '/docs/moteur-v5-validation.html',
-                title: 'Moteur mathématique v5 — validation historique',
-                desc: 'Équations et paramètres utilisés par les scénarios historiques validés, avec test de reproduction des scénarios BAM/HCP.',
-              },
-              {
-                href: '/docs/business-model-canvas.html',
-                title: 'Business Model Canvas — Éco Inclusif',
-                desc: 'Le canvas complet du projet : proposition de valeur, segments, ressources et modèle économique.',
-              },
-              {
-                href: '/docs/presentation-business-model.html',
-                title: 'Présentation du Business Model',
-                desc: 'La version présentation du canvas : mission d’inclusion économique et stratégie de diffusion.',
-              },
-              {
-                href: '/docs/guide-fonctionnalites-cbs.pdf',
-                title: 'Guide des fonctionnalités (PDF)',
-                desc: "Toute l'application expliquée écran par écran — le document d'accueil des stagiaires.",
-              },
-            ].map(doc => (
-              <a
-                key={doc.href}
-                href={doc.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-start gap-3 rounded-lg border p-4 transition-colors duration-200"
-                style={{
-                  borderColor: 'var(--border-subtle)',
-                  backgroundColor: 'var(--bg-panel)',
-                  textDecoration: 'none',
-                }}
-              >
-                <FileText size={16} className="mt-0.5 flex-shrink-0" style={{ color: 'var(--accent-primary)' }} />
-                <span className="flex-1">
-                  <span className="block text-sm font-semibold mb-0.5" style={{ color: 'var(--text-primary)' }}>
-                    {doc.title}
-                  </span>
-                  <span className="block text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                    {doc.desc}
-                  </span>
-                </span>
-                <ExternalLink
-                  size={12}
-                  className="mt-1 flex-shrink-0 opacity-40 transition-opacity duration-200 group-hover:opacity-100"
-                  style={{ color: 'var(--text-tertiary)' }}
-                />
-              </a>
-            ))}
-          </div>
         </div>
 
         <div className="mt-10">

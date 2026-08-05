@@ -1,5 +1,5 @@
 /**
- * Moteur v5 — équations estimées et scénarios historiques ancrés.
+ * Moteur historique — équations estimées et scénarios historiques ancrés.
  *
  *   stepV5                  pas de simulation, remplace step() du moteur v1
  *   historicalScenarios     constantes de chocs des 4 scénarios rejouables

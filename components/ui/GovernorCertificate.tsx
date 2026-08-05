@@ -28,7 +28,65 @@ export function GovernorCertificate({
   })
 
   const handlePrint = () => {
-    window.print()
+    const certificate = document.getElementById('print-certificate-area')
+    if (!certificate) {
+      window.print()
+      return
+    }
+
+    const printWindow = window.open('', '_blank', 'width=1200,height=900')
+    if (!printWindow) {
+      window.print()
+      return
+    }
+
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(node => node.outerHTML)
+      .join('\n')
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Certificat CBS</title>
+          ${styles}
+          <style>
+            @page { size: A4 landscape; margin: 0; }
+            html, body {
+              width: 297mm;
+              height: 210mm;
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+              background: #fff;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            body {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            #print-certificate-area {
+              width: 297mm !important;
+              height: 210mm !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              transform: none !important;
+            }
+          </style>
+        </head>
+        <body>${certificate.outerHTML}</body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    window.setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 300)
   }
 
   return (
@@ -109,7 +167,7 @@ export function GovernorCertificate({
             </p>
             <div className="flex items-center justify-center gap-3">
               <span className="h-[1px] w-12 bg-[#C9A86A]" />
-              <span className="text-sm font-semibold tracking-wider text-[#B41923]">BOARD OF GVERNORS</span>
+              <span className="text-sm font-semibold tracking-wider text-[#B41923]">BOARD OF GOVERNORS</span>
               <span className="h-[1px] w-12 bg-[#C9A86A]" />
             </div>
           </div>

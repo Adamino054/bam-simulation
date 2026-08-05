@@ -13,6 +13,12 @@ import {
 import { useAuthStore } from '@/store/authStore'
 import { useGameStore } from '@/store/gameStore'
 import { SCENARIOS } from '@/engine/scenarios'
+import { getLevelConfig } from '@/engine/difficulty'
+import {
+  historicalInitialState,
+  historicalQuartersCount,
+  isHistoricalScenario,
+} from '@/engine/v5/historicalScenarios'
 import { ThemeToggle } from '@/components/shell/ThemeToggle'
 import { PerformanceRadar } from '@/components/ui/PerformanceRadar'
 import { fmtPct } from '@/lib/format'
@@ -130,13 +136,32 @@ export default function DashboardPage() {
   const scenarios = Object.values(SCENARIOS)
   const selectedScenario = SCENARIOS[selected]
   const selectedMeta = DIFFICULTY_META[selectedScenario.difficulty]
-  const initialState = selectedScenario.initialState
+  const selectedIsHistorical = isHistoricalScenario(selected)
+  const initialState = selectedIsHistorical
+    ? historicalInitialState(selected, { ...selectedScenario.initialState })
+    : selectedScenario.initialState
+  const selectedLevelConfig = getLevelConfig(difficultyLevel)
+  const displayedQuarters = selectedIsHistorical
+    ? historicalQuartersCount(selected)
+    : freeMode && selectedSupportsFreeMode
+      ? 25
+      : selectedLevelConfig.quarters
+  const displayedShockStatus = selectedIsHistorical
+    ? 'CALIBRÉ'
+    : selectedScenario.initialShocks.length > 0
+      ? 'ACTIF'
+      : 'AUCUN'
+  const displayedShockDescription = selectedIsHistorical
+    ? 'Chocs historiques calibrés dans le moteur historique.'
+    : selectedScenario.initialShocks.length > 0
+      ? selectedScenario.initialShocks[0].label + ' : ' + selectedScenario.initialShocks[0].description
+      : 'Aucun choc majeur en cours.'
   const gameHistory = player?.gameHistory ?? []
   const riskScore = Math.min(100, Math.round(
     Math.abs(initialState.inflation - 2) * 10 +
     Math.abs(initialState.outputGap) * 7 +
     Math.max(0, initialState.nplRatio - 5) * 5 +
-    selectedScenario.initialShocks.length * 12 +
+    (selectedIsHistorical ? 12 : selectedScenario.initialShocks.length * 12) +
     (selectedScenario.difficulty === 'crisis' ? 22 : selectedScenario.difficulty === 'hard' ? 12 : 4) +
     (100 - initialState.centralBankCredibility) * 0.18
   ))
@@ -146,13 +171,40 @@ export default function DashboardPage() {
     { label: 'Inflation', value: `${initialState.inflation.toFixed(2)} %`, color: initialState.inflation > 4 ? '#C25450' : initialState.inflation < 1 ? '#C9A86A' : '#4A9D7C' },
     { label: 'Output gap', value: `${initialState.outputGap.toFixed(2)} %`, color: Math.abs(initialState.outputGap) > 2 ? '#C25450' : '#5C7E92' },
     { label: 'NPL', value: `${initialState.nplRatio.toFixed(1)} %`, color: initialState.nplRatio > 8 ? '#C25450' : '#4A9D7C' },
-    { label: 'Credibilite', value: `${initialState.centralBankCredibility}/100`, color: initialState.centralBankCredibility < 55 ? '#C25450' : '#C9A86A' },
+    { label: 'Crédibilité', value: `${initialState.centralBankCredibility}/100`, color: initialState.centralBankCredibility < 55 ? '#C25450' : '#C9A86A' },
   ]
-  const missionObjectives = [
-    'Ramener l inflation vers la cible sans casser l activite.',
-    'Preserver la credibilite de la banque centrale.',
-    'Surveiller les risques bancaires et les chocs initiaux.',
-  ]
+  const scenarioBriefingText =
+    selected === 'volcker1979' && freeMode && selectedSupportsFreeMode
+      ? "Choc Volcker prolongé : inflation très élevée, anticipations désancrées et crédibilité fragile. Le mode libre étend l'horizon à 25 trimestres ; l'objectif devient de restaurer progressivement la stabilité des prix sans laisser la crédibilité s'effondrer."
+      : selectedScenario.descriptionByLevel[difficultyLevel] || selectedScenario.description
+  const missionObjectives = (() => {
+    if (selected === 'crisis2008') {
+      return [
+        'Stabiliser le canal du crédit.',
+        'Réduire les tensions bancaires sans choc brutal.',
+        'Surveiller NPL, crédit et liquidité.',
+      ]
+    }
+    if (selected === 'volcker1979') {
+      return [
+        'Désancrage inflationniste à corriger.',
+        'Préserver une crédibilité positive.',
+        freeMode && selectedSupportsFreeMode ? 'Horizon prolongé en mode libre.' : 'Mission courte de désinflation.',
+      ]
+    }
+    if (selectedIsHistorical) {
+      return [
+        "Lire la période historique avant d'agir.",
+        'Limiter les écarts macroéconomiques.',
+        'Suivre la liquidité et la crédibilité.',
+      ]
+    }
+    return [
+      "Ramener l'inflation vers la cible sans casser l'activité.",
+      'Préserver la crédibilité de la banque centrale.',
+      'Surveiller les risques bancaires et les chocs initiaux.',
+    ]
+  })()
 
   const askScenarioCoach = () => {
     sound.playTick()
@@ -334,7 +386,7 @@ export default function DashboardPage() {
                           {selectedScenario.title}
                         </h2>
                         <p className="text-xs leading-relaxed max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-                          {selectedScenario.descriptionByLevel[difficultyLevel] || selectedScenario.description}
+                          {scenarioBriefingText}
                         </p>
                       </div>
 
@@ -512,29 +564,29 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Inflation</span>
-                          <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.inflation > 4 ? 'var(--data-negative)' : SCENARIOS[selected].initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
-                            {SCENARIOS[selected].initialState.inflation.toFixed(2)} %
+                          <span className="font-mono text-sm font-semibold" style={{ color: initialState.inflation > 4 ? 'var(--data-negative)' : initialState.inflation < 1.5 ? 'var(--data-neutral)' : 'var(--data-positive)' }}>
+                            {initialState.inflation.toFixed(2)} %
                           </span>
                         </div>
 
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Croissance PIB</span>
-                          <span className="font-mono text-sm font-semibold" style={{ color: SCENARIOS[selected].initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
-                            {SCENARIOS[selected].initialState.gdpGrowth.toFixed(2)} %
+                          <span className="font-mono text-sm font-semibold" style={{ color: initialState.gdpGrowth > 0 ? 'var(--data-positive)' : 'var(--data-negative)' }}>
+                            {initialState.gdpGrowth.toFixed(2)} %
                           </span>
                         </div>
 
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Taux Directeur</span>
                           <span className="font-mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                            {SCENARIOS[selected].initialState.policyRate.toFixed(2)} %
+                            {initialState.policyRate.toFixed(2)} %
                           </span>
                         </div>
 
                         <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left">
                           <span className="block text-[8px] label-caps" style={{ color: 'var(--text-tertiary)' }}>Crédibilité</span>
                           <span className="font-mono text-sm font-semibold" style={{ color: 'var(--accent-warm)' }}>
-                            {SCENARIOS[selected].initialState.centralBankCredibility} / 100
+                            {initialState.centralBankCredibility} / 100
                           </span>
                         </div>
                       </div>
@@ -542,14 +594,12 @@ export default function DashboardPage() {
                       <div className="p-2 rounded bg-[var(--bg-base)] border border-[var(--border-subtle)] text-left mt-1">
                         <div className="flex justify-between items-center text-[8px] label-caps mb-1" style={{ color: 'var(--text-tertiary)' }}>
                           <span>Impact des chocs initiaux</span>
-                          <span className="font-mono font-bold" style={{ color: SCENARIOS[selected].initialShocks.length > 0 ? 'var(--data-negative)' : 'var(--data-positive)' }}>
-                            {SCENARIOS[selected].initialShocks.length > 0 ? 'ACTIF' : 'AUCUN'}
+                          <span className="font-mono font-bold" style={{ color: displayedShockStatus === 'AUCUN' ? 'var(--data-positive)' : 'var(--data-negative)' }}>
+                            {displayedShockStatus}
                           </span>
                         </div>
                         <p className="text-[10px] leading-tight" style={{ color: 'var(--text-secondary)' }}>
-                          {SCENARIOS[selected].initialShocks.length > 0 
-                            ? SCENARIOS[selected].initialShocks[0].label + ' : ' + SCENARIOS[selected].initialShocks[0].description
-                            : 'Aucun choc majeur en cours.'}
+                          {displayedShockDescription}
                         </p>
                       </div>
                     </div>
@@ -569,23 +619,29 @@ export default function DashboardPage() {
                       <div className="p-3 rounded-lg border text-[11px] leading-relaxed" style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'var(--border-subtle)' }}>
                         <span className="font-semibold block mb-1" style={{ color: 'var(--text-primary)' }}>Règles du niveau {difficultyLevel === 'beginner' ? 'Débutant' : difficultyLevel === 'intermediate' ? 'Intermédiaire' : 'Expert'} :</span>
                         <ul className="list-disc list-inside space-y-0.5 text-xs text-[var(--text-secondary)]" style={{ color: 'var(--text-secondary)' }}>
-                          {difficultyLevel === 'beginner' ? (
+                          {selectedIsHistorical ? (
+                            <>
+                              <li><span style={{ color: 'var(--accent-warm)', fontWeight: 600 }}>Scoring historique :</span> cohérence des décisions avec la période rejouée.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments du niveau :</span> {difficultyLevel === 'beginner' ? 'taux directeur, réserve obligatoire et opérations de marché.' : difficultyLevel === 'intermediate' ? 'forward guidance, réserves et intervention de change.' : 'arsenal complet de politique monétaire.'}</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Durée :</span> {displayedQuarters} trimestres de simulation historique.</li>
+                            </>
+                          ) : difficultyLevel === 'beginner' ? (
                             <>
                               <li><span style={{ color: 'var(--data-positive)', fontWeight: 600 }}>Scoring indulgent :</span> Écarts mineurs tolérés.</li>
-                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments simplifiés :</span> Taux directeur uniquement.</li>
-                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs modérés :</span> 16 trimestres de simulation.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments de base :</span> taux directeur, réserve obligatoire et opérations de marché.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Durée :</span> {displayedQuarters} trimestres de simulation.</li>
                             </>
                           ) : difficultyLevel === 'intermediate' ? (
                             <>
                               <li><span style={{ color: 'var(--accent-warm)', fontWeight: 600 }}>Scoring standard :</span> Pondération stricte de la crédibilité.</li>
-                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments avancés :</span> Forward guidance, réserves, CCyB.</li>
-                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs stochastiques :</span> 20 trimestres de simulation.</li>
+                              <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Instruments avancés :</span> forward guidance, réserves et intervention de change.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Durée :</span> {displayedQuarters} trimestres de simulation.</li>
                             </>
                           ) : (
                             <>
                               <li><span style={{ color: 'var(--data-negative)', fontWeight: 600 }}>Scoring institutionnel :</span> Zéro marge d'erreur, pass-through accentué.</li>
                               <li><span style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>Arsenal complet :</span> Tous les leviers de politique monétaire activés.</li>
-                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Chocs sévères :</span> 25 trimestres. Pas de conseils en cours de jeu.</li>
+                              <li><span style={{ color: 'var(--accent-cool)', fontWeight: 600 }}>Durée :</span> {displayedQuarters} trimestres. Pas de conseils en cours de jeu.</li>
                             </>
                           )}
                         </ul>
@@ -622,7 +678,7 @@ export default function DashboardPage() {
                     </p>
                     {!selectedSupportsFreeMode && (
                       <p className="text-[10px] mt-0.5" style={{ color: 'var(--accent-warm)' }}>
-                        Scénario historique : chocs déjà calibrés dans le moteur v5.
+                        Scénario historique : chocs déjà calibrés dans le moteur historique.
                       </p>
                     )}
                   </div>

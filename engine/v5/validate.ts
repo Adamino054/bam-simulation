@@ -1,11 +1,10 @@
 /**
- * Validation du moteur v5 — à lancer avec :  npx tsx engine/v5/validate.ts
+ * Validation du moteur historique — à lancer avec :  npx tsx engine/v5/validate.ts
  *
  * En mode jeu, les scénarios historiques injectent quatre constantes trimestrielles
  * (u^π offre, u^y demande, u^u marché du travail, g^pot potentiel) qui ancrent la
- * trajectoire sur les séries du HCP. C'est ce qui garantit que reproduire les décisions
- * de Bank Al-Maghrib redonne les chiffres officiels, et que deux scénarios qui se
- * recouvrent donnent exactement les mêmes valeurs.
+ * trajectoire sur les séries historiques. C'est ce qui garantit la cohérence des
+ * périodes documentées et des scénarios qui se recouvrent.
  *
  * Ce script mesure la performance NON AIDÉE : il retire les constantes une à une pour
  * voir ce que le moteur produit par sa seule dynamique estimée. C'est ce chiffre-là,

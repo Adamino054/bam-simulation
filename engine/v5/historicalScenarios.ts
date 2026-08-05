@@ -1,5 +1,5 @@
 /**
- * Scénarios historiques rejouables — moteur v5.
+ * Scénarios historiques rejouables — moteur historique.
  *
  * Trois scénarios de la plateforme rejouent une période réelle : le joueur qui
  * reproduit les décisions de Bank Al-Maghrib retrouve les séries du HCP.
@@ -149,7 +149,7 @@ export function historicalPotentialGrowth(id: ScenarioId, idx: number): number {
 /**
  * État initial : l'observé du trimestre précédant le premier tour.
  * Le bloc bancaire (taux débiteur, NPL, crédit…) est conservé depuis le scénario
- * de la plateforme — il ne participe pas aux quatre variables macro du v5.
+ * de la plateforme — il ne participe pas aux quatre variables macro du moteur historique.
  */
 export function historicalInitialState(id: ScenarioId, base: EconomicState): EconomicState {
   if (id === 'covid2020') return { ...base, ...covidRealInitialState() } as EconomicState

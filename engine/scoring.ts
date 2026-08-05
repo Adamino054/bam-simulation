@@ -257,15 +257,15 @@ function generateHistoricalBenchmarkCommentary(
   avgHistoricalTrajectoryDeviation: number,
 ): string {
   if (total >= 95) {
-    return "Reproduction historique excellente : vos décisions suivent le repère BAM et la trajectoire reste alignée sur les valeurs HCP du scénario."
+    return "Reproduction historique excellente : vos décisions restent très cohérentes avec la période rejouée et la trajectoire macroéconomique obtenue."
   }
   if (total >= 80) {
-    return `Reproduction solide : l'écart moyen au taux BAM reste contenu (${avgRateDeviationBp.toFixed(0)} pb), avec une trajectoire proche du repère historique.`
+    return `Reproduction solide : l'écart moyen d'orientation du taux reste contenu (${avgRateDeviationBp.toFixed(0)} pb), avec une trajectoire proche du repère historique.`
   }
   if (total >= 65) {
-    return `Reproduction partielle : plusieurs décisions s'écartent du repère BAM, notamment sur le taux (${avgRateDeviationBp.toFixed(0)} pb en moyenne) ou la réserve (${avgReserveDeviationBp.toFixed(0)} pb).`
+    return `Reproduction partielle : plusieurs décisions s'écartent du repère historique, notamment sur le taux (${avgRateDeviationBp.toFixed(0)} pb en moyenne) ou la réserve (${avgReserveDeviationBp.toFixed(0)} pb).`
   }
-  return `Reproduction faible : les choix s'éloignent nettement du repère BAM et la trajectoire macro diverge du scénario historique (${avgHistoricalTrajectoryDeviation.toFixed(2)} pt d'écart moyen).`
+  return `Reproduction faible : les choix s'éloignent nettement du repère historique et la trajectoire macro diverge du scénario (${avgHistoricalTrajectoryDeviation.toFixed(2)} pt d'écart moyen).`
 }
 
 /** Generate "Rapport de Gouverneur" analysis from history */

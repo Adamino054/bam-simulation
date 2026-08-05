@@ -91,7 +91,7 @@ export function ScoreBreakdown() {
         ))}
       </div>
       <p style={{ fontFamily: 'monospace', fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '12px', borderTop: '1px solid var(--border-subtle)', paddingTop: '8px' }}>
-        Pour les scénarios historiques, le score bascule vers un benchmark BAM : taux directeur, réserve obligatoire et trajectoire HCP.
+        Pour les scénarios historiques, le score évalue la cohérence des décisions avec la période rejouée et la trajectoire macroéconomique obtenue.
       </p>
     </DiagramFrame>
   )
